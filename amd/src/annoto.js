@@ -27,7 +27,6 @@ define(['jquery'], function($) {
         init: function(params) {
             // Check params from backend.
             this.params = params;
-            console.log(this.params.length);
 
             if (!params) {
                 this.logWarn('Empty params. Annoto will not start.');
@@ -37,12 +36,11 @@ define(['jquery'], function($) {
             // Skip filter - if plugin works in Global scope or is present in ACL or has <annoto> tag - continue this script.
             if (!this.params.isGlobalScope) {
                 if (!(this.params.isACLmatch || this.hasAnnotoTag())) {
-                    this.logWarn('Annoto is disabled for this page.');
+                    this.log('Annoto is disabled for this page.');
                     return;
                 }
             }
 
-            this.log('Looking for players at frontend...');
             return this.findPlayer();
         },
         hasAnnotoTag: function() {
@@ -53,7 +51,6 @@ define(['jquery'], function($) {
             var youtube = $('iframe[src*="youtube.com"]').first().get(0);
             var vimeo = $('iframe[src*="vimeo.com"]').first().get(0);
             var videotag = $('video').first().get(0);
-            console.log(youtube);
 
             if (h5p) {
                 annotoplayer = h5p;
@@ -169,13 +166,13 @@ define(['jquery'], function($) {
             }
         },
         log: function(msg, arg) {
-            console && console.debug('AnnotoFilterPlugin: ' + msg, arg || '');
+            window.console && console.debug('AnnotoFilterPlugin: ' + msg, arg || '');
         },
         logWarn: function(msg, arg) {
-            console && console.warn('AnnotoFilterPlugin: ' + msg, arg || '');
+            window.console && console.warn('AnnotoFilterPlugin: ' + msg, arg || '');
         },
         logError: function(msg, err) {
-            console && console.error('AnnotoFilterPlugin: ' + msg, err || '');
+            window.console && console.error('AnnotoFilterPlugin: ' + msg, err || '');
         }
     };
 });

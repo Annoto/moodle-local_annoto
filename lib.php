@@ -48,7 +48,6 @@ function local_annoto_get_jsparams() {
 
     // Set id of the video frame where script should be attached.
     $defaultplayerid = 'annoto_default_player_id';
-    $playerfound = false;
     $isglobalscope = filter_var($settings->scope, FILTER_VALIDATE_BOOLEAN);
 
     // If scope is not Global - check if url is in access list.
