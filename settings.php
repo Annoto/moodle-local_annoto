@@ -26,7 +26,7 @@ defined('MOODLE_INTERNAL') || die;
 
 if ($hassiteconfig) {
 
-    $settings = new admin_settingpage('local_annoto', get_string('appsetingsheading', 'local_annoto'));
+    $settings = new admin_settingpage('local_annoto', get_string('pluginname', 'local_annoto'));
     $ADMIN->add('localplugins', $settings);
 
     /* Application setup. */
