@@ -59,6 +59,10 @@ define(['jquery'], function($) {
                 annotoplayer = videotag;
                 this.params.playerType = 'videojs';
             } else if (youtube) {
+                var youtubeSrc = youtube.src;
+                if(youtubeSrc.search(/enablejsapi/i) === -1) {
+                  youtube.src = (youtubeSrc.search(/[?]/) === -1) ? youtubeSrc + '?enablejsapi=1' : youtubeSrc + '&enablejsapi=1';
+                }
                 annotoplayer = youtube;
                 this.params.playerType = 'youtube';
             } else if (vimeo) {
