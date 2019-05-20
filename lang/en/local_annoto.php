@@ -80,3 +80,5 @@ $string['scopedesc'] = 'Choose where you want to allow Annoto plugin: check - al
 $string['acl'] = 'ACL';
 $string['acldesc'] = 'List of allowed URLs or course IDs (please, provide one per line)';
 
+// Privacy API
+$string['privacy:metadata'] = 'The Annoto local plugin only shows data stored in other locations';
