@@ -47,17 +47,19 @@ define(['jquery'], function($) {
             return ($('annoto').length > 0 && $('annotodisable').length === 0);
         },
         findPlayer: function() {
-            var h5p = $('iframe.h5p-iframe').first().get(0);
-            var youtube = $('iframe[src*="youtube.com"]').first().get(0);
-            var vimeo = $('iframe[src*="vimeo.com"]').first().get(0);
-            var videotag = $('video').first().get(0);
 
-            if (h5p) {
+            var h5p = $('iframe.h5p-iframe').first().get(0),
+                youtube = $('iframe[src*="youtube.com"]').first().get(0),
+                vimeo = $('iframe[src*="vimeo.com"]').first().get(0),
+                videojs = $('.video-js').first().get(0),
+                annotoplayer = '';
+                
+            if (videojs) {
+                annotoplayer = videojs;
+                this.params.playerType = 'videojs';
+            } else if (h5p) {
                 annotoplayer = h5p;
                 this.params.playerType = 'h5p';
-            } else if (videotag) {
-                annotoplayer = videotag;
-                this.params.playerType = 'videojs';
             } else if (youtube) {
                 var youtubeSrc = youtube.src;
                 if(youtubeSrc.search(/enablejsapi/i) === -1) {
@@ -71,7 +73,6 @@ define(['jquery'], function($) {
             } else {
                 return;
             }
-
             if (!annotoplayer.id || annotoplayer.id === '') {
                 annotoplayer.id = this.params.defaultPlayerId;
             }
