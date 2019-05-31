@@ -13,22 +13,38 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
-
 /**
- * Privacy Subsystem implementation for block_common_courses.
+ * Privacy implementation for GDPR
  *
  * @package    local_annoto
  * @copyright  Annoto Ltd.
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class provider implements \core_privacy\local\metadata\null_provider {
+namespace local_annoto\privacy;
+use core_privacy\local\metadata\collection;
+
+defined('MOODLE_INTERNAL') || die();
+
+class provider implements
+        // This plugin does store personal user data.
+        \core_privacy\local\metadata\provider {
+        // \core_privacy\local\request\plugin\provider {
+
     /**
-     * Get the language string identifier with the component's language
-     * file to explain why this plugin stores no data.
+     * This function provids the metadata for the user privacy register
      *
-     * @return  string
+     * @param collection $collection - the metadata collection to use
+     * @return collection updated collection
      */
-    public static function get_reason() : string {
-        return 'privacy:metadata';
+
+    public static function get_metadata(collection $collection) :collection {
+
+      $collection->add_external_location_link('annoto', [
+          'userid' => 'privacy:metadata:annoto:userid',
+          'fullname' => 'privacy:metadata:annoto:fullname',
+          'email' => 'privacy:metadata:annoto:email',
+        ], 'privacy:metadata:annoto');
+
+        return $collection;
     }
 }
