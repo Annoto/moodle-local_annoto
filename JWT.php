@@ -15,21 +15,23 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * JSON Web Token implementation, based on this spec:
- * http://tools.ietf.org/html/draft-ietf-oauth-json-web-token-06
+ * JSON Web Token implementation, based on this spec: http://tools.ietf.org/html/draft-ietf-oauth-json-web-token-06
  *
- * PHP version 5
- *
- * @category Authentication
- * @package  Authentication_JWT
  * @author   Neuman Vong <neuman@twilio.com>
  * @author   Anant Narayanan <anant@php.net>
  * @license  http://opensource.org/licenses/BSD-3-Clause 3-clause BSD
  * @link     https://github.com/firebase/php-jwt
+ * @copyright (c) 2011, Neuman Vong
  */
 
 defined('MOODLE_INTERNAL') || die();
 
+/**
+ * Class for working with JWTs.
+  * @package    local_annoto
+  * @copyright (c) 2011, Neuman Vong
+  * @license  http://opensource.org/licenses/BSD-3-Clause 3-clause BSD
+ */
 class JWT
 {
 

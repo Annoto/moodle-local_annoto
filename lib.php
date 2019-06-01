@@ -15,6 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Local plugin "Annoto" - Library
  * @package    local_annoto
  * @copyright  Annoto Ltd.
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -131,6 +132,7 @@ function local_annoto_get_jsparams() {
 
 /**
  * Function gets user token for Annoto script.
+ * @param stdClass $settings the plugin global settings.
  * @return string
  */
 function local_annoto_get_user_token($settings) {
@@ -192,6 +194,7 @@ function local_annoto_get_lang() {
 
 /**
  * Function defines either is current user a 'moderator' or not (in the context of Annoto script).
+ * @param stdClass $settings the plugin global settings.
  * @return bolean
  */
 function local_annoto_is_moderator($settings) {
