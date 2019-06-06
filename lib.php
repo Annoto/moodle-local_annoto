@@ -32,8 +32,7 @@ function local_annoto_before_footer() {
     // Start local_annoto only on the course page or at course module pages.
     if ((strpos($PAGE->pagetype, 'mod-') !== false) ||
         (strpos($PAGE->pagetype, 'course-view-') !== false)) {
-        $jsparams = local_annoto_get_jsparams();
-        $PAGE->requires->js_call_amd('local_annoto/annoto', 'init', array($jsparams));
+        $PAGE->requires->js_call_amd('local_annoto/annoto', 'init');
     }
 }
 
@@ -137,6 +136,9 @@ function local_annoto_get_jsparams() {
  */
 function local_annoto_get_user_token($settings) {
     global $USER, $PAGE;
+
+    $context = context_system::instance();
+    $PAGE->set_context($context);
 
     // Is user logged in or is guest.
     $userloggined = isloggedin();

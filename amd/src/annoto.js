@@ -23,28 +23,38 @@
 
 define([
   'jquery',
-  'core/log'
-], function($, log) {
+  'core/log',
+  'core/notification',
+  'core/ajax'
+], function($, log, notification, Ajax) {
 
     return {
-        init: function(params) {
-            // Check params from backend.
-            this.params = params;
+        init: function() {
+            Ajax.call([{
+                methodname: 'get_jsparams',
+                args: {},
+                done: function(response) {
+                    var params = JSON.parse(response);
+                    this.params = params;
 
-            if (!params) {
-                log.warn('Empty params. Annoto will not start.');
-                return;
-            }
+                    if (!params) {
+                        log.warn('Empty params. Annoto will not start.');
+                        return;
+                    }
 
-            // Skip filter - if plugin works in Global scope or is present in ACL or has <annoto> tag - continue this script.
-            if (!this.params.isGlobalScope) {
-                if (!(this.params.isACLmatch || this.hasAnnotoTag())) {
-                    log.debug('Annoto is disabled for this page.');
-                    return;
-                }
-            }
+                    // Return if plugin works in Global scope or is present in ACL or has <annoto> tag - continue this script.
+                    if (!this.params.isGlobalScope) {
+                        if (!(this.params.isACLmatch || this.hasAnnotoTag())) {
+                            log.debug('Annoto is disabled for this page.');
+                            return;
+                        }
+                    }
 
-            this.findPlayer();
+                    this.findPlayer();
+
+                }.bind(this),
+                fail: notification.exception
+            }]);
         },
         hasAnnotoTag: function() {
             return ($('annoto').length > 0 && $('annotodisable').length === 0);
@@ -124,7 +134,7 @@ define([
                     player: {
                         type: params.playerType,
                         element: params.playerId,
-                        mediaDetails: function () {
+                        mediaDetails: function() {
                             return {
                                 title: params.mediaTitle,
                                 description: params.mediaDescription,
@@ -147,7 +157,7 @@ define([
             };
 
             if (window.Annoto) {
-                window.Annoto.on('ready', function (api) {
+                window.Annoto.on('ready', function(api) {
                     var jwt = params.userToken;
                     if (api && jwt && jwt !== '') {
                         api.auth(jwt).catch(function() {
