@@ -21,44 +21,63 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-define(['jquery'], function($) {
+define([
+  'jquery',
+  'core/log',
+  'core/notification',
+  'core/ajax'
+], function($, log, notification, Ajax) {
 
     return {
-        init: function(params) {
-            // Check params from backend.
-            this.params = params;
+        init: function() {
+            Ajax.call([{
+                methodname: 'get_jsparams',
+                args: {},
+                done: function(response) {
+                    var params = JSON.parse(response);
+                    this.params = params;
 
-            if (!params) {
-                this.logWarn('Empty params. Annoto will not start.');
-                return;
-            }
+                    if (!params) {
+                        log.warn('Empty params. Annoto will not start.');
+                        return;
+                    }
 
-            // Skip filter - if plugin works in Global scope or is present in ACL or has <annoto> tag - continue this script.
-            if (!this.params.isGlobalScope) {
-                if (!(this.params.isACLmatch || this.hasAnnotoTag())) {
-                    this.log('Annoto is disabled for this page.');
-                    return;
-                }
-            }
+                    // Return if plugin works in Global scope or is present in ACL or has <annoto> tag - continue this script.
+                    if (!this.params.isGlobalScope) {
+                        if (!(this.params.isACLmatch || this.hasAnnotoTag())) {
+                            log.debug('Annoto is disabled for this page.');
+                            return;
+                        }
+                    }
 
-            return this.findPlayer();
+                    this.findPlayer();
+
+                }.bind(this),
+                fail: notification.exception
+            }]);
         },
         hasAnnotoTag: function() {
             return ($('annoto').length > 0 && $('annotodisable').length === 0);
         },
         findPlayer: function() {
-            var h5p = $('iframe.h5p-iframe').first().get(0);
-            var youtube = $('iframe[src*="youtube.com"]').first().get(0);
-            var vimeo = $('iframe[src*="vimeo.com"]').first().get(0);
-            var videotag = $('video').first().get(0);
 
-            if (h5p) {
+            var h5p = $('iframe.h5p-iframe').first().get(0),
+                youtube = $('iframe[src*="youtube.com"]').first().get(0),
+                vimeo = $('iframe[src*="vimeo.com"]').first().get(0),
+                videojs = $('.video-js').first().get(0),
+                annotoplayer = '';
+
+            if (videojs) {
+                annotoplayer = videojs;
+                this.params.playerType = 'videojs';
+            } else if (h5p) {
                 annotoplayer = h5p;
                 this.params.playerType = 'h5p';
-            } else if (videotag) {
-                annotoplayer = videotag;
-                this.params.playerType = 'videojs';
             } else if (youtube) {
+                var youtubeSrc = youtube.src;
+                if (youtubeSrc.search(/enablejsapi/i) === -1) {
+                    youtube.src = (youtubeSrc.search(/[?]/) === -1) ? youtubeSrc + '?enablejsapi=1' : youtubeSrc + '&enablejsapi=1';
+                }
                 annotoplayer = youtube;
                 this.params.playerType = 'youtube';
             } else if (vimeo) {
@@ -67,7 +86,6 @@ define(['jquery'], function($) {
             } else {
                 return;
             }
-
             if (!annotoplayer.id || annotoplayer.id === '') {
                 annotoplayer.id = this.params.defaultPlayerId;
             }
@@ -80,16 +98,15 @@ define(['jquery'], function($) {
                 return;
             }
             this.bootsrapDone = true;
-            return require([this.params.bootstrapUrl], this.bootWidget.bind(this));
+            require([this.params.bootstrapUrl], this.bootWidget.bind(this));
         },
         bootWidget: function() {
             var params = this.params;
-            var that = this;
             var nonOverlayTimelinePlayers = ['youtube', 'vimeo'];
             var innerAlignPlayers = ['h5p'];
             var horizontalAlign = 'element_edge';
             if (!params.widgetOverlay || params.widgetOverlay === 'auto') {
-                horizontalAlign = (innerAlignPlayers.indexOf(params.playerType) !== -1) ? 'inner' : 'element_edge'
+                horizontalAlign = (innerAlignPlayers.indexOf(params.playerType) !== -1) ? 'inner' : 'element_edge';
             } else if (params.widgetOverlay === 'inner') {
                 horizontalAlign = 'inner';
             }
@@ -107,22 +124,19 @@ define(['jquery'], function($) {
                     vertical: params.alignVertical,
                     horizontal: horizontalAlign,
                 },
-                ux :{
+                ux: {
                     ssoAuthRequestHandle: function() {
-                        window.location.replace(params.loginUrl)
+                        window.location.replace(params.loginUrl);
                     },
-                    /* logoutRequestHandle: function() {
-                        window.location.replace(params.logoutUrl)
-                    } */
                 },
                 zIndex: params.zIndex ? params.zIndex : 100,
                 widgets: [{
                     player: {
                         type: params.playerType,
                         element: params.playerId,
-                        mediaDetails : function () {
+                        mediaDetails: function() {
                             return {
-                                title : params.mediaTitle,
+                                title: params.mediaTitle,
                                 description: params.mediaDescription,
                                 group: {
                                     id: params.mediaGroupId,
@@ -143,11 +157,11 @@ define(['jquery'], function($) {
             };
 
             if (window.Annoto) {
-                window.Annoto.on('ready', function (api) {
+                window.Annoto.on('ready', function(api) {
                     var jwt = params.userToken;
                     if (api && jwt && jwt !== '') {
                         api.auth(jwt).catch(function() {
-                            that.logError('Annoto SSO auth error');
+                            log.error('Annoto SSO auth error');
                         });
                     }
                 });
@@ -162,17 +176,8 @@ define(['jquery'], function($) {
                     window.Annoto.boot(config);
                 }
             } else {
-                that.logWarn('Annoto not loaded');
+                log.warn('Annoto not loaded');
             }
-        },
-        log: function(msg, arg) {
-            window.console && console.debug('AnnotoFilterPlugin: ' + msg, arg || '');
-        },
-        logWarn: function(msg, arg) {
-            window.console && console.warn('AnnotoFilterPlugin: ' + msg, arg || '');
-        },
-        logError: function(msg, err) {
-            window.console && console.error('AnnotoFilterPlugin: ' + msg, err || '');
         }
     };
 });

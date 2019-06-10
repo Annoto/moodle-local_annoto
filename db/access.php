@@ -15,6 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Capability definitions for this module.
  * @package    local_annoto
  * @copyright  Annoto Ltd.
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -24,7 +25,7 @@ defined('MOODLE_INTERNAL') || die();
 
 $capabilities = array(
     'local/annoto:moderatediscussion' => array(
-        'riskbitmask' => RISK_SPAM,
+        'riskbitmask' => RISK_DATALOSS,
         'captype' => 'write',
         'contextlevel' => CONTEXT_COURSE,
         'archetypes' => array(
