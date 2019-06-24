@@ -44,6 +44,7 @@ function local_annoto_before_footer() {
 /**
  * Function gets user token for Annoto script.
  * @param stdClass $settings the plugin global settings.
+ * @param int $courseid the id of the course.
  * @return string
  */
 function local_annoto_get_user_token($settings, $courseid) {
@@ -89,6 +90,7 @@ function local_annoto_get_user_token($settings, $courseid) {
 
 /**
  * Function gets current language for Annoto script.
+ * @param stdClass $course Course object
  * @return string
  */
 function local_annoto_get_lang($course) {
@@ -109,6 +111,7 @@ function local_annoto_get_lang($course) {
 /**
  * Function defines either is current user a 'moderator' or not (in the context of Annoto script).
  * @param stdClass $settings the plugin global settings.
+ * @param int $courseid the id of the course.
  * @return bolean
  */
 function local_annoto_is_moderator($settings, $courseid) {

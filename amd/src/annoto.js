@@ -34,13 +34,12 @@ define([
             Ajax.call([{
                 methodname: 'get_jsparams',
                 args: {
-                  courseid: courseid,
-                  pageurl: pageurl,
-                  modid: modid
+                    courseid: courseid,
+                    pageurl: pageurl,
+                    modid: modid
                 },
                 done: function(response) {
                     var params = JSON.parse(response);
-                    console.dir(params);
                     this.params = params;
 
                     if (!params) {
