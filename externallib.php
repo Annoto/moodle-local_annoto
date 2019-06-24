@@ -40,7 +40,11 @@ class local_annoto_external extends external_api {
      */
     public static function get_jsparams_parameters() {
         return new external_function_parameters(
-                array()
+                array(
+                  'courseid' => new external_value(PARAM_INT, 'Course id', VALUE_DEFAULT, null),
+                  'pageurl' => new external_value(PARAM_URL, 'Page URL', VALUE_DEFAULT, null),
+                  'modid' => new external_value(PARAM_INT, 'Mod id', VALUE_OPTIONAL)
+                )
         );
     }
 
@@ -56,8 +60,8 @@ class local_annoto_external extends external_api {
      * Get parameters for Anooto's JS script
      * @return array
      */
-    public static function get_jsparams() {
-        return json_encode(local_annoto_get_jsparams());
+    public static function get_jsparams($courseid, $pageurl, $modid) {
+        return local_annoto_get_jsparams($courseid, $pageurl, $modid);
     }
 
 }

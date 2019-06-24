@@ -27,12 +27,17 @@ defined('MOODLE_INTERNAL') || die();
  * Callback function - injects Annoto's JS into every page.
  */
 function local_annoto_before_footer() {
-    global $PAGE;
+    global $PAGE, $COURSE, $USER;
 
     // Start local_annoto only on the course page or at course module pages.
     if ((strpos($PAGE->pagetype, 'mod-') !== false) ||
         (strpos($PAGE->pagetype, 'course-view-') !== false)) {
-        $PAGE->requires->js_call_amd('local_annoto/annoto', 'init');
+
+        $courseid = $COURSE->id;
+        $pageurl = $PAGE->url->out();
+        $modid = $PAGE->cm->id ?? 0;
+
+        $PAGE->requires->js_call_amd('local_annoto/annoto', 'init', array($courseid, $pageurl, $modid));
     }
 }
 
@@ -40,8 +45,9 @@ function local_annoto_before_footer() {
  * Function prepares parameters for Anooto's JS script
  * @return array
  */
-function local_annoto_get_jsparams() {
-    global $CFG, $PAGE;
+function local_annoto_get_jsparams($courseid, $pageurl, $modid) {
+    global $CFG;
+    $course = get_course($courseid);
 
     // Get plugin global settings.
     $settings = get_config('local_annoto');
@@ -58,11 +64,9 @@ function local_annoto_get_jsparams() {
         $iscourseinacl = false;
         $isurlinacl = false;
 
-        if (is_object($PAGE->course)) {
-            $iscourseinacl = in_array($PAGE->course->id, $aclarr);
-        }
+        $iscourseinacl = in_array($courseid, $aclarr);
+
         if (!$iscourseinacl) {
-            $pageurl = $PAGE->url->out();
             $isurlinacl = in_array($pageurl, $aclarr);
         }
         $isaclmatch = ($iscourseinacl || $isurlinacl);
@@ -71,20 +75,18 @@ function local_annoto_get_jsparams() {
     // Get login, logout urls.
     $loginurl = $CFG->wwwroot . "/login/index.php";
     $logouturl = $CFG->wwwroot . "/login/logout.php?sesskey=" . sesskey();
-    // Get activity data for mediaDetails.
-    $cmtitle = $PAGE->cm->name ?? ''; // Set empty value, if user is on the course page.
-    $cmintro = $PAGE->activityrecord->intro ?? ''; // Set empty value, if user is on the course page.
 
-    // Get course info.
-    if (is_object($PAGE->course)) {
-        $courseid = $PAGE->course->id;
-        $coursename = $PAGE->course->fullname;
-        $coursesummary = $PAGE->course->summary;
+    // Get activity data for mediaDetails.
+    if ($modid) {
+      $modinfo = get_fast_modinfo($course);
+      $cm = $modinfo->get_cm($modid);
+      $cmtitle = $cm->name;
+      $cmintro = $cm->content ?? ''; // Set empty value, if there is no valid intro.
     }
 
     // Locale settings.
     if ($settings->locale == "auto") {
-        $lang = local_annoto_get_lang();
+        $lang = local_annoto_get_lang($course);
     } else {
         $lang = $settings->locale;
     }
@@ -103,7 +105,7 @@ function local_annoto_get_jsparams() {
     $jsparams = array(
         'bootstrapUrl' => $settings->scripturl,
         'clientId' => $settings->clientid,
-        'userToken' => local_annoto_get_user_token($settings),
+        'userToken' => local_annoto_get_user_token($settings, $courseid),
         'position' => $widgetposition,
         'alignVertical' => $widgetverticalalign,
         'widgetOverlay' => $settings->widgetoverlay,
@@ -114,8 +116,8 @@ function local_annoto_get_jsparams() {
         'mediaTitle' => $cmtitle,
         'mediaDescription' => $cmintro,
         'mediaGroupId' => $courseid,
-        'mediaGroupTitle' => $coursename,
-        'mediaGroupDescription' => $coursesummary,
+        'mediaGroupTitle' => $course->fullname,
+        'mediaGroupDescription' => $course->summary,
         'privateThread' => filter_var($settings->discussionscope, FILTER_VALIDATE_BOOLEAN),
         'locale' => $lang,
         'rtl' => filter_var((substr($lang, 0, 2) === "he"), FILTER_VALIDATE_BOOLEAN),
@@ -125,8 +127,8 @@ function local_annoto_get_jsparams() {
         'isGlobalScope' => $isglobalscope,
         'isACLmatch' => !empty($isaclmatch) ? filter_var($isaclmatch, FILTER_VALIDATE_BOOLEAN) : false,
     );
-
-    return $jsparams;
+echo var_dump(json_encode($jsparams)) ; exit();
+    return  json_encode($jsparams);
 }
 
 /**
@@ -134,10 +136,10 @@ function local_annoto_get_jsparams() {
  * @param stdClass $settings the plugin global settings.
  * @return string
  */
-function local_annoto_get_user_token($settings) {
+function local_annoto_get_user_token($settings, $courseid) {
     global $USER, $PAGE;
 
-    $context = context_system::instance();
+    $context = context_course::instance($courseid);
     $PAGE->set_context($context);
 
     // Is user logged in or is guest.
@@ -160,7 +162,7 @@ function local_annoto_get_user_token($settings) {
     $expire = $issuedat + 60 * 20;             // Adding 20 minutes.
 
     // Check if user is a moderator.
-    $moderator = local_annoto_is_moderator($settings);
+    $moderator = local_annoto_is_moderator($settings, $courseid);
 
     $payload = array(
         "jti" => $USER->id,                     // User's id in Moodle.
@@ -179,11 +181,11 @@ function local_annoto_get_user_token($settings) {
  * Function gets current language for Annoto script.
  * @return string
  */
-function local_annoto_get_lang() {
-    global $PAGE, $SESSION, $COURSE, $USER;
+function local_annoto_get_lang($course) {
+    global $SESSION, $USER;
 
-    if (isset($COURSE->lang) and !empty($COURSE->lang)) {
-        return $COURSE->lang;
+    if (isset($course->lang) and !empty($course->lang)) {
+        return $course->lang;
     }
     if (isset($SESSION->lang) and !empty($SESSION->lang)) {
         return $SESSION->lang;
@@ -199,24 +201,24 @@ function local_annoto_get_lang() {
  * @param stdClass $settings the plugin global settings.
  * @return bolean
  */
-function local_annoto_is_moderator($settings) {
-    global $COURSE, $USER;
+function local_annoto_is_moderator($settings, $courseid) {
+    global $USER;
 
     $reqcapabilities = array(
         'local/annoto:moderatediscussion'
     );
 
-    $coursecontext = context_course::instance($COURSE->id);
+    $context = context_course::instance($courseid);
 
     // Check the minimum required capabilities.
     foreach ($reqcapabilities as $cap) {
-        if (!has_capability($cap, $coursecontext)) {
+        if (!has_capability($cap, $context)) {
             return false;
         }
     }
 
     // Check if user has a role as defined in settings.
-    $userroles = get_user_roles($coursecontext, $USER->id, true);
+    $userroles = get_user_roles($context, $USER->id, true);
     $allowedroles = explode(',', $settings->moderatorroles);
 
     foreach ($userroles as $role) {
