@@ -115,30 +115,17 @@ function local_annoto_get_lang($course) {
  * @return bolean
  */
 function local_annoto_is_moderator($settings, $courseid) {
-    global $USER;
-
-    $reqcapabilities = array(
-        'local/annoto:moderatediscussion'
-    );
-
-    $context = context_course::instance($courseid);
-
-    // Check the minimum required capabilities.
-    foreach ($reqcapabilities as $cap) {
-        if (!has_capability($cap, $context)) {
-            return false;
-        }
-    }
+    global  $USER;
+    $ismoderator = false;
+    $coursecontext = context_course::instance($courseid);
 
     // Check if user has a role as defined in settings.
-    $userroles = get_user_roles($context, $USER->id, true);
+    $userroles = get_user_roles($coursecontext, $USER->id, true);
     $allowedroles = explode(',', $settings->moderatorroles);
-
     foreach ($userroles as $role) {
         if (in_array($role->roleid, $allowedroles)) {
-            return true;
+            $ismoderator = true;
         }
     }
-
-    return false;
+    return $ismoderator;
 }
