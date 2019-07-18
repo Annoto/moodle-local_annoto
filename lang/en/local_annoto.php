@@ -51,7 +51,7 @@ $string['discussionscopedesc'] = 'Choose scope of Annoto discussions: private pe
 $string['discussionscopesitewide'] = 'Site wide';
 $string['discussionscopeprivate'] = 'Private per course';
 $string['moderatorroles'] = 'Moderator roles';
-$string['moderatorrolesdesc'] = 'Specify Who is allowed to moderate the discussions (the selected roles should have the following capabilities as a minimum: moodle/comment:delete, moodle/notes:manage, moodle/question:add, moodle/course:manageactivities, moodle/analytics:listinsights)';
+$string['moderatorrolesdesc'] = 'Specify who is allowed to moderate discussions (only roles that at least include the following capabilities are available: local/annoto:moderatediscussion).';
 
 // UX preferences.
 $string['appuxheading'] = 'Annoto UX Preferences';

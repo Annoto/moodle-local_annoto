@@ -29,10 +29,15 @@ define([
 ], function($, log, notification, Ajax) {
 
     return {
-        init: function() {
+        init: function(courseid, pageurl, modid) {
+
             Ajax.call([{
                 methodname: 'get_jsparams',
-                args: {},
+                args: {
+                    courseid: courseid,
+                    pageurl: pageurl,
+                    modid: modid
+                },
                 done: function(response) {
                     var params = JSON.parse(response);
                     this.params = params;

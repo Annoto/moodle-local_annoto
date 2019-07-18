@@ -24,6 +24,8 @@
 
 defined('MOODLE_INTERNAL') || die;
 
+require_once($CFG->dirroot. '/local/annoto/classes/admin_setting_custompickroles.php');
+
 if ($hassiteconfig) {
 
     $settings = new admin_settingpage('local_annoto', get_string('pluginname', 'local_annoto'));
@@ -67,14 +69,12 @@ if ($hassiteconfig) {
                 'true' => get_string('discussionscopeprivate', 'local_annoto'))));
 
     // Moderators Roles.
-    $settings->add(new admin_setting_pickroles('local_annoto/moderatorroles', get_string('moderatorroles', 'local_annoto'),
+    $settings->add(new admin_setting_custompickroles('local_annoto/moderatorroles', get_string('moderatorroles', 'local_annoto'),
         get_string('moderatorrolesdesc', 'local_annoto'),
         array(
             'manager',
-            'coursecreator',
             'editingteacher',
         )));
-
 
     /* UX preferences. */
     $settings->add(new admin_setting_heading('local_annoto/appuxheading', get_string('appuxheading', 'local_annoto'), ''));
