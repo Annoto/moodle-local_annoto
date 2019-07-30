@@ -24,7 +24,7 @@
 define([], function() {
 
     return {
-            init: function(params) {
+            init: function(params) {console.dir('kaltura amd');
               // Will be initialized to https://github.com/Annoto/widget-api/blob/master/lib/index.d.ts#L12
               var pluginApi;
 
@@ -51,10 +51,11 @@ define([], function() {
 
                       this.kdp.kBind('annotoPluginReady', this.annotoReady.bind(this));
                       this.kdp.kBind('annotoPluginSetup', this.annotoSetup.bind(this));
+                      this.kdp.kBind('doPlay', function(){console.dir('play')});
 
                   },
 
-                  annotoSetup: function(params) {console.dir('sdfds');
+                  annotoSetup: function(params) {console.dir('setup');
                       /**
                        *  config will contain the annoto widget configuration.
                        * This hook provides a chance to modify the configuration if required.
@@ -79,7 +80,7 @@ define([], function() {
                       // config.locale = 'en';
                   },
 
-                  annotoReady: function(api) {
+                  annotoReady: function(api) {console.dir('ready');
                       // api is the API to be used after Annoot is setup
                       // It can be used for SSO auth.
                       // https://github.com/Annoto/widget-api/blob/master/lib/index.d.ts#L12

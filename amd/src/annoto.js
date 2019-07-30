@@ -56,9 +56,7 @@ define([
                         }
                     }
 
-                    if (typeof kWidget != 'undefined') {
-                        kaltura.init(params);
-                    }else {
+                    if (typeof kWidget == 'undefined') {
                         this.findPlayer();
                     }
 
@@ -76,13 +74,8 @@ define([
                 vimeo = $('iframe[src*="vimeo.com"]').first().get(0),
                 videojs = $('.video-js').first().get(0),
                 jwplayer = $('.jwplayer').first().get(0),
-                // kalturaPlayer = $('[id^="kaltura_player"]').first().get(0),
                 annotoplayer = '';
 
-            // if (kalturaPlayer) {
-            //     console.dir('kaltura_player_1563969381_atik');
-            //     this.params.playerType = 'kaltura';
-            //     return;
             if (videojs) {
                 annotoplayer = videojs;
                 this.params.playerType = 'videojs';
