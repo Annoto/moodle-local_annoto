@@ -3,7 +3,7 @@
     if (typeof kWidget == 'undefined') {
       return;
     }
-    var params = JSON.parse(document.getElementById('annotojsparam').dataset.jsparam);
+    var jsparams = JSON.parse(document.getElementById('annotojsparam').dataset.jsparam);
 
     /**
      *
@@ -58,7 +58,7 @@
             this.kdp.kBind('annotoPluginSetup', this.annotoSetup.bind(this));
         },
 
-        annotoSetup: function() {
+        annotoSetup: function(params) {
             /**
              *  config will contain the annoto widget configuration.
              * This hook provides a chance to modify the configuration if required.
@@ -72,6 +72,8 @@
              * clientId, features, etc. DO NOT CHANGE THE PLAYER TYPE OR PLAYER ELEMENT CONFIG.
             */
 
+            params.config.clientId = jsparams.clientId;
+
             var config = params.config;
             var widget = config.widgets[0];
             var playerConfig = widget.player;
@@ -81,6 +83,7 @@
             ux.ssoAuthRequestHandle = ssoAuthRequestHandle;
             playerConfig.mediaDetails = this.enrichMediaDetails.bind(this);
             // config.locale = 'en';
+
         },
 
         annotoReady: function(api) {
@@ -94,7 +97,11 @@
              * https://github.com/Annoto/moodle-local_annoto/blob/master/amd/src/annoto.js#L167
              * below is simplified version.
              */
-            pluginApi.auth(params.userToken)
+            pluginApi.auth(jsparams.userToken).catch(function() {
+                log.error('Annoto SSO auth error');
+            });
+
+
         },
 
         enrichMediaDetails: function(details) {
