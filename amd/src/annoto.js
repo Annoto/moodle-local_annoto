@@ -26,8 +26,7 @@ define([
   'core/log',
   'core/notification',
   'core/ajax',
-  'local_annoto/kaltura'
-], function($, log, notification, Ajax, kaltura) {
+], function($, log, notification, Ajax) {
 
     return {
         init: function(courseid, pageurl, modid) {
@@ -42,7 +41,6 @@ define([
                 done: function(response) {
                     var params = JSON.parse(response);
                     this.params = params;
-
                     if (!params) {
                         log.warn('Empty params. Annoto will not start.');
                         return;

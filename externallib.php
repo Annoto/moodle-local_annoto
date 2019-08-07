@@ -65,7 +65,7 @@ class local_annoto_external extends external_api {
      */
     public static function get_jsparams($courseid, $pageurl, $modid) {
         global $PAGE;
-        $context = context_course::instance($courseid); // 50 course3
+        $context = context_course::instance($courseid);
         $PAGE->set_context($context);
         return json_encode(get_jsparam($courseid, $pageurl, $modid), JSON_HEX_TAG);
     }
