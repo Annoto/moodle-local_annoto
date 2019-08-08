@@ -24,10 +24,15 @@
 defined('MOODLE_INTERNAL') || die();
 
 /**
- * Callback function - injects Annoto's JS into every page.
+ * Allow plugins to provide some content to be rendered in the navbar.
+ * The plugin must define a PLUGIN_render_navbar_output function that returns
+ * the HTML they wish to add to the navbar.
+ *
+ * @return string HTML for the navbar
  */
-function local_annoto_before_footer() {
+function local_annoto_render_navbar_output() {
     global $PAGE, $COURSE, $USER;
+    $output = '';
 
     // Start local_annoto only on the course page or at course module pages.
     if ((strpos($PAGE->pagetype, 'mod-') !== false) ||
@@ -39,25 +44,10 @@ function local_annoto_before_footer() {
 
         $PAGE->requires->js('/local/annoto/kaltura.js');
         $PAGE->requires->js_call_amd('local_annoto/annoto', 'init', array($courseid, $pageurl, $modid));
+
+        $jsparam = json_encode(get_jsparam($courseid, $pageurl, $modid));
+        $output = "<li class='sr-only' id='annotojsparam' data-jsparam='".$jsparam."'></li>";
     }
-}
-
-/**
- * Allow plugins to provide some content to be rendered in the navbar.
- * The plugin must define a PLUGIN_render_navbar_output function that returns
- * the HTML they wish to add to the navbar.
- *
- * @return string HTML for the navbar
- */
-function local_annoto_render_navbar_output() {
-    global $PAGE, $COURSE, $USER;
-
-    $courseid = $COURSE->id;
-    $pageurl = $PAGE->url->out();
-    $modid = $PAGE->cm->id ?? 0;
-
-    $jsparam = json_encode(get_jsparam($courseid, $pageurl, $modid));
-    $output = "<li class='sr-only' id='annotojsparam' data-jsparam='".$jsparam."'></li>";
     return $output;
 }
 

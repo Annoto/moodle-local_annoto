@@ -55,7 +55,8 @@ define([
                     }
 
                     if (typeof kWidget == 'undefined') {
-                        this.findPlayer();
+                        var self = this;
+                        $( document ).ready(self.findPlayer.bind(this));
                     }
 
                 }.bind(this),
@@ -99,6 +100,7 @@ define([
             if (!annotoplayer.id || annotoplayer.id === '') {
                 annotoplayer.id = this.params.defaultPlayerId;
             }
+
             this.params.playerId = annotoplayer.id;
 
             this.bootstrap();
