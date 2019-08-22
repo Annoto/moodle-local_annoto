@@ -126,12 +126,13 @@ function local_annoto_is_moderator($settings, $courseid) {
     global  $USER;
     $ismoderator = false;
     $coursecontext = context_course::instance($courseid);
+    $capabilities = 'local/annoto:moderatediscussion';
 
     // Check if user has a role as defined in settings.
     $userroles = get_user_roles($coursecontext, $USER->id, true);
     $allowedroles = explode(',', $settings->moderatorroles);
     foreach ($userroles as $role) {
-        if (in_array($role->roleid, $allowedroles)) {
+        if (in_array($role->roleid, $allowedroles) && has_capability($capabilities, $coursecontext)) {
             $ismoderator = true;
         }
     }
