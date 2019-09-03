@@ -55,10 +55,12 @@ define([
                     }
 
                     if (typeof kWidget != 'undefined' && M.kaltura) {
+                        log.info('Kaltura loaded');
                         window.KApps.annotoApp.kdp.kBind('annotoPluginReady', this.annotoReady.bind(this));
                         this.annotoSetup(M.kaltura.config);
                         M.kaltura.doneCb();
                     } else {
+                        log.info('Kaltrura player not triggered');
                         var self = this;
                         $( document ).ready(self.findPlayer.bind(this));
                     }
@@ -278,8 +280,16 @@ define([
             // This hook gives a change to enrich the details, for example
             // providing group information for private discussions per course/playlist
             // https://github.com/Annoto/widget-api/blob/master/lib/media-details.d.ts#L6.
-
-            var retVal = details || {};
+            var params = this.params;
+            var mediaDetails = {
+                description: params.mediaDescription,
+                group: {
+                    id: params.mediaGroupId,
+                    type: 'playlist',
+                    title: params.mediaGroupTitle,
+                    privateThread: params.privateThread,
+                }
+            };
             /*
              * Annoto Kaltura plugin, already has some details about the media like title.
              * But for moodle if the title and description we get from Moodle is the activity and present,
@@ -289,6 +299,8 @@ define([
              *
              * retVal.group = { ... };
              */
+
+            var retVal = Object.assign(details, mediaDetails);
             return retVal;
         },
     };
