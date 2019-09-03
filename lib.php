@@ -42,11 +42,9 @@ function local_annoto_render_navbar_output() {
         $pageurl = $PAGE->url->out();
         $modid = $PAGE->cm->id ?? 0;
 
-        $PAGE->requires->js('/local/annoto/kaltura.js');
+        $PAGE->requires->js('/local/annoto/initkaltura.js');
         $PAGE->requires->js_call_amd('local_annoto/annoto', 'init', array($courseid, $pageurl, $modid));
 
-        $jsparam = json_encode(get_jsparam($courseid, $pageurl, $modid));
-        $output = "<li class='sr-only' id='annotojsparam' data-jsparam='".$jsparam."'></li>";
     }
     return $output;
 }
