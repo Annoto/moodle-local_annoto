@@ -24,15 +24,12 @@
 defined('MOODLE_INTERNAL') || die();
 
 /**
- * Allow plugins to provide some content to be rendered in the navbar.
- * The plugin must define a PLUGIN_render_navbar_output function that returns
- * the HTML they wish to add to the navbar.
+ * Allow plugins to injecting JS across the site, like analytics.
  *
- * @return string HTML for the navbar
  */
-function local_annoto_render_navbar_output() {
-    global $PAGE, $COURSE, $USER;
-    $output = '';
+
+function local_annoto_before_footer() {
+    global $PAGE, $COURSE;
 
     // Start local_annoto only on the course page or at course module pages.
     if ((strpos($PAGE->pagetype, 'mod-') !== false) ||
@@ -46,7 +43,7 @@ function local_annoto_render_navbar_output() {
         $PAGE->requires->js_call_amd('local_annoto/annoto', 'init', array($courseid, $pageurl, $modid));
 
     }
-    return $output;
+
 }
 
 

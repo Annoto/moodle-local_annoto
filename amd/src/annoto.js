@@ -189,18 +189,12 @@ define([
         annotoReady: function(api) {
             // Api is the API to be used after Annoot is setup
             // It can be used for SSO auth.
-            // https://github.com/Annoto/widget-api/blob/master/lib/index.d.ts#L12.
-            var pluginApi = api;
-
-            /*
-             * This should be essentially same as here:
-             * https://github.com/Annoto/moodle-local_annoto/blob/master/amd/src/annoto.js#L167
-             * below is simplified version.
-             */
-            pluginApi.auth(this.params.userToken).catch(function() {
-                log.error('Annoto SSO auth error');
-            });
-
+            var jwt = this.params.userToken;
+            if (api && jwt && jwt !== '') {
+                api.auth(jwt).catch(function() {
+                    log.error('Annoto SSO auth error');
+                });
+            }
         },
 
         setupKalturaPlugin: function(config) {
