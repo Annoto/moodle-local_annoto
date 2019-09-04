@@ -46,9 +46,8 @@
         annotoSetup: function(params) {
 
             params.await = function(doneCb){
-                M.kaltura = {};
-                M.kaltura.doneCb = doneCb;
-                M.kaltura.config = params.config;
+                window.KApps.annotoApp.doneCb = doneCb;
+                window.KApps.annotoApp.config = params.config;
             };
 
         },

@@ -54,15 +54,14 @@ define([
                         }
                     }
 
-                    if (typeof kWidget != 'undefined' && M.kaltura) {
+                    if (typeof kWidget != 'undefined' && window.KApps) {
                         log.info('Kaltura loaded');
                         window.KApps.annotoApp.kdp.kBind('annotoPluginReady', this.annotoReady.bind(this));
-                        this.annotoSetup(M.kaltura.config);
-                        M.kaltura.doneCb();
+                        this.setupKalturaPlugin(window.KApps.annotoApp.config);
+                        window.KApps.annotoApp.doneCb();
                     } else {
                         log.info('Kaltrura player not triggered');
-                        var self = this;
-                        $( document ).ready(self.findPlayer.bind(this));
+                        $( document ).ready(this.findPlayer.bind(this));
                     }
 
                 }.bind(this),
@@ -78,15 +77,11 @@ define([
                 youtube = $('iframe[src*="youtube.com"]').first().get(0),
                 vimeo = $('iframe[src*="vimeo.com"]').first().get(0),
                 videojs = $('.video-js').first().get(0),
-                jwplayer = $('.jwplayer').first().get(0),
                 annotoplayer = '';
 
             if (videojs) {
                 annotoplayer = videojs;
                 this.params.playerType = 'videojs';
-            } else if (jwplayer) {
-                annotoplayer = jwplayer;
-                this.params.playerType = 'jw';
             } else if (h5p) {
                 annotoplayer = h5p;
                 this.params.playerType = 'h5p';
@@ -175,14 +170,7 @@ define([
             };
 
             if (window.Annoto) {
-                window.Annoto.on('ready', function(api) {
-                    var jwt = params.userToken;
-                    if (api && jwt && jwt !== '') {
-                        api.auth(jwt).catch(function() {
-                            log.error('Annoto SSO auth error');
-                        });
-                    }
-                });
+                window.Annoto.on('ready', this.annotoReady.bind(this));
                 if (params.playerType === 'videojs' && window.requirejs) {
                     window.require(['media_videojs/video-lazy'], function(vjs) {
                         config.widgets[0].player.params = {
@@ -215,7 +203,7 @@ define([
 
         },
 
-        annotoSetup: function(config) {
+        setupKalturaPlugin: function(config) {
             /*
              *  config will contain the annoto widget configuration.
              * This hook provides a chance to modify the configuration if required.
@@ -230,48 +218,28 @@ define([
              * clientId, features, etc. DO NOT CHANGE THE PLAYER TYPE OR PLAYER ELEMENT CONFIG.
             */
             var params = this.params;
-
-            var innerAlignPlayers = ['h5p'];
-            var horizontalAlign = 'element_edge';
-            if (!params.widgetOverlay || params.widgetOverlay === 'auto') {
-                horizontalAlign = (innerAlignPlayers.indexOf(params.playerType) !== -1) ? 'inner' : 'element_edge';
-            } else if (params.widgetOverlay === 'inner') {
-                horizontalAlign = 'inner';
-            }
-
-            var configSrc = {
-                clientId: params.clientId,
-                position: params.position,
-                features: {
-                    tabs: params.featureTab,
-                    cta: params.featureCTA,
-                },
-                width: {
-                    max: (horizontalAlign === 'inner') ? 320 : 360,
-                },
-                align: {
-                    vertical: params.alignVertical,
-                    horizontal: horizontalAlign,
-                },
-                ux: {
-                    ssoAuthRequestHandle: function() {
-                        window.location.replace(params.loginUrl);
-                    },
-                },
-                zIndex: params.zIndex ? params.zIndex : 100,
-                demoMode: params.demoMode,
-                rtl: params.rtl,
-                locale: params.locale,
-            };
-
-            Object.assign(config, configSrc);
-
             var widget = config.widgets[0];
             var playerConfig = widget.player;
             var ux = config.ux || {};
-            config.ux = ux;
+            var align = config.align || {};
+            var features = config.features || {};
 
-            /* ux.ssoAuthRequestHandle = this.ssoAuthRequestHandle; */
+            config.ux = ux;
+            config.align = align;
+            config.features = features;
+
+            config.clientId = params.clientId;
+            config.position = params.position;
+            config.demoMode = params.demoMode;
+            config.locale = params.locale;
+            config.rtl = params.rtl;
+
+            features.tabs = params.featureTab;
+            features.cta = params.featureCTA;
+            align.vertical = params.alignVertical;
+            ux.ssoAuthRequestHandle = function() {
+                window.location.replace(params.loginUrl);
+            };
             playerConfig.mediaDetails = this.enrichMediaDetails.bind(this);
         },
 
@@ -281,26 +249,22 @@ define([
             // providing group information for private discussions per course/playlist
             // https://github.com/Annoto/widget-api/blob/master/lib/media-details.d.ts#L6.
             var params = this.params;
-            var mediaDetails = {
-                description: params.mediaDescription,
-                group: {
-                    id: params.mediaGroupId,
-                    type: 'playlist',
-                    title: params.mediaGroupTitle,
-                    privateThread: params.privateThread,
-                }
+            var retVal = details || {};
+
+            retVal.description = retVal.description ? retVal.description : params.mediaDescription;
+            retVal.group = {
+                id: params.mediaGroupId,
+                type: 'playlist',
+                title: params.mediaGroupTitle,
+                privateThread: params.privateThread,
             };
             /*
              * Annoto Kaltura plugin, already has some details about the media like title.
              * But for moodle if the title and description we get from Moodle is the activity and present,
              * we should override it, if it's embedded in places where there is no Moodle media title, don't change it.
              * The group should always be set as done here:
-             * https://github.com/Annoto/moodle-local_annoto/blob/master/amd/src/annoto.js#L142
-             *
-             * retVal.group = { ... };
              */
 
-            var retVal = Object.assign(details, mediaDetails);
             return retVal;
         },
     };
