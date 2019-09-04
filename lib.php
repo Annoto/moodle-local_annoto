@@ -24,10 +24,12 @@
 defined('MOODLE_INTERNAL') || die();
 
 /**
- * Callback function - injects Annoto's JS into every page.
+ * Allow plugins to injecting JS across the site, like analytics.
+ *
  */
+
 function local_annoto_before_footer() {
-    global $PAGE, $COURSE, $USER;
+    global $PAGE, $COURSE;
 
     // Start local_annoto only on the course page or at course module pages.
     if ((strpos($PAGE->pagetype, 'mod-') !== false) ||
@@ -37,9 +39,13 @@ function local_annoto_before_footer() {
         $pageurl = $PAGE->url->out();
         $modid = $PAGE->cm->id ?? 0;
 
+        $PAGE->requires->js('/local/annoto/initkaltura.js');
         $PAGE->requires->js_call_amd('local_annoto/annoto', 'init', array($courseid, $pageurl, $modid));
+
     }
+
 }
+
 
 /**
  * Function gets user token for Annoto script.
@@ -49,9 +55,6 @@ function local_annoto_before_footer() {
  */
 function local_annoto_get_user_token($settings, $courseid) {
     global $USER, $PAGE;
-
-    $context = context_course::instance($courseid);
-    $PAGE->set_context($context);
 
     // Is user logged in or is guest.
     $userloggined = isloggedin();
@@ -118,14 +121,110 @@ function local_annoto_is_moderator($settings, $courseid) {
     global  $USER;
     $ismoderator = false;
     $coursecontext = context_course::instance($courseid);
+    $capabilities = 'local/annoto:moderatediscussion';
 
     // Check if user has a role as defined in settings.
     $userroles = get_user_roles($coursecontext, $USER->id, true);
     $allowedroles = explode(',', $settings->moderatorroles);
     foreach ($userroles as $role) {
-        if (in_array($role->roleid, $allowedroles)) {
+        if (in_array($role->roleid, $allowedroles) && has_capability($capabilities, $coursecontext)) {
             $ismoderator = true;
         }
     }
     return $ismoderator;
+}
+
+/**
+ * Get parameters for Anooto's JS script
+ * @param int $courseid the id of the course.
+ * @param string $pageurl url of the current page.
+ * @param int $modid mod id.
+ * @return array
+ */
+function get_jsparam($courseid, $pageurl, $modid) {
+    global $CFG;
+    $course = get_course($courseid);
+
+    // Get plugin global settings.
+    $settings = get_config('local_annoto');
+
+    // Set id of the video frame where script should be attached.
+    $defaultplayerid = 'annoto_default_player_id';
+    $isglobalscope = filter_var($settings->scope, FILTER_VALIDATE_BOOLEAN);
+
+    // If scope is not Global - check if url is in access list.
+    if (!$isglobalscope) {
+        // ACL.
+        $acltext = ($settings->acl) ? $settings->acl : null;
+        $aclarr = preg_split("/\R/", $acltext);
+        $iscourseinacl = false;
+        $isurlinacl = false;
+
+        $iscourseinacl = in_array($courseid, $aclarr);
+
+        if (!$iscourseinacl) {
+            $isurlinacl = in_array($pageurl, $aclarr);
+        }
+        $isaclmatch = ($iscourseinacl || $isurlinacl);
+    }
+
+    // Get login, logout urls.
+    $loginurl = $CFG->wwwroot . "/login/index.php";
+    $logouturl = $CFG->wwwroot . "/login/logout.php?sesskey=" . sesskey();
+
+    // Get activity data for mediaDetails.
+    $cmtitle = '';
+    $cmintro = '';
+    if ($modid) {
+        $modinfo = get_fast_modinfo($course);
+        $cm = $modinfo->get_cm($modid);
+        $cmtitle = $cm->name;
+        $cmintro = $cm->content;
+    }
+
+    // Locale settings.
+    if ($settings->locale == "auto") {
+        $lang = local_annoto_get_lang($course);
+    } else {
+        $lang = $settings->locale;
+    }
+    $widgetposition = 'right';
+    $widgetverticalalign = 'center';
+    if (stripos($settings->widgetposition, 'left') !== false) {
+        $widgetposition = 'left';
+    }
+    if (stripos($settings->widgetposition, 'top') !== false) {
+        $widgetverticalalign = 'top';
+    }
+    if (stripos($settings->widgetposition, 'bottom') !== false) {
+        $widgetverticalalign = 'bottom';
+    }
+
+    $jsparams = array(
+        'bootstrapUrl' => $settings->scripturl,
+        'clientId' => $settings->clientid,
+        'userToken' => local_annoto_get_user_token($settings, $courseid),
+        'position' => $widgetposition,
+        'alignVertical' => $widgetverticalalign,
+        'widgetOverlay' => $settings->widgetoverlay,
+        'featureTab' => !empty($settings->tabs) ? filter_var($settings->tabs, FILTER_VALIDATE_BOOLEAN) : true,
+        'featureCTA' => !empty($settings->cta) ? filter_var($settings->cta, FILTER_VALIDATE_BOOLEAN) : false,
+        'loginUrl' => $loginurl,
+        'logoutUrl' => $logouturl,
+        'mediaTitle' => $cmtitle,
+        'mediaDescription' => $cmintro,
+        'mediaGroupId' => $courseid,
+        'mediaGroupTitle' => $course->fullname,
+        'mediaGroupDescription' => $course->summary,
+        'privateThread' => filter_var($settings->discussionscope, FILTER_VALIDATE_BOOLEAN),
+        'locale' => $lang,
+        'rtl' => filter_var((substr($lang, 0, 2) === "he"), FILTER_VALIDATE_BOOLEAN),
+        'demoMode' => filter_var($settings->demomode, FILTER_VALIDATE_BOOLEAN),
+        'defaultPlayerId' => $defaultplayerid,
+        'zIndex' => !empty($settings->zindex) ? filter_var($settings->zindex, FILTER_VALIDATE_INT) : 100,
+        'isGlobalScope' => $isglobalscope,
+        'isACLmatch' => !empty($isaclmatch) ? filter_var($isaclmatch, FILTER_VALIDATE_BOOLEAN) : false,
+    );
+
+    return $jsparams;
 }

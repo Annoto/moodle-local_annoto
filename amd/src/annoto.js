@@ -25,7 +25,7 @@ define([
   'jquery',
   'core/log',
   'core/notification',
-  'core/ajax'
+  'core/ajax',
 ], function($, log, notification, Ajax) {
 
     return {
@@ -41,7 +41,6 @@ define([
                 done: function(response) {
                     var params = JSON.parse(response);
                     this.params = params;
-
                     if (!params) {
                         log.warn('Empty params. Annoto will not start.');
                         return;
@@ -55,7 +54,15 @@ define([
                         }
                     }
 
-                    this.findPlayer();
+                    if (typeof kWidget != 'undefined' && window.KApps) {
+                        log.info('Kaltura loaded');
+                        window.KApps.annotoApp.kdp.kBind('annotoPluginReady', this.annotoReady.bind(this));
+                        this.setupKalturaPlugin(window.KApps.annotoApp.config);
+                        window.KApps.annotoApp.doneCb();
+                    } else {
+                        log.info('Kaltrura player not triggered');
+                        $( document ).ready(this.findPlayer.bind(this));
+                    }
 
                 }.bind(this),
                 fail: notification.exception
@@ -94,6 +101,7 @@ define([
             if (!annotoplayer.id || annotoplayer.id === '') {
                 annotoplayer.id = this.params.defaultPlayerId;
             }
+
             this.params.playerId = annotoplayer.id;
 
             this.bootstrap();
@@ -162,14 +170,7 @@ define([
             };
 
             if (window.Annoto) {
-                window.Annoto.on('ready', function(api) {
-                    var jwt = params.userToken;
-                    if (api && jwt && jwt !== '') {
-                        api.auth(jwt).catch(function() {
-                            log.error('Annoto SSO auth error');
-                        });
-                    }
-                });
+                window.Annoto.on('ready', this.annotoReady.bind(this));
                 if (params.playerType === 'videojs' && window.requirejs) {
                     window.require(['media_videojs/video-lazy'], function(vjs) {
                         config.widgets[0].player.params = {
@@ -183,6 +184,82 @@ define([
             } else {
                 log.warn('Annoto not loaded');
             }
-        }
+        },
+
+        annotoReady: function(api) {
+            // Api is the API to be used after Annoot is setup
+            // It can be used for SSO auth.
+            var jwt = this.params.userToken;
+            if (api && jwt && jwt !== '') {
+                api.auth(jwt).catch(function() {
+                    log.error('Annoto SSO auth error');
+                });
+            }
+        },
+
+        setupKalturaPlugin: function(config) {
+            /*
+             *  config will contain the annoto widget configuration.
+             * This hook provides a chance to modify the configuration if required.
+             * Below we use this chance to attach the ssoAuthRequestHandle and mediaDetails hooks.
+             * https://github.com/Annoto/widget-api/blob/master/lib/config.d.ts#L128
+             *
+             * For the moodle plugin this the place to make all the configuration as done here
+             * https://github.com/Annoto/moodle-local_annoto/blob/master/amd/src/annoto.js#L118
+             *
+             * NOTICE: config is already setup by the Kaltura Annoto plugin,
+             * so we need only to override the required configuration, such as
+             * clientId, features, etc. DO NOT CHANGE THE PLAYER TYPE OR PLAYER ELEMENT CONFIG.
+            */
+            var params = this.params;
+            var widget = config.widgets[0];
+            var playerConfig = widget.player;
+            var ux = config.ux || {};
+            var align = config.align || {};
+            var features = config.features || {};
+
+            config.ux = ux;
+            config.align = align;
+            config.features = features;
+
+            config.clientId = params.clientId;
+            config.position = params.position;
+            config.demoMode = params.demoMode;
+            config.locale = params.locale;
+            config.rtl = params.rtl;
+
+            features.tabs = params.featureTab;
+            features.cta = params.featureCTA;
+            align.vertical = params.alignVertical;
+            ux.ssoAuthRequestHandle = function() {
+                window.location.replace(params.loginUrl);
+            };
+            playerConfig.mediaDetails = this.enrichMediaDetails.bind(this);
+        },
+
+        enrichMediaDetails: function(details) {
+            // The details contains MediaDetails the plugin has managed to obtain
+            // This hook gives a change to enrich the details, for example
+            // providing group information for private discussions per course/playlist
+            // https://github.com/Annoto/widget-api/blob/master/lib/media-details.d.ts#L6.
+            var params = this.params;
+            var retVal = details || {};
+
+            retVal.description = retVal.description ? retVal.description : params.mediaDescription;
+            retVal.group = {
+                id: params.mediaGroupId,
+                type: 'playlist',
+                title: params.mediaGroupTitle,
+                privateThread: params.privateThread,
+            };
+            /*
+             * Annoto Kaltura plugin, already has some details about the media like title.
+             * But for moodle if the title and description we get from Moodle is the activity and present,
+             * we should override it, if it's embedded in places where there is no Moodle media title, don't change it.
+             * The group should always be set as done here:
+             */
+
+            return retVal;
+        },
     };
 });
