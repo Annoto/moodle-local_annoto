@@ -77,11 +77,15 @@ define([
                 youtube = $('iframe[src*="youtube.com"]').first().get(0),
                 vimeo = $('iframe[src*="vimeo.com"]').first().get(0),
                 videojs = $('.video-js').first().get(0),
+                jwplayer = $('.jwplayer').first().get(0),
                 annotoplayer = '';
 
             if (videojs) {
                 annotoplayer = videojs;
                 this.params.playerType = 'videojs';
+            } else if (jwplayer) {
+                annotoplayer = jwplayer;
+                this.params.playerType = 'jw';
             } else if (h5p) {
                 annotoplayer = h5p;
                 this.params.playerType = 'h5p';
