@@ -32,24 +32,27 @@
     window.KApps = window.KApps || {};
 
     KApps.annotoApp = {
-        kdp: null,
+        kdpMap: {},
 
         kWidgetReady: function(player_id) {
-            this.kdp = window.kdp;
-            if (!this.kdp) {
-                this.kdp = document.getElementById(player_id);
+            if (!this.kdpMap[player_id]) {
+                var p = document.getElementById(player_id);
+                this.kdpMap[player_id] = {
+                    player: p
+                };
+                p.kBind('annotoPluginSetup', function(params) {
+                    KApps.annotoApp.annotoSetup(player_id, params);
+                });
             }
-
-            this.kdp.kBind('annotoPluginSetup', this.annotoSetup.bind(this));
         },
 
-        annotoSetup: function(params) {
+        annotoSetup: function(id, params) {
+            var kdp = this.kdpMap[id];
+            kdp.config = params.config;
 
             params.await = function(doneCb){
-                window.KApps.annotoApp.doneCb = doneCb;
-                window.KApps.annotoApp.config = params.config;
+                kdp.doneCb = doneCb;
             };
-
         },
     }
 

@@ -54,11 +54,17 @@ define([
                         }
                     }
 
-                    if (typeof kWidget != 'undefined' && window.KApps) {
+                    if (typeof kWidget != 'undefined' && window.KApps && window.KApps.annotoApp) {
+                        var kdpMap = window.KApps.annotoApp.kdpMap;
                         log.info('Kaltura loaded');
-                        window.KApps.annotoApp.kdp.kBind('annotoPluginReady', this.annotoReady.bind(this));
-                        this.setupKalturaPlugin(window.KApps.annotoApp.config);
-                        window.KApps.annotoApp.doneCb();
+                        for (var kdpMapKey in kdpMap) {
+                            if (kdpMap.hasOwnProperty(kdpMapKey)) {
+                                var kdp = kdpMap[kdpMapKey];
+                                kdp.player.kBind('annotoPluginReady', this.annotoReady.bind(this));
+                                this.setupKalturaPlugin(kdp.config);
+                                kdp.doneCb();
+                            }
+                        }
                     } else {
                         log.info('Kaltrura player not triggered');
                         $( document ).ready(this.findPlayer.bind(this));
