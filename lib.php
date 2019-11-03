@@ -37,7 +37,10 @@ function local_annoto_before_footer() {
 
         $courseid = $COURSE->id;
         $pageurl = $PAGE->url->out();
-        $modid = $PAGE->cm->id ?? 0;
+        $modid = 0;
+        if (isset($PAGE->cm->id)) {
+            $modid = (int)$PAGE->cm->id;
+        }
 
         $PAGE->requires->js('/local/annoto/initkaltura.js');
         $PAGE->requires->js_call_amd('local_annoto/annoto', 'init', array($courseid, $pageurl, $modid));
