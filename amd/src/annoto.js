@@ -30,7 +30,7 @@ define([
 
     return {
         init: function(courseid, pageurl, modid) {
-
+            log.info('Annoto: plugin init');
             Ajax.call([{
                 methodname: 'get_jsparams',
                 args: {
@@ -42,21 +42,21 @@ define([
                     var params = JSON.parse(response);
                     this.params = params;
                     if (!params) {
-                        log.warn('Empty params. Annoto will not start.');
+                        log.error('Annoto: empty params. Plugin won`t start.');
                         return;
                     }
 
                     // Return if plugin works in Global scope or is present in ACL or has <annoto> tag - continue this script.
                     if (!this.params.isGlobalScope) {
                         if (!(this.params.isACLmatch || this.hasAnnotoTag())) {
-                            log.debug('Annoto is disabled for this page.');
+                            log.warn('Annoto: plugin is disabled for this page.');
                             return;
                         }
                     }
 
                     if (typeof kWidget != 'undefined' && window.KApps && window.KApps.annotoApp) {
                         var kdpMap = window.KApps.annotoApp.kdpMap;
-                        log.info('Kaltura loaded');
+                        log.info('Annoto: Kaltura loaded');
                         for (var kdpMapKey in kdpMap) {
                             if (kdpMap.hasOwnProperty(kdpMapKey)) {
                                 var kdp = kdpMap[kdpMapKey];
@@ -66,7 +66,7 @@ define([
                             }
                         }
                     } else {
-                        log.info('Kaltrura player not triggered');
+                        log.info('Annoto: Kaltrura player not triggered');
                         $( document ).ready(this.findPlayer.bind(this));
                     }
 
@@ -192,7 +192,7 @@ define([
                     window.Annoto.boot(config);
                 }
             } else {
-                log.warn('Annoto not loaded');
+                log.warn('Annoto: plugin didn`t load');
             }
         },
 
@@ -202,7 +202,7 @@ define([
             var jwt = this.params.userToken;
             if (api && jwt && jwt !== '') {
                 api.auth(jwt).catch(function() {
-                    log.error('Annoto SSO auth error');
+                    log.error('Annoto: SSO auth error');
                 });
             }
         },
