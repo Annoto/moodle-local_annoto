@@ -29,7 +29,7 @@ defined('MOODLE_INTERNAL') || die();
  */
 
 function local_annoto_before_footer() {
-    global $PAGE, $COURSE;
+    global $PAGE, $COURSE, $OUTPUT;
 
     // Start local_annoto only on the course page or at course module pages.
     if ((strpos($PAGE->pagetype, 'mod-') !== false) ||
@@ -44,9 +44,12 @@ function local_annoto_before_footer() {
 
         $PAGE->requires->js('/local/annoto/initkaltura.js');
         $PAGE->requires->js_call_amd('local_annoto/annoto', 'init', array($courseid, $pageurl, $modid));
-
+        // SETTINGS FOR DEVELOPMENT SERVERS - not intended for production use!!!
+        echo $OUTPUT->notification('Annoto: The plugin inits scripts to handling video content on this page', 'info');
+    }else {
+        // SETTINGS FOR DEVELOPMENT SERVERS - not intended for production use!!!
+        echo $OUTPUT->notification('Annoto: The plugin not configured for this page', 'warning');
     }
-
 }
 
 
