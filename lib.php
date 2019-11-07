@@ -24,13 +24,14 @@
 defined('MOODLE_INTERNAL') || die();
 
 /**
- * Allow plugins to injecting JS across the site, like analytics.
+ * Give plugins an opportunity to inject extra html content. The callback
+ * must always return a string containing valid html.
  *
+ * @return string HTML
  */
-
-function local_annoto_before_footer() {
+function local_annoto_before_standard_top_of_body_html() {
     global $PAGE, $COURSE;
-
+    $html = '';
     // Start local_annoto only on the course page or at course module pages.
     if ((strpos($PAGE->pagetype, 'mod-') !== false) ||
         (strpos($PAGE->pagetype, 'course-view-') !== false)) {
@@ -46,7 +47,7 @@ function local_annoto_before_footer() {
         $PAGE->requires->js_call_amd('local_annoto/annoto', 'init', array($courseid, $pageurl, $modid));
 
     }
-
+    return $html;
 }
 
 
