@@ -29,9 +29,9 @@ define([
 ], function($, log, notification, Ajax) {
 
     window.moodleAnnoto = window.moodleAnnoto || {};
-    
+
     try {
-        if (!!window.sessionStorage.getItem('moodleAnnotoDebug')) {
+        if (window.sessionStorage.getItem('moodleAnnotoDebug')) {
             log = console;
         }
     } catch(err) {}
@@ -283,7 +283,7 @@ define([
             // providing group information for private discussions per course/playlist
             // https://github.com/Annoto/widget-api/blob/master/lib/media-details.d.ts#L6.
             // Annoto Kaltura plugin, already has some details about the media like title.
-            // 
+            //
             var params = this.params;
             var retVal = details || {};
 

@@ -15,7 +15,7 @@
 
     var annotoDebugLog = function() {};
     try {
-        if (!!window.sessionStorage.getItem('moodleAnnotoDebugKaltura')) {
+        if (window.sessionStorage.getItem('moodleAnnotoDebugKaltura')) {
             annotoDebugLog = function(msg, arg) {
                 console.info('AnnotoMoodle | Kaltura: ' + msg, arg || '');
             }
