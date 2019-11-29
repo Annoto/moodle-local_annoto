@@ -1,12 +1,6 @@
 (function () {
     /*
-     *
-     * For Kaltura player, Annoto widget is loaded and bootstrapped by Annoto Kaltura plugin.
-     * So the Moodle plugin should not do it. Instead Annoto Kaltura plugin will expose the annoto API when it's ready.
-     *
-     * Kaltura Embed, works by first loading Kaltura script.
-     * The scripts set a global kWidget object.
-     *
+     * Kaltura Embed, works by first loading Kaltura script. The scripts set a global kWidget object.
      * If Annoto plugin is run before, the Kaltura script is loaded, then kWidget would not be available.
      * and the script below will poll until it is, every 100msec, giving up after 50 retries.
      */
@@ -71,10 +65,10 @@
         return true;
     }
 
-    var annotoKalturaHookSetupRetry = 0;
+    var setupRetry = 0;
     function annotoKalturaHookSetupPoll() {
-        if (!window.moodleAnnoto.kApp && annotoKalturaHookSetupRetry < 50 && !annotoKalturaHookSetup()) {
-            annotoKalturaHookSetupRetry++;
+        if (!window.moodleAnnoto.kApp && setupRetry < 50 && !annotoKalturaHookSetup()) {
+            setupRetry++;
             setTimeout(annotoKalturaHookSetupPoll, 100);
         }
     }
