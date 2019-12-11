@@ -28,9 +28,17 @@ define([
   'core/ajax',
 ], function($, log, notification, Ajax) {
 
+    window.moodleAnnoto = window.moodleAnnoto || {};
+
+    try {
+        if (window.sessionStorage.getItem('moodleAnnotoDebug')) {
+            log = console;
+        }
+    } catch(err) {}
+
     return {
         init: function(courseid, pageurl, modid) {
-            log.info('Annoto: plugin init');
+            log.info('AnnotoMoodle: plugin init');
             Ajax.call([{
                 methodname: 'get_jsparams',
                 args: {
@@ -42,43 +50,41 @@ define([
                     var params = JSON.parse(response);
                     this.params = params;
                     if (!params) {
-                        log.error('Annoto: empty params. Plugin won`t start.');
+                        log.error('AnnotoMoodle: empty params. Plugin won`t start.');
                         return;
                     }
 
                     // Return if plugin works in Global scope or is present in ACL or has <annoto> tag - continue this script.
                     if (!this.params.isGlobalScope) {
                         if (!(this.params.isACLmatch || this.hasAnnotoTag())) {
-                            log.warn('Annoto: plugin is disabled for this page.');
+                            log.info('AnnotoMoodle: plugin is disabled for this page.');
                             return;
                         }
                     }
 
-                    if (typeof kWidget != 'undefined' && window.KApps && window.KApps.annotoApp) {
-                        var kdpMap = window.KApps.annotoApp.kdpMap;
-                        log.info('Annoto: Kaltura loaded');
-                        for (var kdpMapKey in kdpMap) {
-                            if (kdpMap.hasOwnProperty(kdpMapKey)) {
-                                var kdp = kdpMap[kdpMapKey];
-                                kdp.player.kBind('annotoPluginReady', this.annotoReady.bind(this));
-                                this.setupKalturaPlugin(kdp.config);
-                                kdp.doneCb();
-                            }
-                        }
-                    } else {
-                        log.info('Annoto: Kaltrura player not triggered');
-                        $( document ).ready(this.findPlayer.bind(this));
-                    }
+                    this.setupKaltura();
+                    $( document ).ready(this.findPlayer.bind(this));
 
                 }.bind(this),
                 fail: notification.exception
             }]);
         },
+        setupKaltura: function() {
+            var maKApp = window.moodleAnnoto.kApp;
+            window.moodleAnnoto.setupKalturaKdpMap = this.setupKalturaKdpMap.bind(this);
+
+            if (maKApp) {
+                log.info('AnnotoMoodle: Kaltura loaded on init');
+                this.setupKalturaKdpMap(maKApp.kdpMap);
+            } else {
+                log.info('AnnotoMoodle: Kaltura not loaded on init');
+            }
+        },
         hasAnnotoTag: function() {
             return ($('annoto').length > 0 && $('annotodisable').length === 0);
         },
         findPlayer: function() {
-
+            log.info('AnnotoMoodle: detecting player');
             var h5p = $('iframe.h5p-iframe').first().get(0),
                 youtube = $('iframe[src*="youtube.com"]').first().get(0),
                 vimeo = $('iframe[src*="vimeo.com"]').first().get(0),
@@ -115,6 +121,7 @@ define([
             this.params.playerId = annotoplayer.id;
 
             this.bootstrap();
+            log.info('AnnotoMoodle: detected ' + this.params.playerType + ':' + this.params.playerId);
         },
         bootstrap: function() {
             if (this.bootsrapDone) {
@@ -192,7 +199,7 @@ define([
                     window.Annoto.boot(config);
                 }
             } else {
-                log.warn('Annoto: plugin didn`t load');
+                log.warn('AnnotoMoodle: bootstrap didn`t load');
             }
         },
 
@@ -200,22 +207,45 @@ define([
             // Api is the API to be used after Annoot is setup
             // It can be used for SSO auth.
             var jwt = this.params.userToken;
+            log.info('AnnotoMoodle: annoto ready');
             if (api && jwt && jwt !== '') {
                 api.auth(jwt).catch(function() {
-                    log.error('Annoto: SSO auth error');
+                    log.error('AnnotoMoodle: SSO auth error');
                 });
+            } else {
+                log.info('AnnotoMoodle: SSO auth skipped');
             }
         },
 
+        setupKalturaKdpMap: function(kdpMap) {
+            if (!kdpMap) {
+                log.info('AnnotoMoodle: skip setup Kaltura players - missing map');
+                return;
+            }
+            log.info('AnnotoMoodle: setup Kaltura players');
+            for (var kdpMapKey in kdpMap) {
+                if (kdpMap.hasOwnProperty(kdpMapKey)) {
+                    this.setupKalturaKdp(kdpMap[kdpMapKey]);
+                }
+            }
+        },
+        setupKalturaKdp: function(kdp) {
+            if (!kdp.config || kdp.setupDone || !kdp.doneCb) {
+                log.info('AnnotoMoodle: skip Kaltura player: ' + kdp.id);
+                return;
+            }
+            log.info('AnnotoMoodle: setup Kaltura player: ' + kdp.id);
+            kdp.setupDone = true;
+            kdp.player.kBind('annotoPluginReady', this.annotoReady.bind(this));
+            this.setupKalturaPlugin(kdp.config);
+            kdp.doneCb();
+        },
         setupKalturaPlugin: function(config) {
             /*
-             *  config will contain the annoto widget configuration.
+             * config will contain the annoto widget configuration.
              * This hook provides a chance to modify the configuration if required.
              * Below we use this chance to attach the ssoAuthRequestHandle and mediaDetails hooks.
              * https://github.com/Annoto/widget-api/blob/master/lib/config.d.ts#L128
-             *
-             * For the moodle plugin this the place to make all the configuration as done here
-             * https://github.com/Annoto/moodle-local_annoto/blob/master/amd/src/annoto.js#L118
              *
              * NOTICE: config is already setup by the Kaltura Annoto plugin,
              * so we need only to override the required configuration, such as
@@ -252,9 +282,12 @@ define([
             // This hook gives a change to enrich the details, for example
             // providing group information for private discussions per course/playlist
             // https://github.com/Annoto/widget-api/blob/master/lib/media-details.d.ts#L6.
+            // Annoto Kaltura plugin, already has some details about the media like title.
+            //
             var params = this.params;
             var retVal = details || {};
 
+            retVal.title = retVal.title || params.mediaTitle;
             retVal.description = retVal.description ? retVal.description : params.mediaDescription;
             retVal.group = {
                 id: params.mediaGroupId,
@@ -262,12 +295,6 @@ define([
                 title: params.mediaGroupTitle,
                 privateThread: params.privateThread,
             };
-            /*
-             * Annoto Kaltura plugin, already has some details about the media like title.
-             * But for moodle if the title and description we get from Moodle is the activity and present,
-             * we should override it, if it's embedded in places where there is no Moodle media title, don't change it.
-             * The group should always be set as done here:
-             */
 
             return retVal;
         },
