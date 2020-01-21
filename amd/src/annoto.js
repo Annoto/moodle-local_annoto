@@ -34,7 +34,7 @@ define([
         if (window.sessionStorage.getItem('moodleAnnotoDebug')) {
             log = console;
         }
-    } catch(err) {}
+    } catch (err) {}
 
     return {
         init: function(courseid, pageurl, modid) {
@@ -63,11 +63,12 @@ define([
                     }
 
                     this.setupKaltura();
-                    $( document ).ready(this.findPlayer.bind(this));
+                    $(document).ready(this.findPlayer.bind(this));
 
                 }.bind(this),
                 fail: notification.exception
             }]);
+
         },
         setupKaltura: function() {
             var maKApp = window.moodleAnnoto.kApp;
@@ -187,6 +188,7 @@ define([
             };
 
             if (window.Annoto) {
+
                 window.Annoto.on('ready', this.annotoReady.bind(this));
                 if (params.playerType === 'videojs' && window.requirejs) {
                     window.require(['media_videojs/video-lazy'], function(vjs) {
@@ -198,6 +200,9 @@ define([
                 } else {
                     window.Annoto.boot(config);
                 }
+
+                this.checkWidgetVisibility(config);
+
             } else {
                 log.warn('AnnotoMoodle: bootstrap didn`t load');
             }
@@ -206,6 +211,7 @@ define([
         annotoReady: function(api) {
             // Api is the API to be used after Annoot is setup
             // It can be used for SSO auth.
+            this.annotoAPI = api;
             var jwt = this.params.userToken;
             log.info('AnnotoMoodle: annoto ready');
             if (api && jwt && jwt !== '') {
@@ -242,7 +248,7 @@ define([
         },
         setupKalturaPlugin: function(config) {
             /*
-             * config will contain the annoto widget configuration.
+             * Config will contain the annoto widget configuration.
              * This hook provides a chance to modify the configuration if required.
              * Below we use this chance to attach the ssoAuthRequestHandle and mediaDetails hooks.
              * https://github.com/Annoto/widget-api/blob/master/lib/config.d.ts#L128
@@ -298,5 +304,35 @@ define([
 
             return retVal;
         },
+
+        checkWidgetVisibility: function(config) {
+
+          var selectors = {
+              grid: 'body.format-grid #gridshadebox'
+          };
+
+          var observerNodeTatget = document.querySelector(selectors.grid),
+              playerId = this.params.playerId,
+              initialzIndex = config.zIndex,
+              playerNode = document.getElementById(playerId);
+
+          if (observerNodeTatget && playerNode.offsetParent === null) {
+
+              var reloadAnnoto = function() {
+                config.zIndex = playerNode.offsetParent === null ? 0 : initialzIndex;
+                this.annotoAPI.load(config, function(err) {
+                  if (err) {
+                      log.warn('AnnotoMoodle: Error while reloading Annoto configuration');
+                      return;
+                      }
+                      log.info('AnnotoMoodle: Loaded new Configuration!');
+                });
+              };
+
+              var observerConfig = {attributes: true, childList: true, subtree: false},
+                  observer = new MutationObserver(reloadAnnoto.bind(this));
+              observer.observe(observerNodeTatget, observerConfig);
+          }
+        }
     };
 });
