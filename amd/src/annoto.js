@@ -187,6 +187,8 @@ define([
                 locale: params.locale,
             };
 
+            this.config = config;
+
             if (window.Annoto) {
 
                 window.Annoto.on('ready', this.annotoReady.bind(this));
@@ -201,7 +203,7 @@ define([
                     window.Annoto.boot(config);
                 }
 
-                this.checkWidgetVisibility(config);
+                // This.checkWidgetVisibility(config);
 
             } else {
                 log.warn('AnnotoMoodle: bootstrap didn`t load');
@@ -218,6 +220,7 @@ define([
                 api.auth(jwt).catch(function() {
                     log.error('AnnotoMoodle: SSO auth error');
                 });
+                this.checkWidgetVisibility();
             } else {
                 log.info('AnnotoMoodle: SSO auth skipped');
             }
@@ -305,34 +308,44 @@ define([
             return retVal;
         },
 
-        checkWidgetVisibility: function(config) {
+        checkWidgetVisibility: function() {
 
-          var selectors = {
-              grid: 'body.format-grid #gridshadebox'
+          var formatSelectors = {
+            grid: 'body.format-grid #gridshadebox',
+            tabs: 'body.format-tabtopics .yui3-tab-panel'
           };
 
-          var observerNodeTatget = document.querySelector(selectors.grid),
+          var config = this.config,
               playerId = this.params.playerId,
               initialzIndex = config.zIndex,
-              playerNode = document.getElementById(playerId);
+              playerNode = document.getElementById(playerId),
+              tabsid = $(playerNode).parents(formatSelectors.tabs).attr('id'),
+              self = this;
 
-          if (observerNodeTatget && playerNode.offsetParent === null) {
+          formatSelectors.tabs += '#' + tabsid;
 
-              var reloadAnnoto = function() {
-                config.zIndex = playerNode.offsetParent === null ? 0 : initialzIndex;
-                this.annotoAPI.load(config, function(err) {
-                  if (err) {
-                      log.warn('AnnotoMoodle: Error while reloading Annoto configuration');
-                      return;
-                      }
-                      log.info('AnnotoMoodle: Loaded new Configuration!');
-                });
-              };
+          var reloadAnnoto = function() {
+              config.zIndex = playerNode.offsetParent === null ? 0 : initialzIndex;
+              self.annotoAPI.load(config, function(err) {
+                if (err) {
+                    log.warn('AnnotoMoodle: Error while reloading Annoto configuration');
+                    return;
+                  }
+                log.info('AnnotoMoodle: Loaded new Configuration!');
+              });
+          };
 
+          var observerNodeTatget = document.querySelector(Object.values(formatSelectors).join(', '));
+
+          if (observerNodeTatget) {
               var observerConfig = {attributes: true, childList: true, subtree: false},
-                  observer = new MutationObserver(reloadAnnoto.bind(this));
+                  observer = new MutationObserver(reloadAnnoto);
               observer.observe(observerNodeTatget, observerConfig);
+              if (playerNode.offsetParent === null) {
+                  reloadAnnoto();
+              }
           }
+
         }
     };
 });
