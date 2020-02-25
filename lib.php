@@ -23,6 +23,8 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+use Firebase\JWT\JWT as JWT;
+
 /**
  * Allow plugins to injecting JS across the site, like analytics.
  *
@@ -73,8 +75,6 @@ function local_annoto_get_user_token($settings, $courseid) {
     $userpictureurl = $userpicture->get_url($PAGE);
 
     // Create and encode JWT for Annoto script.
-    require_once('JWT.php');                   // Load JWT lib.
-
     $issuedat = time();                        // Get current time.
     $expire = $issuedat + 60 * 20;             // Adding 20 minutes.
 
