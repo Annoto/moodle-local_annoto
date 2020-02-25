@@ -144,7 +144,7 @@ function local_annoto_is_moderator($settings, $courseid) {
  * @param int $modid mod id.
  * @return array
  */
-function get_jsparam($courseid, $pageurl, $modid) {
+function local_annoto_get_jsparam($courseid, $pageurl, $modid) {
     global $CFG;
     $course = get_course($courseid);
 

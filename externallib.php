@@ -74,7 +74,7 @@ class local_annoto_external extends external_api {
 
         $context = context_course::instance($courseid);
         self::validate_context($context);
-        return json_encode(get_jsparam($courseid, $pageurl, $modid), JSON_HEX_TAG);
+        return json_encode(local_annoto_get_jsparam($courseid, $pageurl, $modid), JSON_HEX_TAG);
     }
 
 }
