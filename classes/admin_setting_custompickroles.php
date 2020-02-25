@@ -31,7 +31,7 @@ defined('MOODLE_INTERNAL') || die;
  * @copyright  Annoto Ltd.
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class admin_setting_custompickroles extends admin_setting_configmulticheckbox {
+class local_annoto_admin_setting_custompickroles extends admin_setting_configmulticheckbox {
     /** @var array Array of capabilities which identify roles */
     private $types;
 
