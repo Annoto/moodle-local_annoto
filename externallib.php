@@ -65,16 +65,26 @@ class local_annoto_external extends external_api {
      */
     public static function get_jsparams($courseid, $pageurl, $modid) {
         global $PAGE;
-        $params = self::validate_parameters(self::get_jsparams_parameters(),
-                          array(
-                              'courseid' => $courseid,
-                              'pageurl' => $pageurl,
-                              'modid' => $modid
-                          ));
+        $params = self::validate_parameters(
+            self::get_jsparams_parameters(),
+            array(
+                'courseid' => $courseid,
+                'pageurl' => $pageurl,
+                'modid' => $modid
+            )
+        );
 
         $context = context_course::instance($courseid);
-        self::validate_context($context);
-        return json_encode(local_annoto_get_jsparam($courseid, $pageurl, $modid), JSON_HEX_TAG);
+        $capabilities = 'moodle/search:query'; // Checking permission to prevent unauthorized access.
+        $response = '';
+        if (has_capability($capabilities, $context)) {
+            self::validate_context($context);
+            $response = json_encode(local_annoto_get_jsparam($courseid, $pageurl, $modid), JSON_HEX_TAG);
+        } else {
+            $response = json_encode(false);
+        }
+
+        return $response;
     }
 
 }
