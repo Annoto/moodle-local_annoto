@@ -69,7 +69,8 @@ if ($hassiteconfig) {
                 'true' => get_string('discussionscopeprivate', 'local_annoto'))));
 
     // Moderators Roles.
-    $settings->add(new local_annoto_admin_setting_custompickroles('local_annoto/moderatorroles', get_string('moderatorroles', 'local_annoto'),
+    $settings->add(new local_annoto_admin_setting_custompickroles('local_annoto/moderatorroles',
+        get_string('moderatorroles', 'local_annoto'),
         get_string('moderatorrolesdesc', 'local_annoto'),
         array(
             'manager',
