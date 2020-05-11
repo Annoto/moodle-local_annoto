@@ -34,7 +34,7 @@ define([
         if (window.sessionStorage.getItem('moodleAnnotoDebug')) {
             log = console;
         }
-    } catch(err) {}
+    } catch (err) {}
 
     return {
         init: function(courseid, pageurl, modid) {
@@ -60,10 +60,13 @@ define([
                             log.info('AnnotoMoodle: plugin is disabled for this page.');
                             return;
                         }
+                    } else if (this.hasAnnotoTag()) {
+                        log.info('AnnotoMoodle: plugin is disabled for this page using the Atto plugin.');
+                        return;
                     }
 
                     this.setupKaltura();
-                    $( document ).ready(this.findPlayer.bind(this));
+                    $(document).ready(this.findPlayer.bind(this));
 
                 }.bind(this),
                 fail: notification.exception
@@ -242,7 +245,7 @@ define([
         },
         setupKalturaPlugin: function(config) {
             /*
-             * config will contain the annoto widget configuration.
+             * Config will contain the annoto widget configuration.
              * This hook provides a chance to modify the configuration if required.
              * Below we use this chance to attach the ssoAuthRequestHandle and mediaDetails hooks.
              * https://github.com/Annoto/widget-api/blob/master/lib/config.d.ts#L128
