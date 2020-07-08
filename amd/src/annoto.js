@@ -60,6 +60,9 @@ define([
                             log.info('AnnotoMoodle: plugin is disabled for this page.');
                             return;
                         }
+                    } else if (this.hasAnnotoTag()) {
+                        log.info('AnnotoMoodle: plugin is disabled for this page using the Atto plugin.');
+                        return;
                     }
 
                     this.setupKaltura();
