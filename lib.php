@@ -28,7 +28,7 @@ defined('MOODLE_INTERNAL') || die();
  *
  */
 
-function local_annoto_before_footer() {
+function local_annoto_before_standard_top_of_body_html() {
     global $PAGE, $COURSE;
 
     // Start local_annoto only on the course page or at course module pages.
