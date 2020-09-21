@@ -95,6 +95,7 @@ define([
                 vimeo = $(parent).find('iframe[src*="vimeo.com"]').first().get(0),
                 videojs = $(parent).find('.video-js').first().get(0),
                 jwplayer = $(parent).find('.jwplayer').first().get(0),
+                wistia = $(parent).find('.wistia_embed').first().get(0),
                 annotoPlayer = '';
 
             if (videojs) {
@@ -116,7 +117,10 @@ define([
             } else if (vimeo) {
                 annotoPlayer = vimeo;
                 this.params.playerType = 'vimeo';
-            } else {
+            }else if (wistia) {
+                annotoPlayer = wistia;
+                this.params.playerType = 'wistia';
+            }else {
                 return;
             }
             if (!annotoPlayer.id || annotoPlayer.id === '') {
