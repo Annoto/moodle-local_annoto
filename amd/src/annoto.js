@@ -66,6 +66,7 @@ define([
                     }
 
                     this.setupKaltura();
+                    this.setupWistia();
                     $(document).ready(this.bootstrap.bind(this));
 
                 }.bind(this),
@@ -402,6 +403,75 @@ define([
                 }
             }
 
+        },
+
+        setupWistia: function(){
+            var annotoIframeClient = "https://cdn.annoto.net/widget-iframe-api/latest/client.js",
+                annotoIframeUrl = "https://cdn.annoto.net",
+                wistiaplayer = document.querySelectorAll('iframe');
+
+            wistiaplayer.forEach((iframe) => {
+                var iframeSrc = decodeURIComponent(iframe.src);
+                if (iframeSrc.indexOf(annotoIframeUrl) !== -1) {
+                    require([annotoIframeClient], this.bootWistiaPlayer.bind(this, iframe));
+                    return;
+                }
+            });
+        },
+
+        bootWistiaPlayer: function(iframe, AnnotoIframeApi){
+            var params = this.params,
+                annoto = new AnnotoIframeApi.Client(iframe);
+
+            annoto.onSetup(function (next) {
+                next({
+                    clientId: params.clientId,
+                    position: params.position,
+                    features: {
+                        tabs: params.featureTab,
+                        cta: params.featureCTA,
+                    },
+                    width: {},
+                    align: {
+                        vertical: params.alignVertical,
+                    },
+                    zIndex: params.zIndex ? params.zIndex : 100,
+                    widgets: [{
+                        player: {
+                            mediaDetails: function() {
+                                return {
+                                    title: params.mediaTitle,
+                                    description: params.mediaDescription,
+                                    group: {
+                                        id: params.mediaGroupId,
+                                        type: 'playlist',
+                                        title: params.mediaGroupTitle,
+                                        privateThread: params.privateThread,
+                                    }
+                                };
+                            },
+                        },
+                    }],
+                    demoMode: params.demoMode,
+                    rtl: params.rtl,
+                    locale: params.locale,
+                });
+            });
+
+            annoto.onReady(function (api) {
+                // recomended, so notifications will have URL to valid pages
+                api.registerOriginProvider({
+                    getPageUrl: function () {
+                        return location.href;
+                    },
+                });
+                var token = params.userToken;
+                api.auth(token, function (err) {
+                    if (err) {
+                        log.error('AnnotoWistia: SSO auth error', err);
+                    }else log.info('AnnotoWistia: SSO auth skipped');
+                });
+            });
         }
     };
 });
