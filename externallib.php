@@ -43,7 +43,7 @@ class local_annoto_external extends external_api {
                 array(
                   'courseid' => new external_value(PARAM_INT, 'Course id', VALUE_DEFAULT, null),
                   'pageurl' => new external_value(PARAM_URL, 'Page URL', VALUE_DEFAULT, null),
-                  'modid' => new external_value(PARAM_INT, 'Mod id', VALUE_OPTIONAL)
+                  'modid' => new external_value(PARAM_INT, 'Mod id', VALUE_DEFAULT, 0)
                 )
         );
     }
