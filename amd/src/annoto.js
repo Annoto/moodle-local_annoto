@@ -324,9 +324,18 @@ define([
         checkWidgetVisibility: function() {
             var formatSelectors = {
                 grid: 'body.format-grid .grid_section, body.format-grid #gridshadebox',
-                tabs: 'body.format-tabtopics .yui3-tab-panel'
+                tabs: 'body.format-tabtopics .yui3-tab-panel',
+                snap: 'body.format-topics.theme-snap .topics .section.main'
             };
-            var coureFormat = M.tabtopics ? 'tabs' : M.format_grid ? 'grid' : false;
+            var courseFormat = '';
+
+            if (typeof M.tabtopics !== 'undefined') {
+                courseFormat = 'tabs';
+            } else if (typeof M.format_grid !== 'undefined') {
+                courseFormat = 'grid';
+            } else if (typeof M.snapTheme !== 'undefined') {
+                courseFormat = 'snap';
+            }
 
             var playerNode = document.getElementById(this.params.playerId),
                 self = this;
@@ -335,7 +344,7 @@ define([
                 var mutationTarget;
 
                 if (mutationList) {
-                      switch (coureFormat) {
+                      switch (courseFormat) {
                       case 'tabs':
                         mutationTarget = mutationList.filter(function(m) {
                           return m.target.classList.contains('yui3-tab-panel-selected');
@@ -344,6 +353,11 @@ define([
                       case 'grid':
                         mutationTarget = mutationList.filter(function(m) {
                           return !m.target.classList.contains('hide_section');
+                        })[0].target;
+                        break;
+                      case 'snap':
+                        mutationTarget = mutationList.filter(function(m) {
+                          return m.target.classList.contains('state-visible');
                         })[0].target;
                         break;
                     }
@@ -356,17 +370,18 @@ define([
                     self.prepareConfig();
                 }
 
-                self.annotoAPI.close();
-                if (playerNode.offsetParent !== null) {
-                    self.annotoAPI.load(self.config, function(err) {
-                        if (err) {
-                            log.warn('AnnotoMoodle: Error while reloading Annoto configuration');
-                            return;
-                        }
-                        log.info('AnnotoMoodle: Loaded new Configuration!');
-                    });
-                }
-            };
+                self.annotoAPI.close().then(function(){
+                    if (playerNode.offsetParent !== null) {
+                        self.annotoAPI.load(self.config, function(err) {
+                            if (err) {
+                                log.warn('AnnotoMoodle: Error while reloading Annoto configuration');
+                                return;
+                            }
+                            log.info('AnnotoMoodle: Loaded new Configuration!');
+                        });
+                    }
+                });
+              };
 
             var observerNodeTargets = document.querySelectorAll(Object.values(formatSelectors).join(', '));
 
