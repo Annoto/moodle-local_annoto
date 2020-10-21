@@ -30,7 +30,6 @@ defined('MOODLE_INTERNAL') || die();
 
 function local_annoto_before_footer() {
     global $PAGE, $COURSE;
-
     // Start local_annoto only on the course page or at course module pages.
     if ((strpos($PAGE->pagetype, 'mod-') !== false) ||
         (strpos($PAGE->pagetype, 'course-view-') !== false)) {
@@ -44,9 +43,33 @@ function local_annoto_before_footer() {
 
         $PAGE->requires->js('/local/annoto/initkaltura.js');
         $PAGE->requires->js_call_amd('local_annoto/annoto', 'init', array($courseid, $pageurl, $modid));
-
     }
+}
 
+/**
+ * Insert a chunk of html at the start of the html document.
+ * @return string
+ */
+
+function local_annoto_before_standard_top_of_body_html() {
+    global $PAGE, $COURSE;
+    // Prevent callback loading for all themes except theme_lambda
+    if ($PAGE->theme->name != 'lambda') return '';
+    // Start local_annoto only on the course page or at course module pages.
+    if ((strpos($PAGE->pagetype, 'mod-') !== false) ||
+        (strpos($PAGE->pagetype, 'course-view-') !== false)) {
+
+        $courseid = $COURSE->id;
+        $pageurl = $PAGE->url->out();
+        $modid = 0;
+        if (isset($PAGE->cm->id)) {
+            $modid = (int)$PAGE->cm->id;
+        }
+
+        $PAGE->requires->js('/local/annoto/initkaltura.js');
+        $PAGE->requires->js_call_amd('local_annoto/annoto', 'init', array($courseid, $pageurl, $modid));
+    }
+    return '';
 }
 
 
