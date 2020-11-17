@@ -66,7 +66,7 @@ define([
                     }
 
                     this.setupKaltura();
-                    this.setupWistia();
+                    this.setupWistiaIframeEmbed();
                     $(document).ready(this.bootstrap.bind(this));
 
                 }.bind(this),
@@ -405,21 +405,21 @@ define([
 
         },
 
-        setupWistia: function(){
+        setupWistiaIframeEmbed: function(){
             var annotoIframeClient = "https://cdn.annoto.net/widget-iframe-api/latest/client.js",
-                annotoIframeUrl = "https://cdn.annoto.net",
-                wistiaplayer = document.querySelectorAll('iframe');
+                annotoIframeUrl = /https:\/\/fast.wistia.net\/embed\/iframe.*https:\/\/cdn.annoto.net/,
+                wistiaplayers = document.querySelectorAll('iframe');
 
-            wistiaplayer.forEach((iframe) => {
+            wistiaplayers.forEach((iframe) => {
                 var iframeSrc = decodeURIComponent(iframe.src);
-                if (iframeSrc.indexOf(annotoIframeUrl) !== -1) {
-                    require([annotoIframeClient], this.bootWistiaPlayer.bind(this, iframe));
+                if (iframeSrc.match(annotoIframeUrl)) {
+                    require([annotoIframeClient], this.setupWistiaIframeEmbedPlugin.bind(this, iframe));
                     return;
                 }
             });
         },
 
-        bootWistiaPlayer: function(iframe, AnnotoIframeApi){
+        setupWistiaIframeEmbedPlugin: function(iframe, AnnotoIframeApi){
             var params = this.params,
                 annoto = new AnnotoIframeApi.Client(iframe);
 
@@ -431,11 +431,14 @@ define([
                         tabs: params.featureTab,
                         cta: params.featureCTA,
                     },
-                    width: {},
                     align: {
                         vertical: params.alignVertical,
                     },
-                    zIndex: params.zIndex ? params.zIndex : 100,
+                    ux: {
+                        ssoAuthRequestHandle: function() {
+                            window.location.replace(params.loginUrl);
+                        },
+                    },
                     widgets: [{
                         player: {
                             mediaDetails: function() {
@@ -453,7 +456,6 @@ define([
                         },
                     }],
                     demoMode: params.demoMode,
-                    rtl: params.rtl,
                     locale: params.locale,
                 });
             });
@@ -468,8 +470,8 @@ define([
                 var token = params.userToken;
                 api.auth(token, function (err) {
                     if (err) {
-                        log.error('AnnotoWistia: SSO auth error', err);
-                    }else log.info('AnnotoWistia: SSO auth skipped');
+                        log.error('AnnotoMoodle: SSO auth error', err);
+                    }
                 });
             });
         }
