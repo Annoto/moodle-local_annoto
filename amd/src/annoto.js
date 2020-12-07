@@ -343,6 +343,7 @@ define([
         checkWidgetVisibility: function() {
             var formatSelectors = {
                 grid: 'body.format-grid .grid_section, body.format-grid #gridshadebox',
+                topcoll: 'body.format-topcoll .ctopics.topics .toggledsection ',
                 tabs: 'body.format-tabtopics .yui3-tab-panel',
                 snap: 'body.format-topics.theme-snap .topics .section.main'
             };
@@ -352,6 +353,8 @@ define([
                 courseFormat = 'tabs';
             } else if (typeof M.format_grid !== 'undefined') {
                 courseFormat = 'grid';
+            } else if (typeof M.format_topcoll !== 'undefined') {
+                    courseFormat = 'topcoll';
             } else if (typeof M.snapTheme !== 'undefined') {
                 courseFormat = 'snap';
             }
@@ -374,6 +377,9 @@ define([
                           return !m.target.classList.contains('hide_section');
                         })[0].target;
                         break;
+                      case 'topcoll':
+                        mutationTarget = mutationList[0].target;
+                        break;
                       case 'snap':
                         mutationTarget = mutationList.filter(function(m) {
                           return m.target.classList.contains('state-visible');
@@ -390,7 +396,7 @@ define([
                 }
 
                 self.annotoAPI.close().then(function(){
-                    if (playerNode.offsetParent !== null) {
+                    if (playerNode.offsetParent) {
                         self.annotoAPI.load(self.config, function(err) {
                             if (err) {
                                 log.warn('AnnotoMoodle: Error while reloading Annoto configuration');
