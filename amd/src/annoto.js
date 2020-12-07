@@ -244,6 +244,20 @@ define([
             }
         },
 
+        authKalturaPlayer: function(api) {
+            // Api is the API to be used after Annoot is setup
+            // It can be used for SSO auth.
+            var jwt = this.params.userToken;
+            log.info('AnnotoMoodle: annoto ready');
+            if (api && jwt && jwt !== '') {
+                api.auth(jwt).catch(function() {
+                    log.error('AnnotoMoodle: SSO auth error');
+                });
+            } else {
+                log.info('AnnotoMoodle: SSO auth skipped');
+            }
+        },
+
         setupKalturaKdpMap: function(kdpMap) {
             if (!kdpMap) {
                 log.info('AnnotoMoodle: skip setup Kaltura players - missing map');
@@ -263,7 +277,7 @@ define([
             }
             log.info('AnnotoMoodle: setup Kaltura player: ' + kdp.id);
             kdp.setupDone = true;
-            kdp.player.kBind('annotoPluginReady', this.annotoReady.bind(this));
+            kdp.player.kBind('annotoPluginReady', this.authKalturaPlayer.bind(this));
             this.setupKalturaPlugin(kdp.config);
             kdp.doneCb();
         },
