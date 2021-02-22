@@ -24,10 +24,9 @@
 defined('MOODLE_INTERNAL') || die();
 
 /**
- * Allow plugins to injecting JS across the site, like analytics.
+ * Function allows plugins to injecting JS across the site, like analytics.
  *
  */
-
 function local_annoto_before_footer() {
     global $PAGE, $COURSE;
     // Start local_annoto only on the course page or at course module pages.
@@ -47,14 +46,15 @@ function local_annoto_before_footer() {
 }
 
 /**
- * Insert a chunk of html at the start of the html document.
- * @return string
+ * Function Insert a chunk of html at the start of the html document.
+ * @return string HTML fragment.
  */
-
 function local_annoto_before_standard_top_of_body_html() {
     global $PAGE, $COURSE;
-    // Prevent callback loading for all themes except theme_lambda
-    if ($PAGE->theme->name != 'lambda') return '';
+    // Prevent callback loading for all themes except theme_lambda.
+    if ($PAGE->theme->name != 'lambda') {
+        return '';
+    }
     // Start local_annoto only on the course page or at course module pages.
     if ((strpos($PAGE->pagetype, 'mod-') !== false) ||
         (strpos($PAGE->pagetype, 'course-view-') !== false)) {

@@ -54,5 +54,4 @@ class provider implements
 
           return $collection;
     }
-    
 }

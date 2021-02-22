@@ -1,13 +1,15 @@
+notifications:
+  email:
+    if: env(MOODLE_EMAIL) != no
+
 language: php
 
-sudo: true
-
 addons:
-  firefox: "47.0.1"
-  postgresql: "9.4"
-  apt:
-    packages:
-      - openjdk-8-jre-headless
+  postgresql: "9.6"
+
+services:
+  - mysql
+  - docker
 
 cache:
   directories:
@@ -15,20 +17,18 @@ cache:
     - $HOME/.npm
 
 php:
- - 7.0
-
+  - 7.2
+  - 7.4
 env:
- global:
-  - MOODLE_BRANCH=MOODLE_33_STABLE
- matrix:
-  - DB=mysqli
+  global:
+    - MOODLE_BRANCH=MOODLE_39_STABLE
+  matrix:
+    - DB=mysqli
 
 before_install:
   - phpenv config-rm xdebug.ini
-  - nvm install 8.9
-  - nvm use 8.9
   - cd ../..
-  - composer create-project -n --no-dev --prefer-dist blackboard-open-source/moodle-plugin-ci ci ^2
+  - composer create-project -n --no-dev --prefer-dist moodlehq/moodle-plugin-ci ci ^3
   - export PATH="$(cd ci/bin; pwd):$(cd ci/vendor/bin; pwd):$PATH"
 
 install:
@@ -40,6 +40,8 @@ script:
   - moodle-plugin-ci phpmd
   - moodle-plugin-ci codechecker
   - moodle-plugin-ci validate
+  - moodle-plugin-ci savepoints
+  - moodle-plugin-ci mustache
   - moodle-plugin-ci grunt
   - moodle-plugin-ci phpdoc
   - moodle-plugin-ci phpunit
