@@ -95,9 +95,6 @@ function local_annoto_get_user_token($settings, $courseid) {
     $userpicture->size = 150;
     $userpictureurl = $userpicture->get_url($PAGE);
 
-    // Create and encode JWT for Annoto script.
-    require_once('JWT.php');                   // Load JWT lib.
-
     $issuedat = time();                        // Get current time.
     $expire = $issuedat + 60 * 20;             // Adding 20 minutes.
 
@@ -114,7 +111,15 @@ function local_annoto_get_user_token($settings, $courseid) {
         "scope" => ($moderator ? 'super-mod' : 'user'),
     );
 
-    return JWT::encode($payload, $settings->ssosecret);
+    if (class_exists('\Firebase\JWT\JWT')) {
+        $enctoken = \Firebase\JWT\JWT::encode($payload, $settings->ssosecret);
+    } else {
+        // For Moodle version < 37.
+        require_once('JWT.php'); // Load JWT lib.
+        $enctoken = JWT::encode($payload, $settings->ssosecret);
+    }
+
+    return $enctoken;
 }
 
 /**
