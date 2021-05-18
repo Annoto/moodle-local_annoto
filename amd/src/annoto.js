@@ -125,7 +125,7 @@ define([
                 return;
             }
             if (!annotoPlayer.id || annotoPlayer.id === '') {
-                annotoPlayer.id = this.params.defaultPlayerId;
+                annotoPlayer.id = 'annoto_player_id_' + Math.random().toString(36).substr(2, 6);
             }
 
             return annotoPlayer;

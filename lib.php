@@ -175,7 +175,6 @@ function local_annoto_get_jsparam($courseid, $pageurl, $modid) {
     $settings = get_config('local_annoto');
 
     // Set id of the video frame where script should be attached.
-    $defaultplayerid = 'annoto_default_player_id';
     $isglobalscope = filter_var($settings->scope, FILTER_VALIDATE_BOOLEAN);
 
     // If scope is not Global - check if url is in access list.
@@ -246,7 +245,6 @@ function local_annoto_get_jsparam($courseid, $pageurl, $modid) {
         'locale' => $lang,
         'rtl' => filter_var((substr($lang, 0, 2) === "he"), FILTER_VALIDATE_BOOLEAN),
         'demoMode' => filter_var($settings->demomode, FILTER_VALIDATE_BOOLEAN),
-        'defaultPlayerId' => $defaultplayerid,
         'zIndex' => !empty($settings->zindex) ? filter_var($settings->zindex, FILTER_VALIDATE_INT) : 100,
         'isGlobalScope' => $isglobalscope,
         'isACLmatch' => !empty($isaclmatch) ? filter_var($isaclmatch, FILTER_VALIDATE_BOOLEAN) : false,
