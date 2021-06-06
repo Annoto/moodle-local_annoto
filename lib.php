@@ -231,6 +231,7 @@ function local_annoto_get_jsparam($courseid, $pageurl, $modid) {
     }
 
     $jsparams = array(
+        'deploymentDomain' => $settings->deploymentdomain,
         'bootstrapUrl' => $settings->scripturl,
         'clientId' => $settings->clientid,
         'userToken' => local_annoto_get_user_token($settings, $courseid),
