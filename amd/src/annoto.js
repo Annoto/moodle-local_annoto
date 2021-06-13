@@ -168,6 +168,9 @@ define([
         bootWidget: function() {
             var params = this.params;
             var config = {
+                backend: {
+                  domain: params.deploymentDomain
+                },
                 clientId: params.clientId,
                 position: params.position,
                 features: {

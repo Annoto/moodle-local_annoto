@@ -37,6 +37,12 @@ $string['scripturldesc'] = 'Provide Annoto\'s script URL here';
 $string['demomode'] = 'Demo';
 $string['demomodedesc'] = 'Toggle this if you don\'t have API key and SSO secret (discussions will not be saved in demo mode)';
 
+$string['deploymentdomain'] = 'Deployment domain';
+$string['deploymentdomaindesc'] = 'Provide the region for the widgets. Please note that the widget data is bound to a specific region.';
+$string['eurregion'] = 'EU region';
+$string['usregion'] = 'US region';
+
+
 // Application settings.
 $string['appsetingsheading'] = 'Annoto settings';
 $string['cta'] = 'Call to action';
