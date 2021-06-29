@@ -252,6 +252,7 @@ function local_annoto_get_jsparam($courseid, $pageurl, $modid) {
         'rtl' => filter_var((substr($lang, 0, 2) === "he"), FILTER_VALIDATE_BOOLEAN),
         'demoMode' => filter_var($settings->demomode, FILTER_VALIDATE_BOOLEAN),
         'zIndex' => !empty($settings->zindex) ? filter_var($settings->zindex, FILTER_VALIDATE_INT) : 100,
+        'openOnLoad' => (boolean) $settings->openonload,
         'isGlobalScope' => $isglobalscope,
         'isACLmatch' => !empty($isaclmatch) ? filter_var($isaclmatch, FILTER_VALIDATE_BOOLEAN) : false,
     );

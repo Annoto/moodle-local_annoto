@@ -78,6 +78,8 @@ $string['overlayinner'] = 'On top of player';
 $string['overlayouter'] = 'Next to player';
 $string['zindex'] = 'Stack order';
 $string['zindexdesc'] = 'Choose the overlay stacking order (z-index) of the discussion widget';
+$string['openonload'] = 'Widget state';
+$string['openonloaddesc'] = 'Load widget state on first boot. By default the widget is loaded opened';
 
 // ACL and scope.
 $string['aclheading'] = 'Annoto ACL and application scope';
