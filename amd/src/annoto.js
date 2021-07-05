@@ -185,6 +185,7 @@ define([
                     ssoAuthRequestHandle: function() {
                         window.location.replace(params.loginUrl);
                     },
+                    openOnLoad: params.openOnLoad,
                 },
                 zIndex: params.zIndex ? params.zIndex : 100,
                 widgets: [{
@@ -315,8 +316,11 @@ define([
             features.tabs = params.featureTab;
             features.cta = params.featureCTA;
             align.vertical = params.alignVertical;
-            ux.ssoAuthRequestHandle = function() {
-                window.location.replace(params.loginUrl);
+            ux = {
+                ssoAuthRequestHandle: function() {
+                    window.location.replace(params.loginUrl);
+                },
+                openOnLoad: params.openOnLoad,
             };
             playerConfig.mediaDetails = this.enrichMediaDetails.bind(this);
         },
@@ -461,6 +465,7 @@ define([
                         ssoAuthRequestHandle: function() {
                             window.location.replace(params.loginUrl);
                         },
+                        openOnLoad: params.openOnLoad,
                     },
                     widgets: [{
                         player: {

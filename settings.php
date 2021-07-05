@@ -120,6 +120,10 @@ if ($hassiteconfig) {
     $settings->add(new admin_setting_configtext('local_annoto/zindex', get_string('zindex', 'local_annoto'),
         get_string('zindexdesc', 'local_annoto'), 100, PARAM_INT));
 
+    // Initial State.
+    $settings->add(new admin_setting_configcheckbox('local_annoto/openonload', get_string('openonload', 'local_annoto'),
+        get_string('openonloaddesc', 'local_annoto'), 1));
+
     /* ACL and scope. */
     $settings->add(new admin_setting_heading('local_annoto/aclheading', get_string('aclheading', 'local_annoto'), ''));
 
