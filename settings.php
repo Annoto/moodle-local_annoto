@@ -124,6 +124,17 @@ if ($hassiteconfig) {
     $settings->add(new admin_setting_configcheckbox('local_annoto/openonload', get_string('openonload', 'local_annoto'),
         get_string('openonloaddesc', 'local_annoto'), 1));
 
+    /* UX Wistia player preferences. */
+    $settings->add(new admin_setting_heading('local_annoto/appuxheadingwistia', get_string('appuxheadingwistia', 'local_annoto'), ''));
+
+    // sidePanelLayout.
+    $settings->add(new admin_setting_configcheckbox('local_annoto/sidepanellayout', get_string('sidepanellayout', 'local_annoto'),
+        get_string('sidepanellayoutdesc', 'local_annoto'), 1));
+
+    // sidePanelFullScreen.
+    $settings->add(new admin_setting_configcheckbox('local_annoto/sidepanelfullscreen', get_string('sidepanelfullscreen', 'local_annoto'),
+        get_string('sidepanelfullscreendesc', 'local_annoto'), 0));
+
     /* ACL and scope. */
     $settings->add(new admin_setting_heading('local_annoto/aclheading', get_string('aclheading', 'local_annoto'), ''));
 

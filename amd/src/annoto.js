@@ -466,6 +466,8 @@ define([
                             window.location.replace(params.loginUrl);
                         },
                         openOnLoad: params.openOnLoad,
+                        sidePanelLayout: params.sidePanelLayout,
+                        sidePanelFullScreen: params.sidePanelFullScreen,
                     },
                     widgets: [{
                         player: {
