@@ -253,6 +253,8 @@ function local_annoto_get_jsparam($courseid, $pageurl, $modid) {
         'demoMode' => filter_var($settings->demomode, FILTER_VALIDATE_BOOLEAN),
         'zIndex' => !empty($settings->zindex) ? filter_var($settings->zindex, FILTER_VALIDATE_INT) : 100,
         'openOnLoad' => (boolean) $settings->openonload,
+        'sidePanelLayout' => (boolean) $settings->sidepanellayout,
+        'sidePanelFullScreen' => (boolean) $settings->sidepanelfullscreen ,
         'isGlobalScope' => $isglobalscope,
         'isACLmatch' => !empty($isaclmatch) ? filter_var($isaclmatch, FILTER_VALIDATE_BOOLEAN) : false,
     );

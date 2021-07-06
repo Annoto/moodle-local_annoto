@@ -81,6 +81,13 @@ $string['zindexdesc'] = 'Choose the overlay stacking order (z-index) of the disc
 $string['openonload'] = 'Widget state';
 $string['openonloaddesc'] = 'Load widget state on first boot. By default the widget is loaded opened';
 
+// UX Wistia preferences.
+$string['appuxheadingwistia'] = 'UX Wistia player preferences';
+$string['sidepanellayout'] = 'Wistia widget layout';
+$string['sidepanellayoutdesc'] = 'If enabled, Annoto widget will be positioned on the side of the player instead od overlay.';
+$string['sidepanelfullscreen'] = 'Wistia widget full screen';
+$string['sidepanelfullscreendesc'] = 'If enabled, Annoto widget side panel layout will work in player fullscreen as well.';
+
 // ACL and scope.
 $string['aclheading'] = 'Annoto ACL and application scope';
 $string['scope'] = 'All site scope';
