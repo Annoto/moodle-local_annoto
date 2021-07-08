@@ -168,9 +168,10 @@ define([
         bootWidget: function() {
             var params = this.params;
             var config = {
-                backend: {
-                  domain: params.deploymentDomain
-                },
+                //to enable working with Annoto staging
+                //backend: {
+                //  domain: params.deploymentDomain
+                //},
                 clientId: params.clientId,
                 position: params.position,
                 features: {
