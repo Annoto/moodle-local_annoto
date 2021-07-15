@@ -97,6 +97,7 @@ define([
                 videojs = $(parent).find('.video-js').first().get(0),
                 jwplayer = $(parent).find('.jwplayer').first().get(0),
                 wistia = $(parent).find('.wistia_embed').first().get(0),
+                html5 = $(parent).find('video').first().get(0),
                 annotoPlayer = '';
 
             if (videojs) {
@@ -121,6 +122,9 @@ define([
             }else if (wistia) {
                 annotoPlayer = wistia;
                 this.params.playerType = 'wistia';
+            }else if (html5) {
+                annotoPlayer = html5;
+                this.params.playerType = 'html5';
             }else {
                 return;
             }
