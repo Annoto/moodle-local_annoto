@@ -26,8 +26,8 @@ defined('MOODLE_INTERNAL') || die;
 
 require_once($CFG->dirroot. '/local/annoto/classes/admin_setting_custompickroles.php');
 
-define('USREGION', 'us.annoto.net');
-define('EUREGION', 'annoto.net');
+if (!defined('USREGION')) define('USREGION', 'us.annoto.net');
+if (!defined('EUREGION')) define('EUREGION', 'annoto.net');
 
 if ($hassiteconfig) {
 
