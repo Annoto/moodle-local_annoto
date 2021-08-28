@@ -356,7 +356,8 @@ define([
                 grid: 'body.format-grid .grid_section, body.format-grid #gridshadebox',
                 topcoll: 'body.format-topcoll .ctopics.topics .toggledsection ',
                 tabs: 'body.format-tabtopics .yui3-tab-panel',
-                snap: 'body.format-topics.theme-snap .topics .section.main'
+                snap: 'body.format-topics.theme-snap .topics .section.main',
+                modtab: '#page-mod-tab-view .TabbedPanelsContentGroup .TabbedPanelsContent'
             };
             var courseFormat = '';
 
@@ -368,6 +369,8 @@ define([
                     courseFormat = 'topcoll';
             } else if (typeof M.snapTheme !== 'undefined') {
                 courseFormat = 'snap';
+            } else if (document.body.id === 'page-mod-tab-view') {
+                courseFormat = 'modtab';
             }
 
             var playerNode = document.getElementById(this.params.playerId),
@@ -394,6 +397,11 @@ define([
                       case 'snap':
                         mutationTarget = mutationList.filter(function(m) {
                           return m.target.classList.contains('state-visible');
+                        })[0].target;
+                        break;
+                      case 'modtab':
+                        mutationTarget = mutationList.filter(function(m) {
+                          return m.target.classList.contains('TabbedPanelsContentVisible');
                         })[0].target;
                         break;
                     }
