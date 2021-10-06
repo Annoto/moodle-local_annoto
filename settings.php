@@ -28,6 +28,7 @@ require_once($CFG->dirroot. '/local/annoto/classes/admin_setting_custompickroles
 
 if (!defined('USREGION')) define('USREGION', 'us.annoto.net');
 if (!defined('EUREGION')) define('EUREGION', 'annoto.net');
+if (!defined('CUSTOM')) define('CUSTOM', 'custom');
 
 if ($hassiteconfig) {
 
@@ -55,9 +56,15 @@ if ($hassiteconfig) {
             array(
                 EUREGION => get_string('eurregion', 'local_annoto'),
                 USREGION => get_string('usregion', 'local_annoto'),
+                CUSTOM => get_string('custom', 'local_annoto'),
             )
         )
     );
+
+    $settings->add(new admin_setting_configtext('local_annoto/customdomain', get_string('customdomain', 'local_annoto'),
+        get_string('customdomaindesc', 'local_annoto'), null));
+    $settings->hide_if('local_annoto/customdomain', 'local_annoto/deploymentdomain', 'neq', CUSTOM);
+
 
     // Demo checkbox.
     $settings->add(new admin_setting_configcheckbox('local_annoto/demomode', get_string('demomode', 'local_annoto'),

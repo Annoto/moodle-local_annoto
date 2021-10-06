@@ -42,6 +42,10 @@ $string['deploymentdomaindesc'] = 'Provide the region for the widgets. Please no
 $string['eurregion'] = 'EU region';
 $string['usregion'] = 'US region';
 
+$string['customdomain'] = 'Custom deployment domain';
+$string['customdomaindesc'] = 'Specify a custom deployment domain. Please note that the widget data is bound to a specific region.';
+$string['custom'] = 'Custom';
+
 
 // Application settings.
 $string['appsetingsheading'] = 'Annoto settings';
