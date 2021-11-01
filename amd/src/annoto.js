@@ -119,13 +119,13 @@ define([
             } else if (vimeo) {
                 annotoPlayer = vimeo;
                 this.params.playerType = 'vimeo';
-            }else if (wistia) {
+            } else if (wistia) {
                 annotoPlayer = wistia;
                 this.params.playerType = 'wistia';
-            }else if (html5) {
+            } else if (html5) {
                 annotoPlayer = html5;
                 this.params.playerType = 'html5';
-            }else {
+            } else {
                 return;
             }
             if (!annotoPlayer.id || annotoPlayer.id === '') {
@@ -373,6 +373,14 @@ define([
                 courseFormat = 'modtab';
             }
 
+            // Ugly hack to solve the issue toggling id
+            if (courseFormat === 'modtab') {
+                const allTabas = document.querySelectorAll('.TabbedPanelsContent');
+                allTabas.forEach((node) => {
+                    node.id = 'modtab_' + Math.random().toString(36).substr(2, 6);
+                });
+            }
+
             var playerNode = document.getElementById(this.params.playerId),
                 self = this;
 
@@ -414,7 +422,7 @@ define([
                     self.prepareConfig();
                 }
 
-                self.annotoAPI.close().then(function(){
+                self.annotoAPI.close().then(function() {
                     if (playerNode.offsetParent) {
                         self.annotoAPI.load(self.config, function(err) {
                             if (err) {
@@ -444,7 +452,7 @@ define([
 
         },
 
-        setupWistiaIframeEmbed: function(){
+        setupWistiaIframeEmbed: function() {
             var annotoIframeClient = "https://cdn.annoto.net/widget-iframe-api/latest/client.js",
                 annotoIframeUrl = /https:\/\/fast.wistia.net\/embed\/iframe.*https:\/\/cdn.annoto.net/,
                 wistiaplayers = document.querySelectorAll('iframe');
@@ -458,11 +466,11 @@ define([
             });
         },
 
-        setupWistiaIframeEmbedPlugin: function(iframe, AnnotoIframeApi){
+        setupWistiaIframeEmbedPlugin: function(iframe, AnnotoIframeApi) {
             var params = this.params,
                 annoto = new AnnotoIframeApi.Client(iframe);
 
-            annoto.onSetup(function (next) {
+            annoto.onSetup(function(next) {
                 next({
                     clientId: params.clientId,
                     position: params.position,
@@ -502,15 +510,15 @@ define([
                 });
             });
 
-            annoto.onReady(function (api) {
-                // recomended, so notifications will have URL to valid pages
+            annoto.onReady(function(api) {
+                // Recomended, so notifications will have URL to valid pages
                 api.registerOriginProvider({
-                    getPageUrl: function () {
+                    getPageUrl: function() {
                         return location.href;
                     },
                 });
                 var token = params.userToken;
-                api.auth(token, function (err) {
+                api.auth(token, function(err) {
                     if (err) {
                         log.error('AnnotoMoodle: SSO auth error', err);
                     }
