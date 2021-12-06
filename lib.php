@@ -110,14 +110,7 @@ function local_annoto_get_user_token($settings, $courseid) {
         "exp" => $expire,                       // JWT token expiration time.
         "scope" => ($moderator ? 'super-mod' : 'user'),
     );
-
-    if (class_exists('\Firebase\JWT\JWT')) {
-        $enctoken = \Firebase\JWT\JWT::encode($payload, $settings->ssosecret);
-    } else {
-        // For Moodle version < 37.
-        require_once('JWT.php'); // Load JWT lib.
-        $enctoken = JWT::encode($payload, $settings->ssosecret);
-    }
+    $enctoken = \Firebase\JWT\JWT::encode($payload, $settings->ssosecret);
 
     return $enctoken;
 }
