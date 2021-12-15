@@ -28,21 +28,8 @@ defined('MOODLE_INTERNAL') || die();
  *
  */
 function local_annoto_before_footer() {
-    global $PAGE, $COURSE;
-    // Start local_annoto only on the course page or at course module pages.
-    if ((strpos($PAGE->pagetype, 'mod-') !== false) ||
-        (strpos($PAGE->pagetype, 'course-view-') !== false)) {
-
-        $courseid = $COURSE->id;
-        $pageurl = $PAGE->url->out();
-        $modid = 0;
-        if (isset($PAGE->cm->id)) {
-            $modid = (int)$PAGE->cm->id;
-        }
-
-        $PAGE->requires->js('/local/annoto/initkaltura.js');
-        $PAGE->requires->js_call_amd('local_annoto/annoto', 'init', array($courseid, $pageurl, $modid));
-    }
+    local_annoto_init();
+    return '';
 }
 
 /**
@@ -50,15 +37,37 @@ function local_annoto_before_footer() {
  * @return string HTML fragment.
  */
 function local_annoto_before_standard_top_of_body_html() {
-    global $PAGE, $COURSE;
+    global $PAGE;
     // Prevent callback loading for all themes except theme_lambda.
     if ($PAGE->theme->name != 'lambda') {
         return '';
     }
-    // Start local_annoto only on the course page or at course module pages.
-    if ((strpos($PAGE->pagetype, 'mod-') !== false) ||
-        (strpos($PAGE->pagetype, 'course-view-') !== false)) {
+    local_annoto_init();
+    return '';
+}
 
+/**
+ * Function init plugin according to the proper environment conditions.
+ * @return boolean
+ */
+function local_annoto_init() {
+    global $PAGE, $COURSE;
+
+    $istargetpage = false;
+    $possiblepages = [
+        'mod-',
+        'course-view-',
+        'blocks-'
+    ];
+
+    foreach ($possiblepages as $possiblepage) {
+        if ((strpos($PAGE->pagetype, $possiblepage) !== false)){
+            $istargetpage = true;
+            break;
+        }
+    }
+    // Start local_annoto on a specific pages only.
+    if ($istargetpage) {
         $courseid = $COURSE->id;
         $pageurl = $PAGE->url->out();
         $modid = 0;
@@ -69,7 +78,6 @@ function local_annoto_before_standard_top_of_body_html() {
         $PAGE->requires->js('/local/annoto/initkaltura.js');
         $PAGE->requires->js_call_amd('local_annoto/annoto', 'init', array($courseid, $pageurl, $modid));
     }
-    return '';
 }
 
 
