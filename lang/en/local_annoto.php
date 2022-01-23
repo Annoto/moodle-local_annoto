@@ -104,3 +104,20 @@ $string['privacy:metadata:annoto'] = 'In order to integrate with a remote servic
 $string['privacy:metadata:annoto:userid'] = 'The userid is sent from Moodle to allow you to access your data on the remote system.';
 $string['privacy:metadata:annoto:fullname'] = 'Your full name is sent to the remote system to allow a better user experience.';
 $string['privacy:metadata:annoto:email'] = 'Your e-mail name is sent to the remote system to allow a better user experience.';
+
+// LTI
+$string['externaltoolsettings'] = 'Annoto dashboard (LTI)';
+$string['toolurl'] = 'External tool URL';
+$string['toolurldesc'] = 'Provide external tool URL';
+$string['tooliconurl'] = 'External tool icon';
+$string['tooliconurldesc'] = 'External tool icon URL';
+
+$string['toolname'] = 'External tool name';
+$string['toolnamedesc'] = 'External tool name';
+$string['annoto_dashboard:view'] = 'Annoto dashboard view';
+$string['section:media'] = 'media';
+$string['section:video'] = 'video';
+$string['annoto_dashboard_description'] = 'Annoto’s dashboard was designed in order to shed a light upon students’ behavior within Annoto in-video collaboration widget, providing you with data regarding their engagement with the video.';
+
+$string['lti_activity_name'] = 'Annoto Dashboard';
+
