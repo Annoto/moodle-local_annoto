@@ -46,7 +46,7 @@ if ($hassiteconfig) {
     $settings->add(new admin_setting_configtext('local_annoto/ssosecret', get_string('ssosecret', 'local_annoto'),
         get_string('ssosecretdesc', 'local_annoto'), null));
 
-    // Annoto scritp url.
+    // Annoto script url.
     $settings->add(new admin_setting_configtext('local_annoto/scripturl', get_string('scripturl', 'local_annoto'),
         get_string('scripturldesc', 'local_annoto'), 'https://app.annoto.net/annoto-bootstrap.js'));
 
@@ -70,7 +70,23 @@ if ($hassiteconfig) {
     $settings->add(new admin_setting_configcheckbox('local_annoto/demomode', get_string('demomode', 'local_annoto'),
         get_string('demomodedesc', 'local_annoto'), 'true', 'true', 'false'));
 
-    /* Application settings. */
+    /* External tool (LTI) settings. */
+    $settings->add(new admin_setting_heading('local_annoto/externaltoolsettings', get_string('externaltoolsettings', 'local_annoto'), ''));
+
+    // LTI name.
+    $settings->add(new admin_setting_configtext('local_annoto/toolname', get_string('toolname', 'local_annoto'),
+        get_string('toolnamedesc', 'local_annoto'), 'AnnotoDashboard'));
+
+    // LTI url.
+    $settings->add(new admin_setting_configtext('local_annoto/toolurl', get_string('toolurl', 'local_annoto'),
+        get_string('toolurldesc', 'local_annoto'), 'https://auth.annoto.net/lti/course-insights'));
+
+    // LTI icon url.
+    $settings->add(new admin_setting_configtext('local_annoto/tooliconurl', get_string('tooliconurl', 'local_annoto'),
+        get_string('tooliconurldesc', 'local_annoto'), 'https://assets.annoto.net/images/logo_icon.png'));
+
+
+
     $settings->add(new admin_setting_heading('local_annoto/appsetingsheading', get_string('appsetingsheading', 'local_annoto'),
         ''));
 
