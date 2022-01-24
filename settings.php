@@ -37,8 +37,7 @@ if ($hassiteconfig) {
     $pluginmanager = core_plugin_manager::instance();
     $plugininfo = $pluginmanager->get_plugin_info('local_annoto');
     $version = $plugininfo->versiondb;
-    $release = $plugininfo->release;
-    $name = get_string('pluginname', 'local_annoto').' (v. '.$version.' r. '.$release.')';
+    $name = get_string('pluginname', 'local_annoto').' (v. '.$version. ')';
 
     $settings = new admin_settingpage('local_annoto',$name);
     $ADMIN->add('localplugins', $settings);
