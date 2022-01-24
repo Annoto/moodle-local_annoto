@@ -297,7 +297,7 @@ function local_annoto_extend_settings_navigation(settings_navigation $settingsna
         }
     }
 
-    $text = get_string('pluginname', 'local_annoto');
+    $text = get_string('lti_activity_name', 'local_annoto');
     $type = navigation_node::TYPE_SETTING;
     $icon = new pix_icon('icon', '','local_annoto');
     $url  = $cm->url->out();

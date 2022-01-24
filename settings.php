@@ -32,7 +32,15 @@ if (!defined('CUSTOM')) define('CUSTOM', 'custom');
 
 if ($hassiteconfig) {
 
-    $settings = new admin_settingpage('local_annoto', get_string('pluginname', 'local_annoto'));
+    //$version = get_config('local_annoto');
+
+    $pluginmanager = core_plugin_manager::instance();
+    $plugininfo = $pluginmanager->get_plugin_info('local_annoto');
+    $version = $plugininfo->versiondb;
+    $release = $plugininfo->release;
+    $name = get_string('pluginname', 'local_annoto').' (v. '.$version.' r. '.$release.')';
+
+    $settings = new admin_settingpage('local_annoto',$name);
     $ADMIN->add('localplugins', $settings);
 
     /* Application setup. */
