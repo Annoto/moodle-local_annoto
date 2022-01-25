@@ -262,3 +262,169 @@ function local_annoto_get_jsparam($courseid, $pageurl, $modid) {
 
     return $jsparams;
 }
+
+
+/**
+ * Adds module specific settings to the settings block
+ *
+ * @param settings_navigation $settings The settings navigation object
+ * @param context_course $context The node to add module settings to
+ */
+function local_annoto_extend_settings_navigation(settings_navigation $settingsnav, context  $context) {
+    global $PAGE, $COURSE;
+
+    if ((strpos($PAGE->pagetype, 'mod-') === false) &&
+        (strpos($PAGE->pagetype, 'course-view-') === false)) {
+        return;
+    }
+
+    // Get plugin global settings.
+    $settings = get_config('local_annoto');
+
+    // Only let users with the appropriate capability see this settings item.
+    if (!local_annoto_is_moderator($settings, $COURSE->id)) {
+        return;
+    }
+
+    if(!$settingnode = $settingsnav->find('courseadmin', navigation_node::TYPE_COURSE)){
+        return;
+    }
+
+    //create a dashboard instance if not available
+    if(!$cm = local_annoto_get_lti_course_module()){
+        if(!$cm = local_annoto_create_lti_course_module()){
+            return;
+        }
+    }
+
+    $text = get_string('lti_activity_name', 'local_annoto');
+    $type = navigation_node::TYPE_SETTING;
+    $icon = new pix_icon('icon', '','local_annoto');
+    $url  = $cm->url->out();
+
+    $annotodashboard = navigation_node::create($text, $url, $type , null, 'annotodashboard', $icon);
+    if ($settingnode->find('coursereports', navigation_node::TYPE_CONTAINER)) {
+        $settingnode->add_node($annotodashboard,'coursereports');
+    } else {
+        // The nodes next to the course report node have no keys,
+        // So the target node is calculated as a delta from the closest know key.
+        $keys = array_flip($settingnode->get_children_key_list());
+        $key = isset($keys['users']) ? $keys['users'] : 0;
+        // Insert the new node two places after the users node.
+        $settingnode->add_node($annotodashboard, $settingnode->children->get_key_list()[$key+2]);
+    }
+
+}
+
+/**
+ * returns annoto dashboard's lti course module of current course
+ *
+ * @return cm_info|null $cm
+ */
+function local_annoto_get_lti_course_module(){
+
+    GLOBAL $PAGE;
+
+    $modinfo = get_fast_modinfo($PAGE->course);
+
+    foreach($modinfo->get_instances_of('lti') as $cm){
+
+        $domain = $cm->get_icon_url()->get_host();
+        if(strpos($domain, 'annoto') !== false){
+            return $cm;
+        }
+    }
+
+    return null;
+}
+
+/**
+ * creates annoto dashboard's lti course module for current course
+ *
+ * @return cm_info|null $cm
+ */
+function local_annoto_create_lti_course_module(){
+    GLOBAL $DB, $CFG, $PAGE;
+
+    $context = context_course::instance($PAGE->course->id);
+    if(!has_capability('moodle/course:manageactivities', $context)){
+        return null;
+    }
+
+    if (!course_allowed_module($PAGE->course, 'lti')) {
+        return null;
+    }
+
+    require_once($CFG->dirroot . '/mod/lti/locallib.php');
+
+    // Get plugin global settings.
+    $settings = get_config('local_annoto');
+    $lti = lti_get_tool_by_url_match($settings->toolurl);
+
+    if (!$lti){
+        $lti = new stdClass();
+        $lti->id = local_annoto_lti_add_type();
+    }
+
+    $toolconfig = lti_get_type_config($lti->id);
+
+    $new_dashboard = new stdClass;
+    $new_dashboard->modulename = 'lti';
+    $new_dashboard->name = get_string('lti_activity_name', 'local_annoto');
+    $new_dashboard->course = $PAGE->course->id;
+    $new_dashboard->introeditor = [
+        'itemid' => 0,
+        'format' => FORMAT_PLAIN,
+        'text'   => get_string('pluginname', 'local_annoto')
+    ];
+    $new_dashboard->section = 0;
+    $new_dashboard->visible = 0;
+    $new_dashboard->typeid = $lti->id;
+    $new_dashboard->servicesalt = $toolconfig['servicesalt'];
+    $new_dashboard->instructorchoicesendname = 1;
+    $new_dashboard->instructorchoicesendemailaddr = 1;
+    $new_dashboard->showtitlelaunch = 1;
+    $new_dashboard->timecreated = time();
+    $new_dashboard->timemodified = time();
+
+    if(!create_module($new_dashboard)){
+        return null;
+    }
+
+    return local_annoto_get_lti_course_module();
+}
+
+/**
+ * creates Annoto LTI type
+ *
+ * @return integer LTI type id
+ */
+function local_annoto_lti_add_type() {
+
+    // Get plugin global settings.
+    $settings = get_config('local_annoto');
+    
+    $type = new stdClass;
+    $type->name = $settings->toolname;
+    $type->baseurl = $settings->toolurl;
+    $type->tooldomain = parse_url($settings->toolurl, PHP_URL_HOST);
+    $type->state = 1;
+
+    $type->icon = $settings->tooliconurl;
+    $type->secureicon = $settings->tooliconurl;
+    $type->description = get_string('annoto_dashboard_description', 'local_annoto');
+
+    $config = new stdClass;
+    $config->lti_resourcekey = $settings->clientid;
+    $config->lti_password = $settings->ssosecret;
+    $config->lti_coursevisible = 0;
+    $config->lti_launchcontainer = 3;
+
+    //Privacy setting
+    $config->lti_forcessl = 1;
+    $config->lti_sendname = 1;
+    $config->lti_sendemailaddr = 1;
+    $config->lti_acceptgrades = 2;
+
+    return lti_add_type($type, $config);
+}
