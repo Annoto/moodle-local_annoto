@@ -34,8 +34,6 @@ $string['ssosecret'] = 'SSO secret';
 $string['ssosecretdesc'] = 'SSO secret is provided by Annoto (keep in secret)';
 $string['scripturl'] = 'Annoto\'s script URL';
 $string['scripturldesc'] = 'Provide Annoto\'s script URL here';
-$string['demomode'] = 'Demo';
-$string['demomodedesc'] = 'Toggle this if you don\'t have API key and SSO secret (discussions will not be saved in demo mode)';
 
 $string['deploymentdomain'] = 'Deployment domain';
 $string['deploymentdomaindesc'] = 'Provide the region for the widgets. Please note that the widget data is bound to a specific region.';
@@ -56,48 +54,20 @@ $string['localedesc'] = 'Choose language (Auto will set per page and course base
 $string['localeauto'] = 'Auto detect';
 $string['localeen'] = 'English';
 $string['localehe'] = 'Hebrew';
-$string['discussionscope'] = 'Discussions scope';
-$string['discussionscopedesc'] = 'Choose scope of Annoto discussions: private per course (default) or site wide (if same video is used in multiple courses the discussion will be pulic across courses)';
-$string['discussionscopesitewide'] = 'Site wide';
-$string['discussionscopeprivate'] = 'Private per course';
 $string['moderatorroles'] = 'Moderator roles';
 $string['moderatorrolesdesc'] = 'Specify who is allowed to moderate discussions (only roles that at least include the following capabilities are available: local/annoto:moderatediscussion).';
 
 // UX preferences.
 $string['appuxheading'] = 'Annoto UX Preferences';
-$string['widgetposition'] = 'Widget position';
-$string['widgetpositiondesc'] = 'Where to place the Discussion widget relative to the player';
 $string['positionright'] = 'Right';
 $string['positionleft'] = 'Left';
 $string['positiontopright'] = 'Top right';
 $string['positiontopleft'] = 'Top left';
 $string['positionbottomright'] = 'Bottom right';
 $string['positionbottomleft'] = 'Bottom left';
-$string['tabs'] = 'Tabs';
-$string['tabsdesc'] = 'Enables widget tabs for quickly toggling between comments and private notes';
-$string['widgetoverlay'] = 'Overlay mode';
-$string['widgetoverlaydesc'] = 'Chose the mode of widget overlay. Can be on top (inside) of player or outside of player. Auto will select the mode based on player type';
 $string['overlayauto'] = 'Auto';
 $string['overlayinner'] = 'On top of player';
 $string['overlayouter'] = 'Next to player';
-$string['zindex'] = 'Stack order';
-$string['zindexdesc'] = 'Choose the overlay stacking order (z-index) of the discussion widget';
-$string['openonload'] = 'Widget state';
-$string['openonloaddesc'] = 'Load widget state on first boot. By default the widget is loaded opened';
-
-// UX Wistia preferences.
-$string['appuxheadingwistia'] = 'UX Wistia player preferences';
-$string['sidepanellayout'] = 'Wistia widget layout';
-$string['sidepanellayoutdesc'] = 'If enabled, Annoto widget will be positioned on the side of the player instead od overlay.';
-$string['sidepanelfullscreen'] = 'Wistia widget full screen';
-$string['sidepanelfullscreendesc'] = 'If enabled, Annoto widget side panel layout will work in player fullscreen as well.';
-
-// ACL and scope.
-$string['aclheading'] = 'Annoto ACL and application scope';
-$string['scope'] = 'All site scope';
-$string['scopedesc'] = 'Choose where you want to allow Annoto plugin: check - all site, uncheck - allow only for ACL list and for allowed pages using Annoto Atto plugin';
-$string['acl'] = 'ACL';
-$string['acldesc'] = 'List of allowed URLs or course IDs (please, provide one per line)';
 
 // Privacy API.
 $string['privacy:metadata:annoto'] = 'In order to integrate with a remote service, user data needs to be exchanged with that service.';

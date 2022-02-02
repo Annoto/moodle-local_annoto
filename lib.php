@@ -69,14 +69,13 @@ function local_annoto_init() {
     // Start local_annoto on a specific pages only.
     if ($istargetpage) {
         $courseid = $COURSE->id;
-        $pageurl = $PAGE->url->out();
         $modid = 0;
         if (isset($PAGE->cm->id)) {
             $modid = (int)$PAGE->cm->id;
         }
 
         $PAGE->requires->js('/local/annoto/initkaltura.js');
-        $PAGE->requires->js_call_amd('local_annoto/annoto', 'init', array($courseid, $pageurl, $modid));
+        $PAGE->requires->js_call_amd('local_annoto/annoto', 'init', array($courseid, $modid));
     }
 }
 
@@ -173,31 +172,12 @@ function local_annoto_is_moderator($settings, $courseid) {
  * @param int $modid mod id.
  * @return array
  */
-function local_annoto_get_jsparam($courseid, $pageurl, $modid) {
+function local_annoto_get_jsparam($courseid, $modid) {
     global $CFG;
     $course = get_course($courseid);
 
     // Get plugin global settings.
     $settings = get_config('local_annoto');
-
-    // Set id of the video frame where script should be attached.
-    $isglobalscope = filter_var($settings->scope, FILTER_VALIDATE_BOOLEAN);
-
-    // If scope is not Global - check if url is in access list.
-    if (!$isglobalscope) {
-        // ACL.
-        $acltext = ($settings->acl) ? $settings->acl : null;
-        $aclarr = preg_split("/\R/", $acltext);
-        $iscourseinacl = false;
-        $isurlinacl = false;
-
-        $iscourseinacl = in_array($courseid, $aclarr);
-
-        if (!$iscourseinacl) {
-            $isurlinacl = in_array($pageurl, $aclarr);
-        }
-        $isaclmatch = ($iscourseinacl || $isurlinacl);
-    }
 
     // Get login, logout urls.
     $loginurl = $CFG->wwwroot . "/login/index.php";
@@ -219,28 +199,12 @@ function local_annoto_get_jsparam($courseid, $pageurl, $modid) {
     } else {
         $lang = $settings->locale;
     }
-    $widgetposition = 'right';
-    $widgetverticalalign = 'center';
-    if (stripos($settings->widgetposition, 'left') !== false) {
-        $widgetposition = 'left';
-    }
-    if (stripos($settings->widgetposition, 'top') !== false) {
-        $widgetverticalalign = 'top';
-    }
-    if (stripos($settings->widgetposition, 'bottom') !== false) {
-        $widgetverticalalign = 'bottom';
-    }
 
     $jsparams = array(
         'deploymentDomain' => $settings->deploymentdomain != 'custom' ? $settings->deploymentdomain : $settings->customdomain,
         'bootstrapUrl' => $settings->scripturl,
         'clientId' => $settings->clientid,
         'userToken' => local_annoto_get_user_token($settings, $courseid),
-        'position' => $widgetposition,
-        'alignVertical' => $widgetverticalalign,
-        'widgetOverlay' => $settings->widgetoverlay,
-        'featureTab' => !empty($settings->tabs) ? filter_var($settings->tabs, FILTER_VALIDATE_BOOLEAN) : true,
-        'featureCTA' => !empty($settings->cta) ? filter_var($settings->cta, FILTER_VALIDATE_BOOLEAN) : false,
         'loginUrl' => $loginurl,
         'logoutUrl' => $logouturl,
         'mediaTitle' => $cmtitle,
@@ -248,16 +212,8 @@ function local_annoto_get_jsparam($courseid, $pageurl, $modid) {
         'mediaGroupId' => $courseid,
         'mediaGroupTitle' => $course->fullname,
         'mediaGroupDescription' => $course->summary,
-        'privateThread' => filter_var($settings->discussionscope, FILTER_VALIDATE_BOOLEAN),
         'locale' => $lang,
         'rtl' => filter_var((substr($lang, 0, 2) === "he"), FILTER_VALIDATE_BOOLEAN),
-        'demoMode' => filter_var($settings->demomode, FILTER_VALIDATE_BOOLEAN),
-        'zIndex' => !empty($settings->zindex) ? filter_var($settings->zindex, FILTER_VALIDATE_INT) : 100,
-        'openOnLoad' => (boolean) $settings->openonload,
-        'sidePanelLayout' => (boolean) $settings->sidepanellayout,
-        'sidePanelFullScreen' => (boolean) $settings->sidepanelfullscreen ,
-        'isGlobalScope' => $isglobalscope,
-        'isACLmatch' => !empty($isaclmatch) ? filter_var($isaclmatch, FILTER_VALIDATE_BOOLEAN) : false,
     );
 
     return $jsparams;
