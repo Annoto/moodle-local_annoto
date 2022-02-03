@@ -32,8 +32,6 @@ if (!defined('CUSTOM')) define('CUSTOM', 'custom');
 
 if ($hassiteconfig) {
 
-    //$version = get_config('local_annoto');
-
     $pluginmanager = core_plugin_manager::instance();
     $plugininfo = $pluginmanager->get_plugin_info('local_annoto');
     $version = $plugininfo->versiondb;
@@ -42,7 +40,7 @@ if ($hassiteconfig) {
     $settings = new admin_settingpage('local_annoto',$name);
     $ADMIN->add('localplugins', $settings);
 
-    /* Application setup. */
+    /* Annoto setup. */
     $settings->add(new admin_setting_heading('local_annoto/setupheading', get_string('setupheading', 'local_annoto'), ''));
 
     // API key / clientID.
@@ -57,7 +55,7 @@ if ($hassiteconfig) {
     $settings->add(new admin_setting_configtext('local_annoto/scripturl', get_string('scripturl', 'local_annoto'),
         get_string('scripturldesc', 'local_annoto'), 'https://app.annoto.net/annoto-bootstrap.js'));
 
-    // deploymentDomain.
+    // Deployment domain.
     $settings->add(new admin_setting_configselect('local_annoto/deploymentdomain', get_string('deploymentdomain', 'local_annoto'),
         get_string('deploymentdomaindesc', 'local_annoto'), EUREGION,
             array(
@@ -73,7 +71,7 @@ if ($hassiteconfig) {
     $settings->hide_if('local_annoto/customdomain', 'local_annoto/deploymentdomain', 'neq', CUSTOM);
 
 
-    /* External tool (LTI) settings. */
+    /* Annoto dashboard (LTI) */
     $settings->add(new admin_setting_heading('local_annoto/externaltoolsettings', get_string('externaltoolsettings', 'local_annoto'), ''));
 
     // LTI name.
@@ -88,8 +86,11 @@ if ($hassiteconfig) {
     $settings->add(new admin_setting_configtext('local_annoto/tooliconurl', get_string('tooliconurl', 'local_annoto'),
         get_string('tooliconurldesc', 'local_annoto'), 'https://assets.annoto.net/images/logo_icon.png'));
 
+    // Auto launchig.
+    $settings->add(new admin_setting_configcheckbox('local_annoto/addingdashboard',
+        get_string('addingdashboard', 'local_annoto'), get_string('addingdashboard_desc', 'local_annoto'), 1));
 
-
+    /* Annoto settings */
     $settings->add(new admin_setting_heading('local_annoto/appsetingsheading', get_string('appsetingsheading', 'local_annoto'),
         ''));
 

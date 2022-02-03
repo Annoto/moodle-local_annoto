@@ -246,9 +246,12 @@ function local_annoto_extend_settings_navigation(settings_navigation $settingsna
         return;
     }
 
-    //create a dashboard instance if not available
+    // Create a dashboard instance if not available
     if(!$cm = local_annoto_get_lti_course_module()){
-        if(!$cm = local_annoto_create_lti_course_module()){
+        if (!$settings->addingdashboard) {
+            return;
+        }
+        if (!$cm = local_annoto_create_lti_course_module()) {
             return;
         }
     }
@@ -258,6 +261,7 @@ function local_annoto_extend_settings_navigation(settings_navigation $settingsna
     $icon = new pix_icon('icon', '','local_annoto');
     $url  = $cm->url->out();
 
+    // Add nav button to Annoto dashboard
     $annotodashboard = navigation_node::create($text, $url, $type , null, 'annotodashboard', $icon);
     if ($settingnode->find('coursereports', navigation_node::TYPE_CONTAINER)) {
         $settingnode->add_node($annotodashboard,'coursereports');
