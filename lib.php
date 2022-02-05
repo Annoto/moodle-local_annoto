@@ -368,6 +368,7 @@ function local_annoto_lti_add_type() {
     $type->baseurl = $settings->toolurl;
     $type->tooldomain = parse_url($settings->toolurl, PHP_URL_HOST);
     $type->state = 1;
+    $type->coursevisible = LTI_COURSEVISIBLE_NO;
 
     $type->icon = $settings->tooliconurl;
     $type->secureicon = $settings->tooliconurl;
@@ -376,7 +377,7 @@ function local_annoto_lti_add_type() {
     $config = new stdClass;
     $config->lti_resourcekey = $settings->clientid;
     $config->lti_password = $settings->ssosecret;
-    $config->lti_coursevisible = 0;
+    $config->lti_coursevisible = LTI_COURSEVISIBLE_NO;
     $config->lti_launchcontainer = 3;
 
     //Privacy setting
@@ -388,16 +389,23 @@ function local_annoto_lti_add_type() {
     return lti_add_type($type, $config);
 }
 
-function local_annoto_update_lti_type($name) {
+function local_annoto_update_lti_type() {
 
     $settings = get_config('local_annoto');
     $lti = lti_get_tool_by_url_match($settings->toolurl);
 
-    if (!$lti) return;
-    
-    $record = new StdClass;
-    $record->typeid = $lti->id;
-    $record->name = 'coursevisible';
-    $record->value = $settings->addingdashboard ? 2 : 0;;
-    lti_update_config($record);
+    if (!$lti){
+        $lti = new stdClass;
+        $lti->id = local_annoto_lti_add_type();
+    }
+
+    $coursevisible = $settings->addingdashboard ? LTI_COURSEVISIBLE_NO : LTI_COURSEVISIBLE_ACTIVITYCHOOSER;
+    $lti->coursevisible = $coursevisible;
+
+    $config = new stdClass;
+    $config->lti_resourcekey = $settings->clientid;
+    $config->lti_password = $settings->ssosecret;
+    $config->lti_coursevisible = $coursevisible;
+
+    lti_update_type($lti, $config);
 }

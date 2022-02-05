@@ -45,12 +45,16 @@ if ($hassiteconfig) {
     $settings->add(new admin_setting_heading('local_annoto/setupheading', get_string('setupheading', 'local_annoto'), ''));
 
     // API key / clientID.
-    $settings->add(new admin_setting_configtext('local_annoto/clientid', get_string('clientid', 'local_annoto'),
-        get_string('clientiddesc', 'local_annoto'), null));
+    $setting = new admin_setting_configtext('local_annoto/clientid', get_string('clientid', 'local_annoto'),
+        get_string('clientiddesc', 'local_annoto'), null);
+    $setting->set_updatedcallback('local_annoto_update_lti_type');
+    $settings->add($setting);
 
     // SSO Secret.
-    $settings->add(new admin_setting_configtext('local_annoto/ssosecret', get_string('ssosecret', 'local_annoto'),
-        get_string('ssosecretdesc', 'local_annoto'), null));
+    $setting = new admin_setting_configtext('local_annoto/ssosecret', get_string('ssosecret', 'local_annoto'),
+        get_string('ssosecretdesc', 'local_annoto'), null);
+    $setting->set_updatedcallback('local_annoto_update_lti_type');
+    $settings->add($setting);
 
     // Annoto script url.
     $settings->add(new admin_setting_configtext('local_annoto/scripturl', get_string('scripturl', 'local_annoto'),
