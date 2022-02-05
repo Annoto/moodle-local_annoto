@@ -227,7 +227,7 @@ function local_annoto_get_jsparam($courseid, $modid) {
  * @param context_course $context The node to add module settings to
  */
 function local_annoto_extend_settings_navigation(settings_navigation $settingsnav, context  $context) {
-    global $PAGE, $COURSE;
+    global $CFG, $PAGE, $COURSE;
 
     if ((strpos($PAGE->pagetype, 'mod-') === false) &&
         (strpos($PAGE->pagetype, 'course-view-') === false)) {
@@ -246,12 +246,20 @@ function local_annoto_extend_settings_navigation(settings_navigation $settingsna
         return;
     }
 
+    // Check and create LTI external tool
+   require_once($CFG->dirroot . '/mod/lti/locallib.php');
+    $lti = lti_get_tool_by_url_match($settings->toolurl);
+    if (!$lti){
+        $lti = new stdClass();
+        $lti->id = local_annoto_lti_add_type();
+    }
+
     // Create a dashboard instance if not available
     if(!$cm = local_annoto_get_lti_course_module()){
         if (!$settings->addingdashboard) {
             return;
         }
-        if (!$cm = local_annoto_create_lti_course_module()) {
+        if (!$cm = local_annoto_create_lti_course_module($lti)) {
             return;
         }
     }
@@ -300,11 +308,11 @@ function local_annoto_get_lti_course_module(){
 
 /**
  * creates annoto dashboard's lti course module for current course
- *
+ * @param stdClass $lti LTI extrnall tool for specific mode
  * @return cm_info|null $cm
  */
-function local_annoto_create_lti_course_module(){
-    GLOBAL $DB, $CFG, $PAGE;
+function local_annoto_create_lti_course_module($lti){
+    GLOBAL $CFG, $PAGE;
 
     $context = context_course::instance($PAGE->course->id);
     if(!has_capability('moodle/course:manageactivities', $context)){
@@ -316,15 +324,6 @@ function local_annoto_create_lti_course_module(){
     }
 
     require_once($CFG->dirroot . '/mod/lti/locallib.php');
-
-    // Get plugin global settings.
-    $settings = get_config('local_annoto');
-    $lti = lti_get_tool_by_url_match($settings->toolurl);
-
-    if (!$lti){
-        $lti = new stdClass();
-        $lti->id = local_annoto_lti_add_type();
-    }
 
     $toolconfig = lti_get_type_config($lti->id);
 
@@ -387,4 +386,18 @@ function local_annoto_lti_add_type() {
     $config->lti_acceptgrades = 2;
 
     return lti_add_type($type, $config);
+}
+
+function local_annoto_update_lti_type($name) {
+
+    $settings = get_config('local_annoto');
+    $lti = lti_get_tool_by_url_match($settings->toolurl);
+
+    if (!$lti) return;
+    
+    $record = new StdClass;
+    $record->typeid = $lti->id;
+    $record->name = 'coursevisible';
+    $record->value = $settings->addingdashboard ? 2 : 0;;
+    lti_update_config($record);
 }

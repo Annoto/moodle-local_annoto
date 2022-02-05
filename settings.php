@@ -24,13 +24,14 @@
 
 defined('MOODLE_INTERNAL') || die;
 
-require_once($CFG->dirroot. '/local/annoto/classes/admin_setting_custompickroles.php');
-
 if (!defined('USREGION')) define('USREGION', 'us.annoto.net');
 if (!defined('EUREGION')) define('EUREGION', 'annoto.net');
 if (!defined('CUSTOM')) define('CUSTOM', 'custom');
 
 if ($hassiteconfig) {
+
+    require_once($CFG->dirroot. '/local/annoto/classes/admin_setting_custompickroles.php');
+    require_once($CFG->dirroot . '/local/annoto/lib.php');
 
     $pluginmanager = core_plugin_manager::instance();
     $plugininfo = $pluginmanager->get_plugin_info('local_annoto');
@@ -87,9 +88,12 @@ if ($hassiteconfig) {
         get_string('tooliconurldesc', 'local_annoto'), 'https://assets.annoto.net/images/logo_icon.png'));
 
     // Auto launchig.
-    $settings->add(new admin_setting_configcheckbox('local_annoto/addingdashboard',
-        get_string('addingdashboard', 'local_annoto'), get_string('addingdashboard_desc', 'local_annoto'), 1));
 
+    $setting = new admin_setting_configcheckbox('local_annoto/addingdashboard',
+        get_string('addingdashboard', 'local_annoto'), get_string('addingdashboard_desc', 'local_annoto'), 1);
+    $setting->set_updatedcallback('local_annoto_update_lti_type');
+    $settings->add($setting);
+    
     /* Annoto settings */
     $settings->add(new admin_setting_heading('local_annoto/appsetingsheading', get_string('appsetingsheading', 'local_annoto'),
         ''));
