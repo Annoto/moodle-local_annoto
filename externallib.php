@@ -42,7 +42,6 @@ class local_annoto_external extends external_api {
         return new external_function_parameters(
                 array(
                   'courseid' => new external_value(PARAM_INT, 'Course id', VALUE_DEFAULT, null),
-                  'pageurl' => new external_value(PARAM_URL, 'Page URL', VALUE_DEFAULT, null),
                   'modid' => new external_value(PARAM_INT, 'Mod id', VALUE_DEFAULT, 0)
                 )
         );
@@ -59,17 +58,15 @@ class local_annoto_external extends external_api {
     /**
      * Get parameters for Anooto's JS script
      * @param int $courseid the id of the course.
-     * @param string $pageurl url of the current page.
      * @param int $modid mod id.
      * @return array
      */
-    public static function get_jsparams($courseid, $pageurl, $modid) {
+    public static function get_jsparams($courseid, $modid) {
         global $PAGE;
         $params = self::validate_parameters(
             self::get_jsparams_parameters(),
             array(
                 'courseid' => $courseid,
-                'pageurl' => $pageurl,
                 'modid' => $modid
             )
         );
@@ -79,7 +76,7 @@ class local_annoto_external extends external_api {
         $response = '';
         if (has_capability($capabilities, $context)) {
             self::validate_context($context);
-            $response = json_encode(local_annoto_get_jsparam($courseid, $pageurl, $modid), JSON_HEX_TAG);
+            $response = json_encode(local_annoto_get_jsparam($courseid, $modid), JSON_HEX_TAG);
         } else {
             $response = json_encode(false);
         }
