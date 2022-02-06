@@ -58,7 +58,7 @@ if ($hassiteconfig) {
 
     // Annoto script url.
     $settings->add(new admin_setting_configtext('local_annoto/scripturl', get_string('scripturl', 'local_annoto'),
-        get_string('scripturldesc', 'local_annoto'), 'https://app.annoto.net/annoto-bootstrap.js'));
+        get_string('scripturldesc', 'local_annoto'), 'https://cdn.annoto.net/widget/latest/bootstrap.js'));
 
     // Deployment domain.
     $settings->add(new admin_setting_configselect('local_annoto/deploymentdomain', get_string('deploymentdomain', 'local_annoto'),
