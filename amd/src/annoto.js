@@ -97,6 +97,7 @@ define([
                 videojs = $(parent).find('.video-js').first().get(0),
                 jwplayer = $(parent).find('.jwplayer').first().get(0),
                 wistia = $(parent).find('.wistia_embed').first().get(0),
+                html5 = $(parent).find('video').first().get(0),
                 annotoPlayer = '';
 
             if (videojs) {
@@ -121,6 +122,9 @@ define([
             }else if (wistia) {
                 annotoPlayer = wistia;
                 this.params.playerType = 'wistia';
+            }else if (html5) {
+                annotoPlayer = html5;
+                this.params.playerType = 'html5';
             }else {
                 return;
             }
@@ -353,7 +357,8 @@ define([
                 grid: 'body.format-grid .grid_section, body.format-grid #gridshadebox',
                 topcoll: 'body.format-topcoll .ctopics.topics .toggledsection ',
                 tabs: 'body.format-tabtopics .yui3-tab-panel',
-                snap: 'body.format-topics.theme-snap .topics .section.main'
+                snap: 'body.format-topics.theme-snap .topics .section.main',
+                modtab: '#page-mod-tab-view .TabbedPanelsContentGroup .TabbedPanelsContent'
             };
             var courseFormat = '';
 
@@ -365,6 +370,8 @@ define([
                     courseFormat = 'topcoll';
             } else if (typeof M.snapTheme !== 'undefined') {
                 courseFormat = 'snap';
+            } else if (document.body.id === 'page-mod-tab-view') {
+                courseFormat = 'modtab';
             }
 
             var playerNode = document.getElementById(this.params.playerId),
@@ -391,6 +398,11 @@ define([
                       case 'snap':
                         mutationTarget = mutationList.filter(function(m) {
                           return m.target.classList.contains('state-visible');
+                        })[0].target;
+                        break;
+                      case 'modtab':
+                        mutationTarget = mutationList.filter(function(m) {
+                          return m.target.classList.contains('TabbedPanelsContentVisible');
                         })[0].target;
                         break;
                     }
