@@ -213,7 +213,6 @@ function local_annoto_get_jsparam($courseid, $modid) {
         'mediaGroupTitle' => $course->fullname,
         'mediaGroupDescription' => $course->summary,
         'locale' => $lang,
-        'rtl' => filter_var((substr($lang, 0, 2) === "he"), FILTER_VALIDATE_BOOLEAN),
     );
 
     return $jsparams;
