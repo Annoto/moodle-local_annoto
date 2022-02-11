@@ -208,6 +208,7 @@ function local_annoto_get_jsparam($courseid, $modid) {
         'loginUrl' => $loginurl,
         'logoutUrl' => $logouturl,
         'mediaTitle' => $cmtitle,
+        'mediaId' => $modid,
         'mediaDescription' => $cmintro,
         'mediaGroupId' => $courseid,
         'mediaGroupTitle' => $course->fullname,
@@ -407,4 +408,19 @@ function local_annoto_update_lti_type() {
     $config->lti_coursevisible = $coursevisible;
 
     lti_update_type($lti, $config);
+}
+
+function local_annoto_update_media() {
+    GLOBAL $DB;
+    $settings = get_config('local_annoto');
+
+    $defaultwidth = $DB->get_record('config', ['name' => 'media_default_width']);
+    $defaultwidth->value = $settings->defaultwidth;
+    $DB->update_record('config', $defaultwidth);
+
+    $defaultheight = $DB->get_record('config', ['name' => 'media_default_height']);
+    $defaultheight->value = $settings->defaultheight;
+    $DB->update_record('config', $defaultheight);
+
+    purge_caches();
 }

@@ -58,6 +58,12 @@ $string['moderatorrolesdesc'] = 'Specify who is allowed to moderate discussions 
 $string['addingdashboard'] = 'Add Annoto dashboard';
 $string['addingdashboard_desc'] = 'Add Annoto dashboard automatically to each course';
 
+$string['defaultwidth'] = 'Media width';
+$string['defaultwidthdesc'] = 'Media player width if a width is not specified and the actual media file width cannot be determined by the player';
+$string['defaultheight'] = 'Media height';
+$string['defaultheightdesc'] = 'Media player height if a height is not specified and the actual media file height cannot be determined by the player';
+
+
 // UX preferences.
 $string['appuxheading'] = 'Annoto UX Preferences';
 $string['positionright'] = 'Right';

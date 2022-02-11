@@ -116,4 +116,16 @@ if ($hassiteconfig) {
             'editingteacher',
         )));
 
+    // Annoto default width.
+    $setting = new admin_setting_configtext('local_annoto/defaultwidth', get_string('defaultwidth', 'local_annoto'),
+        get_string('defaultwidthdesc', 'local_annoto'), 400);
+    $setting->set_updatedcallback('local_annoto_update_media');
+    $settings->add($setting);
+
+    // Annoto default height.
+    $setting = new admin_setting_configtext('local_annoto/defaultheight', get_string('defaultheight', 'local_annoto'),
+        get_string('defaultheightdesc', 'local_annoto'), 400);
+    $setting->set_updatedcallback('local_annoto_update_media');
+    $settings->add($setting);
+
 }
