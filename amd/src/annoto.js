@@ -164,8 +164,19 @@ define([
                         window.location.replace(params.loginUrl);
                     },
                 },
+                hooks: {
+                    mediaDetails: function() {
+                        return {
+                            details: {
+                                title: params.mediaTitle,
+                                id: params.mediaId,
+                                description: params.$cmintro,
+                            }
+                        };
+                    },
+                },
                 locale: params.locale,
-                widgets:[{player: {}}],
+                widgets: [{player: {}}],
                 group: {
                     id: params.mediaGroupId,
                     title: params.mediaGroupTitle,
@@ -408,8 +419,19 @@ define([
                             window.location.replace(params.loginUrl);
                         },
                     },
+                    hooks: {
+                        mediaDetails: function() {
+                            return {
+                                details: {
+                                    title: params.mediaTitle,
+                                    id: params.mediaId,
+                                    description: params.$cmintro,
+                                }
+                            };
+                        },
+                    },
                     locale: params.locale,
-                    widgets:[{player: {}}],
+                    widgets: [{player: {}}],
                     group: {
                         id: params.mediaGroupId,
                         title: params.mediaGroupTitle,
