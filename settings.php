@@ -92,10 +92,10 @@ if ($hassiteconfig) {
         get_string('tooliconurldesc', 'local_annoto'), 'https://assets.annoto.net/images/logo_icon.png'));
 
     // Auto launchig.
-//    $setting = new admin_setting_configcheckbox('local_annoto/addingdashboard',
-//        get_string('addingdashboard', 'local_annoto'), get_string('addingdashboard_desc', 'local_annoto'), 1);
-//    $setting->set_updatedcallback('local_annoto_update_lti_type');
-//    $settings->add($setting);
+    $setting = new admin_setting_configcheckbox('local_annoto/addingdashboard',
+        get_string('addingdashboard', 'local_annoto'), get_string('addingdashboard_desc', 'local_annoto'), 1);
+    $setting->set_updatedcallback('local_annoto_update_lti_type');
+    $settings->add($setting);
     
     /* Annoto settings */
     $settings->add(new admin_setting_heading('local_annoto/appsetingsheading', get_string('appsetingsheading', 'local_annoto'),
