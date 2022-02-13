@@ -164,23 +164,24 @@ define([
                         window.location.replace(params.loginUrl);
                     },
                 },
-                rtl: params.rtl,
-                locale: params.locale,
-                widgets: [{
-                    player: {
-                        mediaDetails: function() {
-                            return {
+                hooks: {
+                    mediaDetails: function() {
+                        return {
+                            details: {
                                 title: params.mediaTitle,
-                                description: params.mediaDescription,
-                                group: {
-                                    id: params.mediaGroupId,
-                                    type: 'playlist',
-                                    title: params.mediaGroupTitle
-                                }
-                            };
-                        },
+                                id: params.mediaId,
+                                description: params.$cmintro,
+                            }
+                        };
                     },
-                }],
+                },
+                locale: params.locale,
+                widgets: [{player: {}}],
+                group: {
+                    id: params.mediaGroupId,
+                    title: params.mediaGroupTitle,
+                    description: params.mediaDescription,
+                },
             };
 
             this.config = config;
@@ -276,7 +277,6 @@ define([
 
             config.clientId = params.clientId;
             config.locale = params.locale;
-            config.rtl = params.rtl;
 
             playerConfig.mediaDetails = this.enrichMediaDetails.bind(this);
         },
@@ -295,8 +295,8 @@ define([
             retVal.description = retVal.description ? retVal.description : params.mediaDescription;
             retVal.group = {
                 id: params.mediaGroupId,
-                type: 'playlist',
-                title: params.mediaGroupTitle
+                title: params.mediaGroupTitle,
+                description: params.mediaDescription,
             };
 
             return retVal;
@@ -419,22 +419,24 @@ define([
                             window.location.replace(params.loginUrl);
                         },
                     },
-                    locale: params.locale,
-                    widgets: [{
-                        player: {
-                            mediaDetails: function() {
-                                return {
+                    hooks: {
+                        mediaDetails: function() {
+                            return {
+                                details: {
                                     title: params.mediaTitle,
-                                    description: params.mediaDescription,
-                                    group: {
-                                        id: params.mediaGroupId,
-                                        type: 'playlist',
-                                        title: params.mediaGroupTitle
-                                    }
-                                };
-                            },
+                                    id: params.mediaId,
+                                    description: params.$cmintro,
+                                }
+                            };
                         },
-                    }],
+                    },
+                    locale: params.locale,
+                    widgets: [{player: {}}],
+                    group: {
+                        id: params.mediaGroupId,
+                        title: params.mediaGroupTitle,
+                        description: params.mediaDescription,
+                    },
                 });
             });
 
