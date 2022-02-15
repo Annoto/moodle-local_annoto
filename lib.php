@@ -315,7 +315,7 @@ function local_annoto_create_lti_course_module($lti){
     GLOBAL $CFG, $PAGE;
 
     $context = context_course::instance($PAGE->course->id);
-    if(!has_capability('moodle/course:manageactivities', $context)){
+    if(!has_capability('local/annoto:managementdashboard', $context)){
         return null;
     }
 
