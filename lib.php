@@ -412,7 +412,11 @@ function local_annoto_update_lti_type() {
 
 function local_annoto_update_media() {
     GLOBAL $DB;
+
     $settings = get_config('local_annoto');
+    if (!$settings->mediasettingsoverride) {
+        return;
+    }
 
     $defaultwidth = $DB->get_record('config', ['name' => 'media_default_width']);
     $defaultwidth->value = $settings->defaultwidth;

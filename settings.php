@@ -116,16 +116,29 @@ if ($hassiteconfig) {
             'editingteacher',
         )));
 
-    // Annoto default width.
-    $setting = new admin_setting_configtext('local_annoto/defaultwidth', get_string('defaultwidth', 'local_annoto'),
-        get_string('defaultwidthdesc', 'local_annoto'), 400);
+    /* Annoto settings */
+    $settings->add(new admin_setting_heading('local_annoto/mediaplayersettingheading', get_string('media_player_setting', 'local_annoto'),
+        ''));
+
+    $setting = new admin_setting_configselect('local_annoto/mediasettingsoverride', get_string('mediasettingsoverride', 'local_annoto'),
+        get_string('mediasettingsoverridedesc', 'local_annoto'), 0, array(
+            0 => get_string('no'),
+            1 => get_string('yes')));
     $setting->set_updatedcallback('local_annoto_update_media');
     $settings->add($setting);
 
-    // Annoto default height.
-    $setting = new admin_setting_configtext('local_annoto/defaultheight', get_string('defaultheight', 'local_annoto'),
-        get_string('defaultheightdesc', 'local_annoto'), 400);
+    // Annoto default width.
+    $setting = new admin_setting_configtext('local_annoto/defaultwidth', get_string('defaultwidth', 'local_annoto'),
+        get_string('defaultwidthdesc', 'local_annoto'), 854);
     $setting->set_updatedcallback('local_annoto_update_media');
     $settings->add($setting);
+    $settings->hide_if('local_annoto/defaultwidth', 'local_annoto/mediasettingsoverride', 'neq', 1);
+
+    // Annoto default height.
+    $setting = new admin_setting_configtext('local_annoto/defaultheight', get_string('defaultheight', 'local_annoto'),
+        get_string('defaultheightdesc', 'local_annoto'), 480);
+    $setting->set_updatedcallback('local_annoto_update_media');
+    $settings->add($setting);
+    $settings->hide_if('local_annoto/defaultheight', 'local_annoto/mediasettingsoverride', 'neq', 1);
 
 }

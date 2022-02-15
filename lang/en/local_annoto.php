@@ -76,6 +76,10 @@ $string['overlayauto'] = 'Auto';
 $string['overlayinner'] = 'On top of player';
 $string['overlayouter'] = 'Next to player';
 
+$string['media_player_setting'] = 'Media Player Setting';
+$string['mediasettingsoverride'] = 'Override Moodle media settings';
+$string['mediasettingsoverridedesc'] = 'Enable overriding the Moodle Media Player settings';
+
 
 // LTI
 $string['externaltoolsettings'] = 'Annoto dashboard (LTI)';
