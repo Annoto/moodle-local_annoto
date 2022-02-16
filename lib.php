@@ -184,8 +184,6 @@ function local_annoto_get_jsparam($courseid, $modid) {
     $logouturl = $CFG->wwwroot . "/login/logout.php?sesskey=" . sesskey();
 
     // Get activity data for mediaDetails.
-    $cmtitle = '';
-    $cmintro = '';
     if ($modid) {
         $modinfo = get_fast_modinfo($course);
         $cm = $modinfo->get_cm($modid);
@@ -207,9 +205,9 @@ function local_annoto_get_jsparam($courseid, $modid) {
         'userToken' => local_annoto_get_user_token($settings, $courseid),
         'loginUrl' => $loginurl,
         'logoutUrl' => $logouturl,
-        'mediaTitle' => $cmtitle,
-        'mediaId' => $modid,
-        'mediaDescription' => $cmintro,
+        'mediaId' => $modid ?? '',
+        'mediaTitle' => $cmtitle ?? '',
+        'mediaDescription' => $cmintro ?? '',
         'mediaGroupId' => $courseid,
         'mediaGroupTitle' => $course->fullname,
         'mediaGroupDescription' => $course->summary,
