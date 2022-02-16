@@ -22,11 +22,13 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-$string['filtername'] = 'Annoto';
 $string['pluginname'] = 'Annoto';
-$string['annoto:moderatediscussion'] = 'Moderate discussions in Annoto';
 
-// Application Setup.
+// Capabilities
+$string['annoto:moderatediscussion'] = 'Moderate discussions in Annoto';
+$string['annoto:managementdashboard'] = 'Manage Annoto dashboard';
+
+// Annoto Setup.
 $string['setupheading'] = 'Annoto setup';
 $string['clientid'] = 'API key';
 $string['clientiddesc'] = 'ClientID is provided by Annoto (keep in secret)';
@@ -34,20 +36,29 @@ $string['ssosecret'] = 'SSO secret';
 $string['ssosecretdesc'] = 'SSO secret is provided by Annoto (keep in secret)';
 $string['scripturl'] = 'Annoto\'s script URL';
 $string['scripturldesc'] = 'Provide Annoto\'s script URL here';
-
 $string['deploymentdomain'] = 'Deployment domain';
 $string['deploymentdomaindesc'] = 'Provide the region for the widgets. Please note that the widget data is bound to a specific region.';
-$string['eurregion'] = 'EU region';
-$string['usregion'] = 'US region';
-
 $string['customdomain'] = 'Custom deployment domain';
 $string['customdomaindesc'] = 'Specify a custom deployment domain. Please note that the widget data is bound to a specific region.';
+$string['eurregion'] = 'EU region';
+$string['usregion'] = 'US region';
 $string['custom'] = 'Custom';
 
-// Application settings.
+// Annoto dashboard (LTI)
+$string['addingdashboard'] = 'Add to the all courses';
+$string['addingdashboard_desc'] = 'If enabled, Annoto dashboard will be automatically added to all the courses';
+$string['externaltoolsettings'] = 'Annoto dashboard (LTI)';
+$string['toolurl'] = 'URL';
+$string['toolurldesc'] = 'External tool URL';
+$string['tooliconurl'] = 'Icon';
+$string['tooliconurldesc'] = 'External tool icon';
+$string['toolname'] = 'Name';
+$string['toolnamedesc'] = 'External tool name';
+$string['annoto_dashboard_description'] = "The Annoto Dashboard was designed in order to shed light upon learners' video consumption and behavior within Annoto in-video collaboration widget, providing you with analytics and insights regarding their activity in the course.";
+$string['lti_activity_name'] = 'Annoto Dashboard';
+
+// Annoto settings.
 $string['appsetingsheading'] = 'Annoto settings';
-$string['cta'] = 'Call to action';
-$string['ctadesc'] = 'Toggle this if you want to use call to actions';
 $string['locale'] = 'Locale';
 $string['localedesc'] = 'Choose language (Auto will set per page and course based on Course and User preferences)';
 $string['localeauto'] = 'Auto detect';
@@ -55,36 +66,6 @@ $string['localeen'] = 'English';
 $string['localehe'] = 'Hebrew';
 $string['moderatorroles'] = 'Moderator roles';
 $string['moderatorrolesdesc'] = 'Specify who is allowed to moderate discussions (only roles that at least include the following capabilities are available: local/annoto:moderatediscussion).';
-$string['addingdashboard'] = 'Add Annoto dashboard';
-$string['addingdashboard_desc'] = 'Add Annoto dashboard automatically to each course';
-
-// UX preferences.
-$string['appuxheading'] = 'Annoto UX Preferences';
-$string['positionright'] = 'Right';
-$string['positionleft'] = 'Left';
-$string['positiontopright'] = 'Top right';
-$string['positiontopleft'] = 'Top left';
-$string['positionbottomright'] = 'Bottom right';
-$string['positionbottomleft'] = 'Bottom left';
-$string['overlayauto'] = 'Auto';
-$string['overlayinner'] = 'On top of player';
-$string['overlayouter'] = 'Next to player';
-
-
-// LTI
-$string['externaltoolsettings'] = 'Annoto dashboard (LTI)';
-$string['toolurl'] = 'External tool URL';
-$string['toolurldesc'] = 'Provide external tool URL';
-$string['tooliconurl'] = 'External tool icon';
-$string['tooliconurldesc'] = 'External tool icon URL';
-$string['toolname'] = 'External tool name';
-$string['toolnamedesc'] = 'External tool name';
-$string['annoto_dashboard:view'] = 'Annoto dashboard view';
-$string['section:media'] = 'media';
-$string['section:video'] = 'video';
-$string['annoto_dashboard_description'] = 'Annoto’s dashboard was designed in order to shed a light upon students’ behavior within Annoto in-video collaboration widget, providing you with data regarding their engagement with the video.';
-$string['lti_activity_name'] = 'Annoto Dashboard';
-
 
 // Privacy API.
 $string['privacy:metadata:annoto'] = 'In order to integrate with a remote service, user data needs to be exchanged with that service.';

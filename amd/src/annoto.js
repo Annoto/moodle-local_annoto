@@ -146,10 +146,11 @@ define([
                 params = this.params,
                 nonOverlayTimelinePlayers = ['youtube', 'vimeo'];
 
+            config.widgets = config.widgets || [{player: {}}];
             config.widgets[0].player.type = params.playerType;
             config.widgets[0].player.element = params.element;
-            config.timeline = {
-                overlayVideo: (nonOverlayTimelinePlayers.indexOf(params.playerType) === -1),
+            config.widgets[0].timeline = {
+                overlay: (nonOverlayTimelinePlayers.indexOf(params.playerType) === -1),
             };
         },
         bootWidget: function() {
@@ -159,28 +160,25 @@ define([
                   domain: params.deploymentDomain
                 },
                 clientId: params.clientId,
-                ux: {
-                    ssoAuthRequestHandle: function() {
-                        window.location.replace(params.loginUrl);
-                    },
-                },
                 hooks: {
                     mediaDetails: function() {
                         return {
                             details: {
                                 title: params.mediaTitle,
                                 id: params.mediaId,
-                                description: params.$cmintro,
+                                description: params.mediaDescription,
                             }
                         };
                     },
+                    ssoAuthRequestHandle: function() {
+                        window.location.replace(params.loginUrl);
+                    },
                 },
                 locale: params.locale,
-                widgets: [{player: {}}],
                 group: {
                     id: params.mediaGroupId,
                     title: params.mediaGroupTitle,
-                    description: params.mediaDescription,
+                    description: params.mediaGroupDescription,
                 },
             };
 
@@ -271,14 +269,25 @@ define([
              * so we need only to override the required configuration, such as
              * clientId, features, etc. DO NOT CHANGE THE PLAYER TYPE OR PLAYER ELEMENT CONFIG.
             */
-            const params = this.params,
-                widget = config.widgets[0],
-                playerConfig = widget.player;
+            const params = this.params;
 
             config.clientId = params.clientId;
+            config.hooks = {
+                getPageUrl: function() {
+                    return window.location.href;
+                },
+                mediaDetails: function() {
+                    return {
+                        details: this.enrichMediaDetails.bind(this)
+                    };
+                },
+            };
+            config.groups = {
+                id: params.mediaGroupId,
+                title: params.mediaGroupTitle,
+                description: params.mediaGroupDescription,
+            };
             config.locale = params.locale;
-
-            playerConfig.mediaDetails = this.enrichMediaDetails.bind(this);
         },
 
         enrichMediaDetails: function(details) {
@@ -288,18 +297,12 @@ define([
             // https://github.com/Annoto/widget-api/blob/master/lib/media-details.d.ts#L6.
             // Annoto Kaltura plugin, already has some details about the media like title.
             //
-            const params = this.params;
-            const retVal = details || {};
+            const mediaDetails = details || {};
 
-            retVal.title = retVal.title || params.mediaTitle;
-            retVal.description = retVal.description ? retVal.description : params.mediaDescription;
-            retVal.group = {
-                id: params.mediaGroupId,
-                title: params.mediaGroupTitle,
-                description: params.mediaDescription,
-            };
+            mediaDetails.title = mediaDetails.title || this.params.mediaTitle;
+            mediaDetails.description = mediaDetails.description || this.params.mediaDescription;
 
-            return retVal;
+            return mediaDetails;
         },
 
         checkWidgetVisibility: function() {
@@ -414,39 +417,33 @@ define([
             annoto.onSetup(function(next) {
                 next({
                     clientId: params.clientId,
-                    ux: {
-                        ssoAuthRequestHandle: function() {
-                            window.location.replace(params.loginUrl);
-                        },
-                    },
                     hooks: {
                         mediaDetails: function() {
                             return {
                                 details: {
                                     title: params.mediaTitle,
                                     id: params.mediaId,
-                                    description: params.$cmintro,
+                                    description: params.mediaDescription,
                                 }
                             };
                         },
+                        ssoAuthRequestHandle: function() {
+                            window.location.replace(params.loginUrl);
+                        },
+                        getPageUrl: function() {
+                            return window.location.href;
+                        },
                     },
                     locale: params.locale,
-                    widgets: [{player: {}}],
                     group: {
                         id: params.mediaGroupId,
                         title: params.mediaGroupTitle,
-                        description: params.mediaDescription,
+                        description: params.mediaGroupDescription,
                     },
                 });
             });
 
             annoto.onReady(function(api) {
-                // Recomended, so notifications will have URL to valid pages
-                api.registerOriginProvider({
-                    getPageUrl: function() {
-                        return location.href;
-                    },
-                });
                 const token = params.userToken;
                 api.auth(token, function(err) {
                     if (err) {

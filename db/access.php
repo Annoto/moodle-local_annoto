@@ -38,7 +38,7 @@ $capabilities = array(
     ),
 
     'local/annoto:managementdashboard' => array(
-        'riskbitmask' => RISK_SPAM,
+        'riskbitmask' => RISK_PERSONAL,
         'captype' => 'write',
         'contextlevel' => CONTEXT_COURSE,
         'archetypes' => array(
