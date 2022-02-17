@@ -205,7 +205,6 @@ function local_annoto_get_jsparam($courseid, $modid) {
         'userToken' => local_annoto_get_user_token($settings, $courseid),
         'loginUrl' => $loginurl,
         'logoutUrl' => $logouturl,
-        'mediaId' => $modid ?? '',
         'mediaTitle' => $cmtitle ?? '',
         'mediaDescription' => $cmintro ?? '',
         'mediaGroupId' => $courseid,

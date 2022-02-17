@@ -26,7 +26,7 @@ $string['pluginname'] = 'Annoto';
 
 // Capabilities
 $string['annoto:moderatediscussion'] = 'Moderate discussions in Annoto';
-$string['annoto:managementdashboard'] = 'Manage Annoto dashboard';
+$string['annoto:managementdashboard'] = 'Access Annoto dashboard';
 
 // Annoto Setup.
 $string['setupheading'] = 'Annoto setup';
@@ -45,7 +45,7 @@ $string['usregion'] = 'US region';
 $string['custom'] = 'Custom';
 
 // Annoto dashboard (LTI)
-$string['addingdashboard'] = 'Add to the all courses';
+$string['addingdashboard'] = 'Add to all the courses';
 $string['addingdashboard_desc'] = 'If enabled, Annoto dashboard will be automatically added to all the courses';
 $string['externaltoolsettings'] = 'Annoto dashboard (LTI)';
 $string['toolurl'] = 'URL';

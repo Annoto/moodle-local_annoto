@@ -165,7 +165,6 @@ define([
                         return {
                             details: {
                                 title: params.mediaTitle,
-                                id: params.mediaId,
                                 description: params.mediaDescription,
                             }
                         };
@@ -276,13 +275,9 @@ define([
                 getPageUrl: function() {
                     return window.location.href;
                 },
-                mediaDetails: function() {
-                    return {
-                        details: this.enrichMediaDetails.bind(this)
-                    };
-                },
+                mediaDetails: this.enrichMediaDetails.bind(this),
             };
-            config.groups = {
+            config.group = {
                 id: params.mediaGroupId,
                 title: params.mediaGroupTitle,
                 description: params.mediaGroupDescription,
@@ -290,19 +285,19 @@ define([
             config.locale = params.locale;
         },
 
-        enrichMediaDetails: function(details) {
+        enrichMediaDetails: function(mediaParams) {
             // The details contains MediaDetails the plugin has managed to obtain
             // This hook gives a change to enrich the details, for example
             // providing group information for private discussions per course/playlist
             // https://github.com/Annoto/widget-api/blob/master/lib/media-details.d.ts#L6.
             // Annoto Kaltura plugin, already has some details about the media like title.
             //
-            const mediaDetails = details || {};
+            const retVal = (mediaParams && mediaParams.details) || {};
 
-            mediaDetails.title = mediaDetails.title || this.params.mediaTitle;
-            mediaDetails.description = mediaDetails.description || this.params.mediaDescription;
+            retVal.title = retVal.title || this.params.mediaTitle;
+            retVal.description = retVal.description || this.params.mediaDescription;
 
-            return mediaDetails;
+            return retVal;
         },
 
         checkWidgetVisibility: function() {
@@ -422,7 +417,6 @@ define([
                             return {
                                 details: {
                                     title: params.mediaTitle,
-                                    id: params.mediaId,
                                     description: params.mediaDescription,
                                 }
                             };
