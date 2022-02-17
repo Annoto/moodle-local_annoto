@@ -56,6 +56,8 @@ $string['toolname'] = 'Name';
 $string['toolnamedesc'] = 'External tool name';
 $string['annoto_dashboard_description'] = "The Annoto Dashboard was designed in order to shed light upon learners' video consumption and behavior within Annoto in-video collaboration widget, providing you with analytics and insights regarding their activity in the course.";
 $string['lti_activity_name'] = 'Annoto Dashboard';
+$string['managementdashboard'] = 'Dashboard manager roles';
+$string['managementdashboard_desc'] = 'Specify who is allowed to access Annoto dashboard';
 
 // Annoto settings.
 $string['appsetingsheading'] = 'Annoto settings';
