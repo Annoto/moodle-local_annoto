@@ -146,7 +146,6 @@ define([
                 params = this.params,
                 nonOverlayTimelinePlayers = ['youtube', 'vimeo'];
 
-            config.widgets = config.widgets || [{player: {}}];
             config.widgets[0].player.type = params.playerType;
             config.widgets[0].player.element = params.element;
             config.widgets[0].timeline = {
@@ -160,6 +159,7 @@ define([
                   domain: params.deploymentDomain
                 },
                 clientId: params.clientId,
+                widgets: [{player: {}}],
                 hooks: {
                     mediaDetails: function() {
                         return {
