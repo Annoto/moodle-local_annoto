@@ -173,12 +173,12 @@ define([
                         window.location.replace(params.loginUrl);
                     },
                 },
-                locale: params.locale,
                 group: {
                     id: params.mediaGroupId,
                     title: params.mediaGroupTitle,
                     description: params.mediaGroupDescription,
                 },
+                ... (params.locale) && {locale: params.locale},
             };
 
             this.config = config;
@@ -275,6 +275,9 @@ define([
                 getPageUrl: function() {
                     return window.location.href;
                 },
+                ssoAuthRequestHandle: function() {
+                    window.location.replace(params.loginUrl);
+                },
                 mediaDetails: this.enrichMediaDetails.bind(this),
             };
             config.group = {
@@ -282,7 +285,9 @@ define([
                 title: params.mediaGroupTitle,
                 description: params.mediaGroupDescription,
             };
-            config.locale = params.locale;
+            if (params.locale) {
+                config.locale = params.locale;
+            }
         },
 
         enrichMediaDetails: function(mediaParams) {
@@ -428,12 +433,12 @@ define([
                             return window.location.href;
                         },
                     },
-                    locale: params.locale,
                     group: {
                         id: params.mediaGroupId,
                         title: params.mediaGroupTitle,
                         description: params.mediaGroupDescription,
                     },
+                    ... (params.locale) && {locale: params.locale},
                 });
             });
 

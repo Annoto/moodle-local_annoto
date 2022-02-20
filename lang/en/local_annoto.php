@@ -62,10 +62,7 @@ $string['managementdashboard_desc'] = 'Specify who is allowed to access Annoto d
 // Annoto settings.
 $string['appsetingsheading'] = 'Annoto settings';
 $string['locale'] = 'Locale';
-$string['localedesc'] = 'Choose language (Auto will set per page and course based on Course and User preferences)';
-$string['localeauto'] = 'Auto detect';
-$string['localeen'] = 'English';
-$string['localehe'] = 'Hebrew';
+$string['locale_desc'] = 'If enable will set per page and course based on Course and User preferences';
 $string['moderatorroles'] = 'Moderator roles';
 $string['moderatorrolesdesc'] = 'Specify who is allowed to moderate discussions (only roles that at least include the following capabilities are available: local/annoto:moderatediscussion).';
 

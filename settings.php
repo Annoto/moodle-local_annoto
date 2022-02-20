@@ -111,14 +111,9 @@ if ($hassiteconfig) {
         ''));
 
     // Locale.
-    $settings->add(new admin_setting_configselect('local_annoto/locale', get_string('locale', 'local_annoto'),
-        get_string('localedesc', 'local_annoto'), 'auto',
-        array(
-            'auto' => get_string('localeauto', 'local_annoto'),
-            'en' => get_string('localeen', 'local_annoto'),
-            'he' => get_string('localehe', 'local_annoto')
-        )
-    ));
+    $settings->add(new admin_setting_configcheckbox('local_annoto/locale',
+        get_string('locale', 'local_annoto'), get_string('locale_desc', 'local_annoto'), 1));
+
 
     // Moderators Roles.
     $settings->add(new local_annoto_admin_setting_custompickroles('local_annoto/moderatorroles',

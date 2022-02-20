@@ -192,13 +192,6 @@ function local_annoto_get_jsparam($courseid, $modid) {
         $cmintro = $cm->content;
     }
 
-    // Locale settings.
-    if ($settings->locale == "auto") {
-        $lang = local_annoto_get_lang($course);
-    } else {
-        $lang = $settings->locale;
-    }
-
     $jsparams = array(
         'deploymentDomain' => $settings->deploymentdomain != 'custom' ? $settings->deploymentdomain : $settings->customdomain,
         'bootstrapUrl' => $settings->scripturl,
@@ -211,7 +204,7 @@ function local_annoto_get_jsparam($courseid, $modid) {
         'mediaGroupId' => $courseid,
         'mediaGroupTitle' => $course->fullname,
         'mediaGroupDescription' => $course->summary,
-        'locale' => $lang,
+        'locale' => $settings->locale ? local_annoto_get_lang($course) : false,
     );
 
     return $jsparams;
