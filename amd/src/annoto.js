@@ -147,7 +147,7 @@ define([
                 nonOverlayTimelinePlayers = ['youtube', 'vimeo'];
 
             config.widgets[0].player.type = params.playerType;
-            config.widgets[0].player.element = params.element;
+            config.widgets[0].player.element = params.playerId;
             config.widgets[0].timeline = {
                 overlay: (nonOverlayTimelinePlayers.indexOf(params.playerType) === -1),
             };
