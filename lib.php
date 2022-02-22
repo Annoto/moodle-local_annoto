@@ -430,3 +430,23 @@ function local_annoto_update_settings($settingname) {
 
     purge_caches();
 }
+
+/**
+ * get all Annoto dashboard's roles with default archetypes
+ *
+ * @return array
+ */
+function local_annoto_get_all_dashboard_roles () {
+    $capabilitiy = 'local/annoto:managementdashboard';
+    $choices = $defaultchoices = [];
+
+    if ($roles = get_roles_with_capability($capabilitiy, CAP_ALLOW)) {
+        $choices = role_fix_names($roles, null, ROLENAME_ORIGINAL, true);
+
+        foreach ($choices as $key => $val) {
+            $defaultchoices[$key] = 1;
+        }
+    }
+
+    return [$choices, $defaultchoices];
+}
