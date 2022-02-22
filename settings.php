@@ -96,16 +96,24 @@ if ($hassiteconfig) {
         get_string('addingdashboard', 'local_annoto'), get_string('addingdashboard_desc', 'local_annoto'), 1);
     $setting->set_updatedcallback('local_annoto_update_settings');
     $settings->add($setting);
-    
+
+    // Management dashboard
+    list($roles, $defaultroles) = local_annoto_get_all_dashboard_roles();
+    $settings->add(new admin_setting_configmulticheckbox('local_annoto/managementdashboard',
+        get_string('managementdashboard', 'local_annoto'),
+        get_string('managementdashboard_desc', 'local_annoto'),
+        $defaultroles,
+        $roles
+        ));
+
     /* Annoto settings */
     $settings->add(new admin_setting_heading('local_annoto/appsetingsheading', get_string('appsetingsheading', 'local_annoto'),
         ''));
 
     // Locale.
-    $settings->add(new admin_setting_configselect('local_annoto/locale', get_string('locale', 'local_annoto'),
-        get_string('localedesc', 'local_annoto'), 'auto', array(  'auto' => get_string('localeauto', 'local_annoto'),
-                                                                'en' => get_string('localeen', 'local_annoto'),
-                                                                'he' => get_string('localehe', 'local_annoto'))));
+    $settings->add(new admin_setting_configcheckbox('local_annoto/locale',
+        get_string('locale', 'local_annoto'), get_string('locale_desc', 'local_annoto'), 1));
+
 
     // Moderators Roles.
     $settings->add(new local_annoto_admin_setting_custompickroles('local_annoto/moderatorroles',

@@ -146,9 +146,8 @@ define([
                 params = this.params,
                 nonOverlayTimelinePlayers = ['youtube', 'vimeo'];
 
-            config.widgets = config.widgets || [{player: {}}];
             config.widgets[0].player.type = params.playerType;
-            config.widgets[0].player.element = params.element;
+            config.widgets[0].player.element = params.playerId;
             config.widgets[0].timeline = {
                 overlay: (nonOverlayTimelinePlayers.indexOf(params.playerType) === -1),
             };
@@ -160,12 +159,12 @@ define([
                   domain: params.deploymentDomain
                 },
                 clientId: params.clientId,
+                widgets: [{player: {}}],
                 hooks: {
                     mediaDetails: function() {
                         return {
                             details: {
                                 title: params.mediaTitle,
-                                id: params.mediaId,
                                 description: params.mediaDescription,
                             }
                         };
@@ -174,12 +173,12 @@ define([
                         window.location.replace(params.loginUrl);
                     },
                 },
-                locale: params.locale,
                 group: {
                     id: params.mediaGroupId,
                     title: params.mediaGroupTitle,
                     description: params.mediaGroupDescription,
                 },
+                ... (params.locale) && {locale: params.locale},
             };
 
             this.config = config;
@@ -276,33 +275,34 @@ define([
                 getPageUrl: function() {
                     return window.location.href;
                 },
-                mediaDetails: function() {
-                    return {
-                        details: this.enrichMediaDetails.bind(this)
-                    };
+                ssoAuthRequestHandle: function() {
+                    window.location.replace(params.loginUrl);
                 },
+                mediaDetails: this.enrichMediaDetails.bind(this),
             };
-            config.groups = {
+            config.group = {
                 id: params.mediaGroupId,
                 title: params.mediaGroupTitle,
                 description: params.mediaGroupDescription,
             };
-            config.locale = params.locale;
+            if (params.locale) {
+                config.locale = params.locale;
+            }
         },
 
-        enrichMediaDetails: function(details) {
+        enrichMediaDetails: function(mediaParams) {
             // The details contains MediaDetails the plugin has managed to obtain
             // This hook gives a change to enrich the details, for example
             // providing group information for private discussions per course/playlist
             // https://github.com/Annoto/widget-api/blob/master/lib/media-details.d.ts#L6.
             // Annoto Kaltura plugin, already has some details about the media like title.
             //
-            const mediaDetails = details || {};
+            const retVal = (mediaParams && mediaParams.details) || {};
 
-            mediaDetails.title = mediaDetails.title || this.params.mediaTitle;
-            mediaDetails.description = mediaDetails.description || this.params.mediaDescription;
+            retVal.title = retVal.title || this.params.mediaTitle;
+            retVal.description = retVal.description || this.params.mediaDescription;
 
-            return mediaDetails;
+            return retVal;
         },
 
         checkWidgetVisibility: function() {
@@ -422,7 +422,6 @@ define([
                             return {
                                 details: {
                                     title: params.mediaTitle,
-                                    id: params.mediaId,
                                     description: params.mediaDescription,
                                 }
                             };
@@ -434,12 +433,12 @@ define([
                             return window.location.href;
                         },
                     },
-                    locale: params.locale,
                     group: {
                         id: params.mediaGroupId,
                         title: params.mediaGroupTitle,
                         description: params.mediaGroupDescription,
                     },
+                    ... (params.locale) && {locale: params.locale},
                 });
             });
 

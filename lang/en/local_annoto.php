@@ -26,7 +26,7 @@ $string['pluginname'] = 'Annoto';
 
 // Capabilities
 $string['annoto:moderatediscussion'] = 'Moderate discussions in Annoto';
-$string['annoto:managementdashboard'] = 'Manage Annoto dashboard';
+$string['annoto:managementdashboard'] = 'Access Annoto dashboard';
 
 // Annoto Setup.
 $string['setupheading'] = 'Annoto setup';
@@ -45,7 +45,7 @@ $string['usregion'] = 'US region';
 $string['custom'] = 'Custom';
 
 // Annoto dashboard (LTI)
-$string['addingdashboard'] = 'Add to the all courses';
+$string['addingdashboard'] = 'Add to all the courses';
 $string['addingdashboard_desc'] = 'If enabled, Annoto dashboard will be automatically added to all the courses';
 $string['externaltoolsettings'] = 'Annoto dashboard (LTI)';
 $string['toolurl'] = 'URL';
@@ -56,14 +56,13 @@ $string['toolname'] = 'Name';
 $string['toolnamedesc'] = 'External tool name';
 $string['annoto_dashboard_description'] = "The Annoto Dashboard was designed in order to shed light upon learners' video consumption and behavior within Annoto in-video collaboration widget, providing you with analytics and insights regarding their activity in the course.";
 $string['lti_activity_name'] = 'Annoto Dashboard';
+$string['managementdashboard'] = 'Dashboard manager roles';
+$string['managementdashboard_desc'] = 'Specify who is allowed to access Annoto dashboard';
 
 // Annoto settings.
 $string['appsetingsheading'] = 'Annoto settings';
 $string['locale'] = 'Locale';
-$string['localedesc'] = 'Choose language (Auto will set per page and course based on Course and User preferences)';
-$string['localeauto'] = 'Auto detect';
-$string['localeen'] = 'English';
-$string['localehe'] = 'Hebrew';
+$string['locale_desc'] = 'If enable will set per page and course based on Course and User preferences';
 $string['moderatorroles'] = 'Moderator roles';
 $string['moderatorrolesdesc'] = 'Specify who is allowed to moderate discussions (only roles that at least include the following capabilities are available: local/annoto:moderatediscussion).';
 

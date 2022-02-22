@@ -106,7 +106,8 @@ function local_annoto_get_user_token($settings, $courseid) {
     $expire = $issuedat + 60 * 20;             // Adding 20 minutes.
 
     // Check if user is a moderator.
-    $moderator = local_annoto_is_moderator($settings, $courseid);
+    $capability = 'local/annoto:moderatediscussion';
+    $moderator = local_annoto_has_capability($settings->moderatorroles, $courseid, $capability);
 
     $payload = array(
         "jti" => $USER->id,                     // User's id in Moodle.
@@ -144,25 +145,25 @@ function local_annoto_get_lang($course) {
 
 /**
  * Function defines either is current user a 'moderator' or not (in the context of Annoto script).
- * @param stdClass $settings the plugin global settings.
+ * @param array $allowedroles preset roles.
  * @param int $courseid the id of the course.
+ * @param string $capability the name of the capability to check
  * @return bolean
  */
-function local_annoto_is_moderator($settings, $courseid) {
+function local_annoto_has_capability($allowedroles, $courseid, $capability) {
     global  $USER;
-    $ismoderator = false;
+    $hascapability = false;
     $coursecontext = context_course::instance($courseid);
-    $capabilities = 'local/annoto:moderatediscussion';
 
     // Check if user has a role as defined in settings.
     $userroles = get_user_roles($coursecontext, $USER->id, true);
-    $allowedroles = explode(',', $settings->moderatorroles);
+    $allowedroles = explode(',', $allowedroles);
     foreach ($userroles as $role) {
-        if (in_array($role->roleid, $allowedroles) && has_capability($capabilities, $coursecontext)) {
-            $ismoderator = true;
+        if (in_array($role->roleid, $allowedroles) && has_capability($capability, $coursecontext)) {
+            $hascapability = true;
         }
     }
-    return $ismoderator;
+    return $hascapability;
 }
 
 /**
@@ -191,13 +192,6 @@ function local_annoto_get_jsparam($courseid, $modid) {
         $cmintro = $cm->content;
     }
 
-    // Locale settings.
-    if ($settings->locale == "auto") {
-        $lang = local_annoto_get_lang($course);
-    } else {
-        $lang = $settings->locale;
-    }
-
     $jsparams = array(
         'deploymentDomain' => $settings->deploymentdomain != 'custom' ? $settings->deploymentdomain : $settings->customdomain,
         'bootstrapUrl' => $settings->scripturl,
@@ -205,13 +199,12 @@ function local_annoto_get_jsparam($courseid, $modid) {
         'userToken' => local_annoto_get_user_token($settings, $courseid),
         'loginUrl' => $loginurl,
         'logoutUrl' => $logouturl,
-        'mediaId' => $modid ?? '',
         'mediaTitle' => $cmtitle ?? '',
         'mediaDescription' => $cmintro ?? '',
         'mediaGroupId' => $courseid,
         'mediaGroupTitle' => $course->fullname,
         'mediaGroupDescription' => $course->summary,
-        'locale' => $lang,
+        'locale' => $settings->locale ? local_annoto_get_lang($course) : false,
     );
 
     return $jsparams;
@@ -236,7 +229,8 @@ function local_annoto_extend_settings_navigation(settings_navigation $settingsna
     $settings = get_config('local_annoto');
 
     // Only let users with the appropriate capability see this settings item.
-    if (!local_annoto_is_moderator($settings, $COURSE->id)) {
+    $capability = 'local/annoto:managementdashboard';
+    if (!local_annoto_has_capability($settings->managementdashboard, $COURSE->id, $capability)) {
         return;
     }
 
@@ -386,8 +380,12 @@ function local_annoto_lti_add_type() {
 
     return lti_add_type($type, $config);
 }
-//
-function local_annoto_update_settings($settingname) {    
+/**
+ * update moodle settings by hook
+ * @param string $settingname
+ *
+ */
+function local_annoto_update_settings($settingname) {
     GLOBAL $DB;
 
     $settings = get_config('local_annoto');
