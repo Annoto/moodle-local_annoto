@@ -37,30 +37,23 @@ define([
     } catch (err) {}
 
     return {
-        init: function(courseid, pageurl, modid) {
+        init: function(courseid, modid) {
             log.info('AnnotoMoodle: plugin init');
             Ajax.call([{
                 methodname: 'get_jsparams',
                 args: {
                     courseid: courseid,
-                    pageurl: pageurl,
                     modid: modid
                 },
                 done: function(response) {
-                    var params = JSON.parse(response);
-                    this.params = params;
-                    if (!params) {
+                    if (!response) {
                         log.error('AnnotoMoodle: empty params. Plugin won`t start.');
                         return;
                     }
+                    this.params = JSON.parse(response);
 
-                    // Return if plugin works in Global scope or is present in ACL or has <annoto> tag - continue this script.
-                    if (!this.params.isGlobalScope) {
-                        if (!(this.params.isACLmatch || this.hasAnnotoTag())) {
-                            log.info('AnnotoMoodle: plugin is disabled for this page.');
-                            return;
-                        }
-                    } else if (this.hasAnnotoTag()) {
+                    // Return if has <annoto> tag.
+                    if (this.hasAnnotoTag()) {
                         log.info('AnnotoMoodle: plugin is disabled for this page using the Atto plugin.');
                         return;
                     }
@@ -75,7 +68,7 @@ define([
 
         },
         setupKaltura: function() {
-            var maKApp = window.moodleAnnoto.kApp;
+            const maKApp = window.moodleAnnoto.kApp;
             window.moodleAnnoto.setupKalturaKdpMap = this.setupKalturaKdpMap.bind(this);
 
             if (maKApp) {
@@ -90,127 +83,102 @@ define([
         },
         findPlayer: function(container) {
             log.info('AnnotoMoodle: detecting player');
-            var parent = container || document.body,
+            const parent = container || document.body,
                 h5p = $(parent).find('iframe.h5p-iframe').first().get(0),
                 youtube = $(parent).find('iframe[src*="youtube.com"]').first().get(0),
                 vimeo = $(parent).find('iframe[src*="vimeo.com"]').first().get(0),
                 videojs = $(parent).find('.video-js').first().get(0),
                 jwplayer = $(parent).find('.jwplayer').first().get(0),
                 wistia = $(parent).find('.wistia_embed').first().get(0),
-                html5 = $(parent).find('video').first().get(0),
-                annotoPlayer = '';
+                html5 = $(parent).find('video').first().get(0);
+            let playerElement = null;
 
             if (videojs) {
-                annotoPlayer = videojs;
+                playerElement = videojs;
                 this.params.playerType = 'videojs';
             } else if (jwplayer) {
-                annotoPlayer = jwplayer;
+                playerElement = jwplayer;
                 this.params.playerType = 'jw';
             } else if (h5p) {
-                annotoPlayer = h5p;
+                playerElement = h5p;
                 this.params.playerType = 'h5p';
             } else if (youtube) {
-                var youtubeSrc = youtube.src;
+                const youtubeSrc = youtube.src;
                 if (youtubeSrc.search(/enablejsapi/i) === -1) {
                     youtube.src = (youtubeSrc.search(/[?]/) === -1) ? youtubeSrc + '?enablejsapi=1' : youtubeSrc + '&enablejsapi=1';
                 }
-                annotoPlayer = youtube;
+                playerElement = youtube;
                 this.params.playerType = 'youtube';
             } else if (vimeo) {
-                annotoPlayer = vimeo;
+                playerElement = vimeo;
                 this.params.playerType = 'vimeo';
-            }else if (wistia) {
-                annotoPlayer = wistia;
+            } else if (wistia) {
+                playerElement = wistia;
                 this.params.playerType = 'wistia';
-            }else if (html5) {
-                annotoPlayer = html5;
+            } else if (html5) {
+                playerElement = html5;
                 this.params.playerType = 'html5';
-            }else {
+            } else {
                 return;
             }
-            if (!annotoPlayer.id || annotoPlayer.id === '') {
-                annotoPlayer.id = 'annoto_player_id_' + Math.random().toString(36).substr(2, 6);
+            if (!playerElement.id || playerElement.id === '') {
+                playerElement.id = 'annoto_player_id_' + Math.random().toString(36).substr(2, 6);
             }
+            this.params.playerId = `#${playerElement.id}`;
+            this.params.element = playerElement;
 
-            return annotoPlayer;
+            return playerElement;
         },
         bootstrap: function() {
             if (this.bootsrapDone) {
                 return;
             }
 
-            var annotoPlayer = this.findPlayer.call(this);
-
+            const annotoPlayer = this.findPlayer.call(this);
             if (annotoPlayer) {
-                this.params.playerId = annotoPlayer.id;
                 this.bootsrapDone = true;
                 require([this.params.bootstrapUrl], this.bootWidget.bind(this));
                 log.info('AnnotoMoodle: detected ' + this.params.playerType + ':' + this.params.playerId);
             }
         },
         prepareConfig: function() {
-            var config = this.config,
+            const config = this.config,
                 params = this.params,
-                nonOverlayTimelinePlayers = ['youtube', 'vimeo'],
-                innerAlignPlayers = ['h5p'],
-                horizontalAlign = 'element_edge';
+                nonOverlayTimelinePlayers = ['youtube', 'vimeo'];
 
-            if (!params.widgetOverlay || params.widgetOverlay === 'auto') {
-                horizontalAlign = (innerAlignPlayers.indexOf(params.playerType) !== -1) ? 'inner' : 'element_edge';
-            } else if (params.widgetOverlay === 'inner') {
-                horizontalAlign = 'inner';
-            }
-
-            config.width = {max: (horizontalAlign === 'inner') ? 320 : 360};
-            config.align.horizontal = horizontalAlign;
             config.widgets[0].player.type = params.playerType;
             config.widgets[0].player.element = params.playerId;
-            config.timeline = {
-                overlayVideo: (nonOverlayTimelinePlayers.indexOf(params.playerType) === -1),
+            config.widgets[0].timeline = {
+                overlay: (nonOverlayTimelinePlayers.indexOf(params.playerType) === -1),
             };
         },
         bootWidget: function() {
-            var params = this.params;
-            var config = {
+            const params = this.params;
+            const config = {
                 backend: {
                   domain: params.deploymentDomain
                 },
                 clientId: params.clientId,
-                position: params.position,
-                features: {
-                    tabs: params.featureTab,
-                    cta: params.featureCTA,
-                },
-                width: {},
-                align: {
-                    vertical: params.alignVertical,
-                },
-                ux: {
+                widgets: [{player: {}}],
+                hooks: {
+                    mediaDetails: function() {
+                        return {
+                            details: {
+                                title: params.mediaTitle,
+                                description: params.mediaDescription,
+                            }
+                        };
+                    },
                     ssoAuthRequestHandle: function() {
                         window.location.replace(params.loginUrl);
                     },
-                    openOnLoad: params.openOnLoad,
                 },
-                zIndex: params.zIndex ? params.zIndex : 100,
-                widgets: [{
-                    player: {
-                        mediaDetails: function() {
-                            return {
-                                title: params.mediaTitle,
-                                description: params.mediaDescription,
-                                group: {
-                                    id: params.mediaGroupId,
-                                    type: 'playlist',
-                                    title: params.mediaGroupTitle,
-                                    privateThread: params.privateThread,
-                                }
-                            };
-                        },
-                    },
-                }],
-                demoMode: params.demoMode,
-                rtl: params.rtl,
-                locale: params.locale,
+                group: {
+                    id: params.mediaGroupId,
+                    title: params.mediaGroupTitle,
+                    description: params.mediaGroupDescription,
+                },
+                ... (params.locale) && {locale: params.locale},
             };
 
             this.config = config;
@@ -220,7 +188,7 @@ define([
             if (window.Annoto) {
                 window.Annoto.on('ready', this.annotoReady.bind(this));
                 if (this.params.playerType === 'videojs' && window.requirejs) {
-                    var self = this;
+                    const self = this;
                     window.require(['media_videojs/video-lazy'], function(vjs) {
                         self.config.widgets[0].player.params = {
                             videojs: vjs
@@ -240,7 +208,7 @@ define([
             // Api is the API to be used after Annoot is setup
             // It can be used for SSO auth.
             this.annotoAPI = api;
-            var jwt = this.params.userToken;
+            const jwt = this.params.userToken;
             log.info('AnnotoMoodle: annoto ready');
             if (api && jwt && jwt !== '') {
                 api.auth(jwt).catch(function() {
@@ -255,7 +223,7 @@ define([
         authKalturaPlayer: function(api) {
             // Api is the API to be used after Annoot is setup
             // It can be used for SSO auth.
-            var jwt = this.params.userToken;
+            const jwt = this.params.userToken;
             log.info('AnnotoMoodle: annoto ready');
             if (api && jwt && jwt !== '') {
                 api.auth(jwt).catch(function() {
@@ -272,7 +240,7 @@ define([
                 return;
             }
             log.info('AnnotoMoodle: setup Kaltura players');
-            for (var kdpMapKey in kdpMap) {
+            for (let kdpMapKey in kdpMap) {
                 if (kdpMap.hasOwnProperty(kdpMapKey)) {
                     this.setupKalturaKdp(kdpMap[kdpMapKey]);
                 }
@@ -300,66 +268,54 @@ define([
              * so we need only to override the required configuration, such as
              * clientId, features, etc. DO NOT CHANGE THE PLAYER TYPE OR PLAYER ELEMENT CONFIG.
             */
-            var params = this.params;
-            var widget = config.widgets[0];
-            var playerConfig = widget.player;
-            var ux = config.ux || {};
-            var align = config.align || {};
-            var features = config.features || {};
-
-            config.ux = ux;
-            config.align = align;
-            config.features = features;
+            const params = this.params;
 
             config.clientId = params.clientId;
-            config.position = params.position;
-            config.demoMode = params.demoMode;
-            config.locale = params.locale;
-            config.rtl = params.rtl;
-
-            features.tabs = params.featureTab;
-            features.cta = params.featureCTA;
-            align.vertical = params.alignVertical;
-            ux = {
+            config.hooks = {
+                getPageUrl: function() {
+                    return window.location.href;
+                },
                 ssoAuthRequestHandle: function() {
                     window.location.replace(params.loginUrl);
                 },
-                openOnLoad: params.openOnLoad,
+                mediaDetails: this.enrichMediaDetails.bind(this),
             };
-            playerConfig.mediaDetails = this.enrichMediaDetails.bind(this);
+            config.group = {
+                id: params.mediaGroupId,
+                title: params.mediaGroupTitle,
+                description: params.mediaGroupDescription,
+            };
+            if (params.locale) {
+                config.locale = params.locale;
+            }
         },
 
-        enrichMediaDetails: function(details) {
+        enrichMediaDetails: function(mediaParams) {
             // The details contains MediaDetails the plugin has managed to obtain
             // This hook gives a change to enrich the details, for example
             // providing group information for private discussions per course/playlist
             // https://github.com/Annoto/widget-api/blob/master/lib/media-details.d.ts#L6.
             // Annoto Kaltura plugin, already has some details about the media like title.
             //
-            var params = this.params;
-            var retVal = details || {};
+            const retVal = (mediaParams && mediaParams.details) || {};
 
-            retVal.title = retVal.title || params.mediaTitle;
-            retVal.description = retVal.description ? retVal.description : params.mediaDescription;
-            retVal.group = {
-                id: params.mediaGroupId,
-                type: 'playlist',
-                title: params.mediaGroupTitle,
-                privateThread: params.privateThread,
-            };
+            retVal.title = retVal.title || this.params.mediaTitle;
+            retVal.description = retVal.description || this.params.mediaDescription;
 
             return retVal;
         },
 
         checkWidgetVisibility: function() {
-            var formatSelectors = {
+            const formatSelectors = {
                 grid: 'body.format-grid .grid_section, body.format-grid #gridshadebox',
                 topcoll: 'body.format-topcoll .ctopics.topics .toggledsection ',
                 tabs: 'body.format-tabtopics .yui3-tab-panel',
                 snap: 'body.format-topics.theme-snap .topics .section.main',
                 modtab: '#page-mod-tab-view .TabbedPanelsContentGroup .TabbedPanelsContent'
             };
-            var courseFormat = '';
+            let courseFormat = '',
+                playerElement = this.params.element,
+                self = this;
 
             if (typeof M.tabtopics !== 'undefined') {
                 courseFormat = 'tabs';
@@ -373,11 +329,8 @@ define([
                 courseFormat = 'modtab';
             }
 
-            var playerNode = document.getElementById(this.params.playerId),
-                self = this;
-
-            var reloadAnnoto = function(mutationList) {
-                var mutationTarget;
+            const reloadAnnoto = function(mutationList) {
+                let mutationTarget = null;
 
                 if (mutationList) {
                       switch (courseFormat) {
@@ -406,16 +359,15 @@ define([
                         break;
                     }
                 }
-                var player = self.findPlayer(mutationTarget);
 
-                if (player) {
-                    self.params.playerId = player.id;
-                    playerNode = document.getElementById(self.params.playerId);
+                playerElement = self.findPlayer(mutationTarget);
+                if (playerElement) {
+                    self.params.element = playerElement;
                     self.prepareConfig();
                 }
 
-                self.annotoAPI.close().then(function(){
-                    if (playerNode.offsetParent) {
+                self.annotoAPI.destroy().then(function() {
+                    if (playerElement.offsetParent) {
                         self.annotoAPI.load(self.config, function(err) {
                             if (err) {
                                 log.warn('AnnotoMoodle: Error while reloading Annoto configuration');
@@ -427,30 +379,30 @@ define([
                 });
               };
 
-            var observerNodeTargets = document.querySelectorAll(Object.values(formatSelectors).join(', '));
+            const observerNodeTargets = document.querySelectorAll(Object.values(formatSelectors).join(', '));
 
             if (observerNodeTargets.length > 0) {
-                var observerConfig = {attributes: true, childList: true, subtree: false},
+                const observerConfig = {attributes: true, childList: true, subtree: false},
                     observer = new MutationObserver(reloadAnnoto);
 
                 observerNodeTargets.forEach(function(target) {
                     observer.observe(target, observerConfig);
                 });
 
-                if (playerNode.offsetParent === null) {
+                if (playerElement.offsetParent === null) {
                     reloadAnnoto();
                 }
             }
 
         },
 
-        setupWistiaIframeEmbed: function(){
-            var annotoIframeClient = "https://cdn.annoto.net/widget-iframe-api/latest/client.js",
+        setupWistiaIframeEmbed: function() {
+            const annotoIframeClient = "https://cdn.annoto.net/widget-iframe-api/latest/client.js",
                 annotoIframeUrl = /https:\/\/fast.wistia.net\/embed\/iframe.*https:\/\/cdn.annoto.net/,
                 wistiaplayers = document.querySelectorAll('iframe');
 
             wistiaplayers.forEach((iframe) => {
-                var iframeSrc = decodeURIComponent(iframe.src);
+                const iframeSrc = decodeURIComponent(iframe.src);
                 if (iframeSrc.match(annotoIframeUrl)) {
                     require([annotoIframeClient], this.setupWistiaIframeEmbedPlugin.bind(this, iframe));
                     return;
@@ -458,59 +410,41 @@ define([
             });
         },
 
-        setupWistiaIframeEmbedPlugin: function(iframe, AnnotoIframeApi){
-            var params = this.params,
+        setupWistiaIframeEmbedPlugin: function(iframe, AnnotoIframeApi) {
+            const params = this.params,
                 annoto = new AnnotoIframeApi.Client(iframe);
 
-            annoto.onSetup(function (next) {
+            annoto.onSetup(function(next) {
                 next({
                     clientId: params.clientId,
-                    position: params.position,
-                    features: {
-                        tabs: params.featureTab,
-                        cta: params.featureCTA,
-                    },
-                    align: {
-                        vertical: params.alignVertical,
-                    },
-                    ux: {
+                    hooks: {
+                        mediaDetails: function() {
+                            return {
+                                details: {
+                                    title: params.mediaTitle,
+                                    description: params.mediaDescription,
+                                }
+                            };
+                        },
                         ssoAuthRequestHandle: function() {
                             window.location.replace(params.loginUrl);
                         },
-                        openOnLoad: params.openOnLoad,
-                        sidePanelLayout: params.sidePanelLayout,
-                        sidePanelFullScreen: params.sidePanelFullScreen,
-                    },
-                    widgets: [{
-                        player: {
-                            mediaDetails: function() {
-                                return {
-                                    title: params.mediaTitle,
-                                    description: params.mediaDescription,
-                                    group: {
-                                        id: params.mediaGroupId,
-                                        type: 'playlist',
-                                        title: params.mediaGroupTitle,
-                                        privateThread: params.privateThread,
-                                    }
-                                };
-                            },
+                        getPageUrl: function() {
+                            return window.location.href;
                         },
-                    }],
-                    demoMode: params.demoMode,
-                    locale: params.locale,
+                    },
+                    group: {
+                        id: params.mediaGroupId,
+                        title: params.mediaGroupTitle,
+                        description: params.mediaGroupDescription,
+                    },
+                    ... (params.locale) && {locale: params.locale},
                 });
             });
 
-            annoto.onReady(function (api) {
-                // recomended, so notifications will have URL to valid pages
-                api.registerOriginProvider({
-                    getPageUrl: function () {
-                        return location.href;
-                    },
-                });
-                var token = params.userToken;
-                api.auth(token, function (err) {
+            annoto.onReady(function(api) {
+                const token = params.userToken;
+                api.auth(token, function(err) {
                     if (err) {
                         log.error('AnnotoMoodle: SSO auth error', err);
                     }
