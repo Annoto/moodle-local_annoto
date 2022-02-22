@@ -386,32 +386,38 @@ function local_annoto_lti_add_type() {
 
     return lti_add_type($type, $config);
 }
-
-function local_annoto_update_lti_type() {
-
-    $settings = get_config('local_annoto');
-    $lti = lti_get_tool_by_url_match($settings->toolurl);
-
-    if (!$lti){
-        $lti = new stdClass;
-        $lti->id = local_annoto_lti_add_type();
-    }
-
-    $coursevisible = $settings->addingdashboard ? LTI_COURSEVISIBLE_NO : LTI_COURSEVISIBLE_ACTIVITYCHOOSER;
-    $lti->coursevisible = $coursevisible;
-
-    $config = new stdClass;
-    $config->lti_resourcekey = $settings->clientid;
-    $config->lti_password = $settings->ssosecret;
-    $config->lti_coursevisible = $coursevisible;
-
-    lti_update_type($lti, $config);
-}
-
-function local_annoto_update_media() {
+//
+function local_annoto_update_settings($settingname) {    
     GLOBAL $DB;
 
     $settings = get_config('local_annoto');
+    $updateltitype = [
+         's_local_annoto_addingdashboard',
+         's_local_annoto_clientid',
+         's_local_annoto_ssosecret',
+    ];
+
+    // Update LTI core settings
+    if (in_array($settingname, $updateltitype)) {
+        $lti = lti_get_tool_by_url_match($settings->toolurl);
+
+        if (!$lti) {
+            $lti = new stdClass;
+            $lti->id = local_annoto_lti_add_type();
+        }
+
+        $coursevisible = $settings->addingdashboard ? LTI_COURSEVISIBLE_NO : LTI_COURSEVISIBLE_ACTIVITYCHOOSER;
+        $lti->coursevisible = $coursevisible;
+
+        $config = new stdClass;
+        $config->lti_resourcekey = $settings->clientid;
+        $config->lti_password = $settings->ssosecret;
+        $config->lti_coursevisible = $coursevisible;
+
+        lti_update_type($lti, $config);
+    }
+
+    // Update media details
     if (!$settings->mediasettingsoverride) {
         return;
     }

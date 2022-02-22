@@ -47,13 +47,13 @@ if ($hassiteconfig) {
     // API key / clientID.
     $setting = new admin_setting_configtext('local_annoto/clientid', get_string('clientid', 'local_annoto'),
         get_string('clientiddesc', 'local_annoto'), null);
-    $setting->set_updatedcallback('local_annoto_update_lti_type');
+    $setting->set_updatedcallback('local_annoto_update_settings');
     $settings->add($setting);
 
     // SSO Secret.
     $setting = new admin_setting_configtext('local_annoto/ssosecret', get_string('ssosecret', 'local_annoto'),
         get_string('ssosecretdesc', 'local_annoto'), null);
-    $setting->set_updatedcallback('local_annoto_update_lti_type');
+    $setting->set_updatedcallback('local_annoto_update_settings');
     $settings->add($setting);
 
     // Annoto script url.
@@ -94,7 +94,7 @@ if ($hassiteconfig) {
     // Auto launchig.
     $setting = new admin_setting_configcheckbox('local_annoto/addingdashboard',
         get_string('addingdashboard', 'local_annoto'), get_string('addingdashboard_desc', 'local_annoto'), 1);
-    $setting->set_updatedcallback('local_annoto_update_lti_type');
+    $setting->set_updatedcallback('local_annoto_update_settings');
     $settings->add($setting);
     
     /* Annoto settings */
@@ -121,23 +121,23 @@ if ($hassiteconfig) {
         ''));
 
     $setting = new admin_setting_configselect('local_annoto/mediasettingsoverride', get_string('mediasettingsoverride', 'local_annoto'),
-        get_string('mediasettingsoverridedesc', 'local_annoto'), 0, array(
+        get_string('mediasettingsoverridedesc', 'local_annoto'), 1, array(
             0 => get_string('no'),
             1 => get_string('yes')));
-    $setting->set_updatedcallback('local_annoto_update_media');
+    $setting->set_updatedcallback('local_annoto_update_settings');
     $settings->add($setting);
 
     // Annoto default width.
     $setting = new admin_setting_configtext('local_annoto/defaultwidth', get_string('defaultwidth', 'local_annoto'),
         get_string('defaultwidthdesc', 'local_annoto'), 854);
-    $setting->set_updatedcallback('local_annoto_update_media');
+    $setting->set_updatedcallback('local_annoto_update_settings');
     $settings->add($setting);
     $settings->hide_if('local_annoto/defaultwidth', 'local_annoto/mediasettingsoverride', 'neq', 1);
 
     // Annoto default height.
     $setting = new admin_setting_configtext('local_annoto/defaultheight', get_string('defaultheight', 'local_annoto'),
         get_string('defaultheightdesc', 'local_annoto'), 480);
-    $setting->set_updatedcallback('local_annoto_update_media');
+    $setting->set_updatedcallback('local_annoto_update_settings');
     $settings->add($setting);
     $settings->hide_if('local_annoto/defaultheight', 'local_annoto/mediasettingsoverride', 'neq', 1);
 
