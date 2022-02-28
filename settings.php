@@ -24,15 +24,14 @@
 
 defined('MOODLE_INTERNAL') || die;
 
-require_once($CFG->dirroot. '/local/annoto/classes/admin_setting_custompickroles.php');
-
 if (!defined('USREGION')) define('USREGION', 'us.annoto.net');
 if (!defined('EUREGION')) define('EUREGION', 'annoto.net');
 if (!defined('CUSTOM')) define('CUSTOM', 'custom');
 
 if ($hassiteconfig) {
 
-    //$version = get_config('local_annoto');
+    require_once($CFG->dirroot. '/local/annoto/classes/admin_setting_custompickroles.php');
+    require_once($CFG->dirroot . '/local/annoto/lib.php');
 
     $pluginmanager = core_plugin_manager::instance();
     $plugininfo = $pluginmanager->get_plugin_info('local_annoto');
@@ -42,22 +41,26 @@ if ($hassiteconfig) {
     $settings = new admin_settingpage('local_annoto',$name);
     $ADMIN->add('localplugins', $settings);
 
-    /* Application setup. */
+    /* Annoto setup. */
     $settings->add(new admin_setting_heading('local_annoto/setupheading', get_string('setupheading', 'local_annoto'), ''));
 
     // API key / clientID.
-    $settings->add(new admin_setting_configtext('local_annoto/clientid', get_string('clientid', 'local_annoto'),
-        get_string('clientiddesc', 'local_annoto'), null));
+    $setting = new admin_setting_configtext('local_annoto/clientid', get_string('clientid', 'local_annoto'),
+        get_string('clientiddesc', 'local_annoto'), null);
+    $setting->set_updatedcallback('local_annoto_update_settings');
+    $settings->add($setting);
 
     // SSO Secret.
-    $settings->add(new admin_setting_configtext('local_annoto/ssosecret', get_string('ssosecret', 'local_annoto'),
-        get_string('ssosecretdesc', 'local_annoto'), null));
+    $setting = new admin_setting_configtext('local_annoto/ssosecret', get_string('ssosecret', 'local_annoto'),
+        get_string('ssosecretdesc', 'local_annoto'), null);
+    $setting->set_updatedcallback('local_annoto_update_settings');
+    $settings->add($setting);
 
     // Annoto script url.
     $settings->add(new admin_setting_configtext('local_annoto/scripturl', get_string('scripturl', 'local_annoto'),
-        get_string('scripturldesc', 'local_annoto'), 'https://app.annoto.net/annoto-bootstrap.js'));
+        get_string('scripturldesc', 'local_annoto'), 'https://cdn.annoto.net/widget/latest/bootstrap.js'));
 
-    // deploymentDomain.
+    // Deployment domain.
     $settings->add(new admin_setting_configselect('local_annoto/deploymentdomain', get_string('deploymentdomain', 'local_annoto'),
         get_string('deploymentdomaindesc', 'local_annoto'), EUREGION,
             array(
@@ -73,16 +76,12 @@ if ($hassiteconfig) {
     $settings->hide_if('local_annoto/customdomain', 'local_annoto/deploymentdomain', 'neq', CUSTOM);
 
 
-    // Demo checkbox.
-    $settings->add(new admin_setting_configcheckbox('local_annoto/demomode', get_string('demomode', 'local_annoto'),
-        get_string('demomodedesc', 'local_annoto'), 'true', 'true', 'false'));
-
-    /* External tool (LTI) settings. */
+    /* Annoto dashboard (LTI) */
     $settings->add(new admin_setting_heading('local_annoto/externaltoolsettings', get_string('externaltoolsettings', 'local_annoto'), ''));
 
     // LTI name.
     $settings->add(new admin_setting_configtext('local_annoto/toolname', get_string('toolname', 'local_annoto'),
-        get_string('toolnamedesc', 'local_annoto'), 'AnnotoDashboard'));
+        get_string('toolnamedesc', 'local_annoto'), 'Annoto Dashboard'));
 
     // LTI url.
     $settings->add(new admin_setting_configtext('local_annoto/toolurl', get_string('toolurl', 'local_annoto'),
@@ -92,24 +91,29 @@ if ($hassiteconfig) {
     $settings->add(new admin_setting_configtext('local_annoto/tooliconurl', get_string('tooliconurl', 'local_annoto'),
         get_string('tooliconurldesc', 'local_annoto'), 'https://assets.annoto.net/images/logo_icon.png'));
 
+    // Auto launchig.
+    $setting = new admin_setting_configcheckbox('local_annoto/addingdashboard',
+        get_string('addingdashboard', 'local_annoto'), get_string('addingdashboard_desc', 'local_annoto'), 1);
+    $setting->set_updatedcallback('local_annoto_update_settings');
+    $settings->add($setting);
 
+    // Management dashboard
+    list($roles, $defaultroles) = local_annoto_get_all_dashboard_roles();
+    $settings->add(new admin_setting_configmulticheckbox('local_annoto/managementdashboard',
+        get_string('managementdashboard', 'local_annoto'),
+        get_string('managementdashboard_desc', 'local_annoto'),
+        $defaultroles,
+        $roles
+        ));
 
+    /* Annoto settings */
     $settings->add(new admin_setting_heading('local_annoto/appsetingsheading', get_string('appsetingsheading', 'local_annoto'),
         ''));
 
     // Locale.
-    $settings->add(new admin_setting_configselect('local_annoto/locale', get_string('locale', 'local_annoto'),
-        get_string('localedesc', 'local_annoto'), 'auto', array(  'auto' => get_string('localeauto', 'local_annoto'),
-                                                                'en' => get_string('localeen', 'local_annoto'),
-                                                                'he' => get_string('localehe', 'local_annoto'))));
+    $settings->add(new admin_setting_configcheckbox('local_annoto/locale',
+        get_string('locale', 'local_annoto'), get_string('locale_desc', 'local_annoto'), 1));
 
-    // Discussions Scope.
-    $settings->add(new admin_setting_configselect('local_annoto/discussionscope',
-        get_string('discussionscope', 'local_annoto'),
-        get_string('discussionscopedesc', 'local_annoto'),
-        'true',
-        array('false' => get_string('discussionscopesitewide', 'local_annoto'),
-                'true' => get_string('discussionscopeprivate', 'local_annoto'))));
 
     // Moderators Roles.
     $settings->add(new local_annoto_admin_setting_custompickroles('local_annoto/moderatorroles',
@@ -120,59 +124,29 @@ if ($hassiteconfig) {
             'editingteacher',
         )));
 
-    /* UX preferences. */
-    $settings->add(new admin_setting_heading('local_annoto/appuxheading', get_string('appuxheading', 'local_annoto'), ''));
+    /* Annoto settings */
+    $settings->add(new admin_setting_heading('local_annoto/mediaplayersettingheading', get_string('media_player_setting', 'local_annoto'),
+        ''));
 
-    // Widget position.
-    $settings->add(new admin_setting_configselect('local_annoto/widgetposition',
-        get_string('widgetposition', 'local_annoto'),
-        get_string('widgetpositiondesc', 'local_annoto'),
-        'topright',
-        array('right' => get_string('positionright', 'local_annoto'),
-                'left' => get_string('positionleft', 'local_annoto'),
-                'topright' => get_string('positiontopright', 'local_annoto'),
-                'topleft' => get_string('positiontopleft', 'local_annoto'),
-                'bottomright' => get_string('positionbottomright', 'local_annoto'),
-                'bottomleft' => get_string('positionbottomleft', 'local_annoto'))));
-    // Widget overlay mode.
-    $settings->add(new admin_setting_configselect('local_annoto/widgetoverlay',
-        get_string('widgetoverlay', 'local_annoto'),
-        get_string('widgetoverlaydesc', 'local_annoto'),
-        'auto',
-        array('auto' => get_string('overlayauto', 'local_annoto'),
-                'inner' => get_string('overlayinner', 'local_annoto'),
-                'outer' => get_string('overlayouter', 'local_annoto'))));
-    // Tabs.
-    $settings->add(new admin_setting_configcheckbox('local_annoto/tabs', get_string('tabs', 'local_annoto'),
-        get_string('tabsdesc', 'local_annoto'), 'true', 'true', 'false'));
+    $setting = new admin_setting_configselect('local_annoto/mediasettingsoverride', get_string('mediasettingsoverride', 'local_annoto'),
+        get_string('mediasettingsoverridedesc', 'local_annoto'), 1, array(
+            0 => get_string('no'),
+            1 => get_string('yes')));
+    $setting->set_updatedcallback('local_annoto_update_settings');
+    $settings->add($setting);
 
-    // Annoto zindex.
-    $settings->add(new admin_setting_configtext('local_annoto/zindex', get_string('zindex', 'local_annoto'),
-        get_string('zindexdesc', 'local_annoto'), 100, PARAM_INT));
+    // Annoto default width.
+    $setting = new admin_setting_configtext('local_annoto/defaultwidth', get_string('defaultwidth', 'local_annoto'),
+        get_string('defaultwidthdesc', 'local_annoto'), 854);
+    $setting->set_updatedcallback('local_annoto_update_settings');
+    $settings->add($setting);
+    $settings->hide_if('local_annoto/defaultwidth', 'local_annoto/mediasettingsoverride', 'neq', 1);
 
-    // Initial State.
-    $settings->add(new admin_setting_configcheckbox('local_annoto/openonload', get_string('openonload', 'local_annoto'),
-        get_string('openonloaddesc', 'local_annoto'), 1));
+    // Annoto default height.
+    $setting = new admin_setting_configtext('local_annoto/defaultheight', get_string('defaultheight', 'local_annoto'),
+        get_string('defaultheightdesc', 'local_annoto'), 480);
+    $setting->set_updatedcallback('local_annoto_update_settings');
+    $settings->add($setting);
+    $settings->hide_if('local_annoto/defaultheight', 'local_annoto/mediasettingsoverride', 'neq', 1);
 
-    /* UX Wistia player preferences. */
-    $settings->add(new admin_setting_heading('local_annoto/appuxheadingwistia', get_string('appuxheadingwistia', 'local_annoto'), ''));
-
-    // sidePanelLayout.
-    $settings->add(new admin_setting_configcheckbox('local_annoto/sidepanellayout', get_string('sidepanellayout', 'local_annoto'),
-        get_string('sidepanellayoutdesc', 'local_annoto'), 1));
-
-    // sidePanelFullScreen.
-    $settings->add(new admin_setting_configcheckbox('local_annoto/sidepanelfullscreen', get_string('sidepanelfullscreen', 'local_annoto'),
-        get_string('sidepanelfullscreendesc', 'local_annoto'), 0));
-
-    /* ACL and scope. */
-    $settings->add(new admin_setting_heading('local_annoto/aclheading', get_string('aclheading', 'local_annoto'), ''));
-
-    // Global Scope.
-    $settings->add(new admin_setting_configcheckbox('local_annoto/scope', get_string('scope', 'local_annoto'),
-        get_string('scopedesc', 'local_annoto'), 'false', 'true', 'false'));
-
-    // URL ACL.
-    $settings->add(new admin_setting_configtextarea('local_annoto/acl', get_string('acl', 'local_annoto'),
-        get_string('acldesc', 'local_annoto'), null));
 }

@@ -22,11 +22,13 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-$string['filtername'] = 'Annoto';
 $string['pluginname'] = 'Annoto';
-$string['annoto:moderatediscussion'] = 'Moderate discussions in Annoto';
 
-// Application Setup.
+// Capabilities
+$string['annoto:moderatediscussion'] = 'Moderate discussions in Annoto';
+$string['annoto:managementdashboard'] = 'Access Annoto dashboard';
+
+// Annoto Setup.
 $string['setupheading'] = 'Annoto setup';
 $string['clientid'] = 'API key';
 $string['clientiddesc'] = 'ClientID is provided by Annoto (keep in secret)';
@@ -34,90 +36,48 @@ $string['ssosecret'] = 'SSO secret';
 $string['ssosecretdesc'] = 'SSO secret is provided by Annoto (keep in secret)';
 $string['scripturl'] = 'Annoto\'s script URL';
 $string['scripturldesc'] = 'Provide Annoto\'s script URL here';
-$string['demomode'] = 'Demo';
-$string['demomodedesc'] = 'Toggle this if you don\'t have API key and SSO secret (discussions will not be saved in demo mode)';
-
 $string['deploymentdomain'] = 'Deployment domain';
 $string['deploymentdomaindesc'] = 'Provide the region for the widgets. Please note that the widget data is bound to a specific region.';
-$string['eurregion'] = 'EU region';
-$string['usregion'] = 'US region';
-
 $string['customdomain'] = 'Custom deployment domain';
 $string['customdomaindesc'] = 'Specify a custom deployment domain. Please note that the widget data is bound to a specific region.';
+$string['eurregion'] = 'EU region';
+$string['usregion'] = 'US region';
 $string['custom'] = 'Custom';
 
+// Annoto dashboard (LTI)
+$string['addingdashboard'] = 'Add to all the courses';
+$string['addingdashboard_desc'] = 'If enabled, Annoto dashboard will be automatically added to all the courses';
+$string['externaltoolsettings'] = 'Annoto dashboard (LTI)';
+$string['toolurl'] = 'URL';
+$string['toolurldesc'] = 'External tool URL';
+$string['tooliconurl'] = 'Icon';
+$string['tooliconurldesc'] = 'External tool icon';
+$string['toolname'] = 'Name';
+$string['toolnamedesc'] = 'External tool name';
+$string['annoto_dashboard_description'] = "The Annoto Dashboard was designed in order to shed light upon learners' video consumption and behavior within Annoto in-video collaboration widget, providing you with analytics and insights regarding their activity in the course.";
+$string['lti_activity_name'] = 'Annoto Dashboard';
+$string['managementdashboard'] = 'Dashboard manager roles';
+$string['managementdashboard_desc'] = 'Specify who is allowed to access Annoto dashboard';
 
-// Application settings.
+// Annoto settings.
 $string['appsetingsheading'] = 'Annoto settings';
-$string['cta'] = 'Call to action';
-$string['ctadesc'] = 'Toggle this if you want to use call to actions';
 $string['locale'] = 'Locale';
-$string['localedesc'] = 'Choose language (Auto will set per page and course based on Course and User preferences)';
-$string['localeauto'] = 'Auto detect';
-$string['localeen'] = 'English';
-$string['localehe'] = 'Hebrew';
-$string['discussionscope'] = 'Discussions scope';
-$string['discussionscopedesc'] = 'Choose scope of Annoto discussions: private per course (default) or site wide (if same video is used in multiple courses the discussion will be pulic across courses)';
-$string['discussionscopesitewide'] = 'Site wide';
-$string['discussionscopeprivate'] = 'Private per course';
+$string['locale_desc'] = 'If enable will set per page and course based on Course and User preferences';
 $string['moderatorroles'] = 'Moderator roles';
 $string['moderatorrolesdesc'] = 'Specify who is allowed to moderate discussions (only roles that at least include the following capabilities are available: local/annoto:moderatediscussion).';
 
-// UX preferences.
-$string['appuxheading'] = 'Annoto UX Preferences';
-$string['widgetposition'] = 'Widget position';
-$string['widgetpositiondesc'] = 'Where to place the Discussion widget relative to the player';
-$string['positionright'] = 'Right';
-$string['positionleft'] = 'Left';
-$string['positiontopright'] = 'Top right';
-$string['positiontopleft'] = 'Top left';
-$string['positionbottomright'] = 'Bottom right';
-$string['positionbottomleft'] = 'Bottom left';
-$string['tabs'] = 'Tabs';
-$string['tabsdesc'] = 'Enables widget tabs for quickly toggling between comments and private notes';
-$string['widgetoverlay'] = 'Overlay mode';
-$string['widgetoverlaydesc'] = 'Chose the mode of widget overlay. Can be on top (inside) of player or outside of player. Auto will select the mode based on player type';
-$string['overlayauto'] = 'Auto';
-$string['overlayinner'] = 'On top of player';
-$string['overlayouter'] = 'Next to player';
-$string['zindex'] = 'Stack order';
-$string['zindexdesc'] = 'Choose the overlay stacking order (z-index) of the discussion widget';
-$string['openonload'] = 'Widget state';
-$string['openonloaddesc'] = 'Load widget state on first boot. By default the widget is loaded opened';
-
-// UX Wistia preferences.
-$string['appuxheadingwistia'] = 'UX Wistia player preferences';
-$string['sidepanellayout'] = 'Wistia widget layout';
-$string['sidepanellayoutdesc'] = 'If enabled, Annoto widget will be positioned on the side of the player instead od overlay.';
-$string['sidepanelfullscreen'] = 'Wistia widget full screen';
-$string['sidepanelfullscreendesc'] = 'If enabled, Annoto widget side panel layout will work in player fullscreen as well.';
-
-// ACL and scope.
-$string['aclheading'] = 'Annoto ACL and application scope';
-$string['scope'] = 'All site scope';
-$string['scopedesc'] = 'Choose where you want to allow Annoto plugin: check - all site, uncheck - allow only for ACL list and for allowed pages using Annoto Atto plugin';
-$string['acl'] = 'ACL';
-$string['acldesc'] = 'List of allowed URLs or course IDs (please, provide one per line)';
+// Media player settings
+$string['media_player_setting'] = 'Media Player Setting';
+$string['mediasettingsoverride'] = 'Override Moodle media settings';
+$string['mediasettingsoverridedesc'] = 'Enable overriding the Moodle Media Player settings';
+$string['defaultwidth'] = 'Media width';
+$string['defaultwidthdesc'] = 'Media player width if a width is not specified and the actual media file width cannot be determined by the player';
+$string['defaultheight'] = 'Media height';
+$string['defaultheightdesc'] = 'Media player height if a height is not specified and the actual media file height cannot be determined by the player';
 
 // Privacy API.
 $string['privacy:metadata:annoto'] = 'In order to integrate with a remote service, user data needs to be exchanged with that service.';
 $string['privacy:metadata:annoto:userid'] = 'The userid is sent from Moodle to allow you to access your data on the remote system.';
 $string['privacy:metadata:annoto:fullname'] = 'Your full name is sent to the remote system to allow a better user experience.';
 $string['privacy:metadata:annoto:email'] = 'Your e-mail name is sent to the remote system to allow a better user experience.';
-
-// LTI
-$string['externaltoolsettings'] = 'Annoto dashboard (LTI)';
-$string['toolurl'] = 'External tool URL';
-$string['toolurldesc'] = 'Provide external tool URL';
-$string['tooliconurl'] = 'External tool icon';
-$string['tooliconurldesc'] = 'External tool icon URL';
-
-$string['toolname'] = 'External tool name';
-$string['toolnamedesc'] = 'External tool name';
-$string['annoto_dashboard:view'] = 'Annoto dashboard view';
-$string['section:media'] = 'media';
-$string['section:video'] = 'video';
-$string['annoto_dashboard_description'] = 'Annoto’s dashboard was designed in order to shed a light upon students’ behavior within Annoto in-video collaboration widget, providing you with data regarding their engagement with the video.';
-
-$string['lti_activity_name'] = 'Annoto Dashboard';
 

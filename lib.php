@@ -69,14 +69,13 @@ function local_annoto_init() {
     // Start local_annoto on a specific pages only.
     if ($istargetpage) {
         $courseid = $COURSE->id;
-        $pageurl = $PAGE->url->out();
         $modid = 0;
         if (isset($PAGE->cm->id)) {
             $modid = (int)$PAGE->cm->id;
         }
 
         $PAGE->requires->js('/local/annoto/initkaltura.js');
-        $PAGE->requires->js_call_amd('local_annoto/annoto', 'init', array($courseid, $pageurl, $modid));
+        $PAGE->requires->js_call_amd('local_annoto/annoto', 'init', array($courseid, $modid));
     }
 }
 
@@ -107,7 +106,8 @@ function local_annoto_get_user_token($settings, $courseid) {
     $expire = $issuedat + 60 * 20;             // Adding 20 minutes.
 
     // Check if user is a moderator.
-    $moderator = local_annoto_is_moderator($settings, $courseid);
+    $capability = 'local/annoto:moderatediscussion';
+    $moderator = local_annoto_has_capability($settings->moderatorroles, $courseid, $capability);
 
     $payload = array(
         "jti" => $USER->id,                     // User's id in Moodle.
@@ -145,25 +145,25 @@ function local_annoto_get_lang($course) {
 
 /**
  * Function defines either is current user a 'moderator' or not (in the context of Annoto script).
- * @param stdClass $settings the plugin global settings.
+ * @param array $allowedroles preset roles.
  * @param int $courseid the id of the course.
+ * @param string $capability the name of the capability to check
  * @return bolean
  */
-function local_annoto_is_moderator($settings, $courseid) {
+function local_annoto_has_capability($allowedroles, $courseid, $capability) {
     global  $USER;
-    $ismoderator = false;
+    $hascapability = false;
     $coursecontext = context_course::instance($courseid);
-    $capabilities = 'local/annoto:moderatediscussion';
 
     // Check if user has a role as defined in settings.
     $userroles = get_user_roles($coursecontext, $USER->id, true);
-    $allowedroles = explode(',', $settings->moderatorroles);
+    $allowedroles = explode(',', $allowedroles);
     foreach ($userroles as $role) {
-        if (in_array($role->roleid, $allowedroles) && has_capability($capabilities, $coursecontext)) {
-            $ismoderator = true;
+        if (in_array($role->roleid, $allowedroles) && has_capability($capability, $coursecontext)) {
+            $hascapability = true;
         }
     }
-    return $ismoderator;
+    return $hascapability;
 }
 
 /**
@@ -173,39 +173,18 @@ function local_annoto_is_moderator($settings, $courseid) {
  * @param int $modid mod id.
  * @return array
  */
-function local_annoto_get_jsparam($courseid, $pageurl, $modid) {
+function local_annoto_get_jsparam($courseid, $modid) {
     global $CFG;
     $course = get_course($courseid);
 
     // Get plugin global settings.
     $settings = get_config('local_annoto');
 
-    // Set id of the video frame where script should be attached.
-    $isglobalscope = filter_var($settings->scope, FILTER_VALIDATE_BOOLEAN);
-
-    // If scope is not Global - check if url is in access list.
-    if (!$isglobalscope) {
-        // ACL.
-        $acltext = ($settings->acl) ? $settings->acl : null;
-        $aclarr = preg_split("/\R/", $acltext);
-        $iscourseinacl = false;
-        $isurlinacl = false;
-
-        $iscourseinacl = in_array($courseid, $aclarr);
-
-        if (!$iscourseinacl) {
-            $isurlinacl = in_array($pageurl, $aclarr);
-        }
-        $isaclmatch = ($iscourseinacl || $isurlinacl);
-    }
-
     // Get login, logout urls.
     $loginurl = $CFG->wwwroot . "/login/index.php";
     $logouturl = $CFG->wwwroot . "/login/logout.php?sesskey=" . sesskey();
 
     // Get activity data for mediaDetails.
-    $cmtitle = '';
-    $cmintro = '';
     if ($modid) {
         $modinfo = get_fast_modinfo($course);
         $cm = $modinfo->get_cm($modid);
@@ -213,51 +192,19 @@ function local_annoto_get_jsparam($courseid, $pageurl, $modid) {
         $cmintro = $cm->content;
     }
 
-    // Locale settings.
-    if ($settings->locale == "auto") {
-        $lang = local_annoto_get_lang($course);
-    } else {
-        $lang = $settings->locale;
-    }
-    $widgetposition = 'right';
-    $widgetverticalalign = 'center';
-    if (stripos($settings->widgetposition, 'left') !== false) {
-        $widgetposition = 'left';
-    }
-    if (stripos($settings->widgetposition, 'top') !== false) {
-        $widgetverticalalign = 'top';
-    }
-    if (stripos($settings->widgetposition, 'bottom') !== false) {
-        $widgetverticalalign = 'bottom';
-    }
-
     $jsparams = array(
         'deploymentDomain' => $settings->deploymentdomain != 'custom' ? $settings->deploymentdomain : $settings->customdomain,
         'bootstrapUrl' => $settings->scripturl,
         'clientId' => $settings->clientid,
         'userToken' => local_annoto_get_user_token($settings, $courseid),
-        'position' => $widgetposition,
-        'alignVertical' => $widgetverticalalign,
-        'widgetOverlay' => $settings->widgetoverlay,
-        'featureTab' => !empty($settings->tabs) ? filter_var($settings->tabs, FILTER_VALIDATE_BOOLEAN) : true,
-        'featureCTA' => !empty($settings->cta) ? filter_var($settings->cta, FILTER_VALIDATE_BOOLEAN) : false,
         'loginUrl' => $loginurl,
         'logoutUrl' => $logouturl,
-        'mediaTitle' => $cmtitle,
-        'mediaDescription' => $cmintro,
+        'mediaTitle' => $cmtitle ?? '',
+        'mediaDescription' => $cmintro ?? '',
         'mediaGroupId' => $courseid,
         'mediaGroupTitle' => $course->fullname,
         'mediaGroupDescription' => $course->summary,
-        'privateThread' => filter_var($settings->discussionscope, FILTER_VALIDATE_BOOLEAN),
-        'locale' => $lang,
-        'rtl' => filter_var((substr($lang, 0, 2) === "he"), FILTER_VALIDATE_BOOLEAN),
-        'demoMode' => filter_var($settings->demomode, FILTER_VALIDATE_BOOLEAN),
-        'zIndex' => !empty($settings->zindex) ? filter_var($settings->zindex, FILTER_VALIDATE_INT) : 100,
-        'openOnLoad' => (boolean) $settings->openonload,
-        'sidePanelLayout' => (boolean) $settings->sidepanellayout,
-        'sidePanelFullScreen' => (boolean) $settings->sidepanelfullscreen ,
-        'isGlobalScope' => $isglobalscope,
-        'isACLmatch' => !empty($isaclmatch) ? filter_var($isaclmatch, FILTER_VALIDATE_BOOLEAN) : false,
+        'locale' => $settings->locale ? local_annoto_get_lang($course) : false,
     );
 
     return $jsparams;
@@ -271,7 +218,7 @@ function local_annoto_get_jsparam($courseid, $pageurl, $modid) {
  * @param context_course $context The node to add module settings to
  */
 function local_annoto_extend_settings_navigation(settings_navigation $settingsnav, context  $context) {
-    global $PAGE, $COURSE;
+    global $CFG, $PAGE, $COURSE;
 
     if ((strpos($PAGE->pagetype, 'mod-') === false) &&
         (strpos($PAGE->pagetype, 'course-view-') === false)) {
@@ -282,7 +229,8 @@ function local_annoto_extend_settings_navigation(settings_navigation $settingsna
     $settings = get_config('local_annoto');
 
     // Only let users with the appropriate capability see this settings item.
-    if (!local_annoto_is_moderator($settings, $COURSE->id)) {
+    $capability = 'local/annoto:managementdashboard';
+    if (!local_annoto_has_capability($settings->managementdashboard, $COURSE->id, $capability)) {
         return;
     }
 
@@ -290,9 +238,20 @@ function local_annoto_extend_settings_navigation(settings_navigation $settingsna
         return;
     }
 
-    //create a dashboard instance if not available
+    // Check and create LTI external tool
+   require_once($CFG->dirroot . '/mod/lti/locallib.php');
+    $lti = lti_get_tool_by_url_match($settings->toolurl);
+    if (!$lti){
+        $lti = new stdClass();
+        $lti->id = local_annoto_lti_add_type();
+    }
+
+    // Create a dashboard instance if not available
     if(!$cm = local_annoto_get_lti_course_module()){
-        if(!$cm = local_annoto_create_lti_course_module()){
+        if (!$settings->addingdashboard) {
+            return;
+        }
+        if (!$cm = local_annoto_create_lti_course_module($lti)) {
             return;
         }
     }
@@ -302,6 +261,7 @@ function local_annoto_extend_settings_navigation(settings_navigation $settingsna
     $icon = new pix_icon('icon', '','local_annoto');
     $url  = $cm->url->out();
 
+    // Add nav button to Annoto dashboard
     $annotodashboard = navigation_node::create($text, $url, $type , null, 'annotodashboard', $icon);
     if ($settingnode->find('coursereports', navigation_node::TYPE_CONTAINER)) {
         $settingnode->add_node($annotodashboard,'coursereports');
@@ -340,14 +300,14 @@ function local_annoto_get_lti_course_module(){
 
 /**
  * creates annoto dashboard's lti course module for current course
- *
+ * @param stdClass $lti LTI extrnall tool for specific mode
  * @return cm_info|null $cm
  */
-function local_annoto_create_lti_course_module(){
-    GLOBAL $DB, $CFG, $PAGE;
+function local_annoto_create_lti_course_module($lti){
+    GLOBAL $CFG, $PAGE;
 
     $context = context_course::instance($PAGE->course->id);
-    if(!has_capability('moodle/course:manageactivities', $context)){
+    if(!has_capability('local/annoto:managementdashboard', $context)){
         return null;
     }
 
@@ -356,15 +316,6 @@ function local_annoto_create_lti_course_module(){
     }
 
     require_once($CFG->dirroot . '/mod/lti/locallib.php');
-
-    // Get plugin global settings.
-    $settings = get_config('local_annoto');
-    $lti = lti_get_tool_by_url_match($settings->toolurl);
-
-    if (!$lti){
-        $lti = new stdClass();
-        $lti->id = local_annoto_lti_add_type();
-    }
 
     $toolconfig = lti_get_type_config($lti->id);
 
@@ -409,6 +360,7 @@ function local_annoto_lti_add_type() {
     $type->baseurl = $settings->toolurl;
     $type->tooldomain = parse_url($settings->toolurl, PHP_URL_HOST);
     $type->state = 1;
+    $type->coursevisible = LTI_COURSEVISIBLE_NO;
 
     $type->icon = $settings->tooliconurl;
     $type->secureicon = $settings->tooliconurl;
@@ -417,7 +369,7 @@ function local_annoto_lti_add_type() {
     $config = new stdClass;
     $config->lti_resourcekey = $settings->clientid;
     $config->lti_password = $settings->ssosecret;
-    $config->lti_coursevisible = 0;
+    $config->lti_coursevisible = LTI_COURSEVISIBLE_NO;
     $config->lti_launchcontainer = 3;
 
     //Privacy setting
@@ -427,4 +379,74 @@ function local_annoto_lti_add_type() {
     $config->lti_acceptgrades = 2;
 
     return lti_add_type($type, $config);
+}
+/**
+ * update moodle settings by hook
+ * @param string $settingname
+ *
+ */
+function local_annoto_update_settings($settingname) {
+    GLOBAL $DB;
+
+    $settings = get_config('local_annoto');
+    $updateltitype = [
+         's_local_annoto_addingdashboard',
+         's_local_annoto_clientid',
+         's_local_annoto_ssosecret',
+    ];
+
+    // Update LTI core settings
+    if (in_array($settingname, $updateltitype)) {
+        $lti = lti_get_tool_by_url_match($settings->toolurl);
+
+        if (!$lti) {
+            $lti = new stdClass;
+            $lti->id = local_annoto_lti_add_type();
+        }
+
+        $coursevisible = $settings->addingdashboard ? LTI_COURSEVISIBLE_NO : LTI_COURSEVISIBLE_ACTIVITYCHOOSER;
+        $lti->coursevisible = $coursevisible;
+
+        $config = new stdClass;
+        $config->lti_resourcekey = $settings->clientid;
+        $config->lti_password = $settings->ssosecret;
+        $config->lti_coursevisible = $coursevisible;
+
+        lti_update_type($lti, $config);
+    }
+
+    // Update media details
+    if (!$settings->mediasettingsoverride) {
+        return;
+    }
+
+    $defaultwidth = $DB->get_record('config', ['name' => 'media_default_width']);
+    $defaultwidth->value = $settings->defaultwidth;
+    $DB->update_record('config', $defaultwidth);
+
+    $defaultheight = $DB->get_record('config', ['name' => 'media_default_height']);
+    $defaultheight->value = $settings->defaultheight;
+    $DB->update_record('config', $defaultheight);
+
+    purge_caches();
+}
+
+/**
+ * get all Annoto dashboard's roles with default archetypes
+ *
+ * @return array
+ */
+function local_annoto_get_all_dashboard_roles () {
+    $capabilitiy = 'local/annoto:managementdashboard';
+    $choices = $defaultchoices = [];
+
+    if ($roles = get_roles_with_capability($capabilitiy, CAP_ALLOW)) {
+        $choices = role_fix_names($roles, null, ROLENAME_ORIGINAL, true);
+
+        foreach ($choices as $key => $val) {
+            $defaultchoices[$key] = 1;
+        }
+    }
+
+    return [$choices, $defaultchoices];
 }
