@@ -25,7 +25,7 @@
 defined('MOODLE_INTERNAL') || die;
 
 if (!defined('USREGION')) define('USREGION', 'us.annoto.net');
-if (!defined('EUREGION')) define('EUREGION', 'annoto.net');
+if (!defined('EUREGION')) define('EUREGION', 'eu.annoto.net');
 if (!defined('CUSTOM')) define('CUSTOM', 'custom');
 
 if ($hassiteconfig) {
@@ -36,7 +36,8 @@ if ($hassiteconfig) {
     $pluginmanager = core_plugin_manager::instance();
     $plugininfo = $pluginmanager->get_plugin_info('local_annoto');
     $version = $plugininfo->versiondb;
-    $name = get_string('pluginname', 'local_annoto').' (v. '.$version. ')';
+    $release = $plugininfo->release;
+    $name = get_string('pluginname', 'local_annoto').' (rel. '.$release.' ver. '.$version.')';
 
     $settings = new admin_settingpage('local_annoto',$name);
     $ADMIN->add('localplugins', $settings);
