@@ -74,7 +74,9 @@ if ($hassiteconfig) {
 
     $settings->add(new admin_setting_configtext('local_annoto/customdomain', get_string('customdomain', 'local_annoto'),
         get_string('customdomaindesc', 'local_annoto'), null));
-    $settings->hide_if('local_annoto/customdomain', 'local_annoto/deploymentdomain', 'neq', CUSTOM);
+    if (method_exists($settings, 'hide_if')) {
+        $settings->hide_if('local_annoto/customdomain', 'local_annoto/deploymentdomain', 'neq', CUSTOM);
+    }
 
 
     /* Annoto dashboard (LTI) */
@@ -141,13 +143,17 @@ if ($hassiteconfig) {
         get_string('defaultwidthdesc', 'local_annoto'), 854);
     $setting->set_updatedcallback('local_annoto_update_settings');
     $settings->add($setting);
-    $settings->hide_if('local_annoto/defaultwidth', 'local_annoto/mediasettingsoverride', 'neq', 1);
+    if (method_exists($settings, 'hide_if')) {
+        $settings->hide_if('local_annoto/defaultwidth', 'local_annoto/mediasettingsoverride', 'neq', 1);
+    }
 
     // Annoto default height.
     $setting = new admin_setting_configtext('local_annoto/defaultheight', get_string('defaultheight', 'local_annoto'),
         get_string('defaultheightdesc', 'local_annoto'), 480);
     $setting->set_updatedcallback('local_annoto_update_settings');
     $settings->add($setting);
-    $settings->hide_if('local_annoto/defaultheight', 'local_annoto/mediasettingsoverride', 'neq', 1);
+    if (method_exists($settings, 'hide_if')) {
+        $settings->hide_if('local_annoto/defaultheight', 'local_annoto/mediasettingsoverride', 'neq', 1);
+    }
 
 }
