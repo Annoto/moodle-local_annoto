@@ -46,7 +46,7 @@ $string['custom'] = 'Custom';
 
 // Annoto dashboard (LTI)
 $string['addingdashboard'] = 'Add to all the courses';
-$string['addingdashboard_desc'] = 'If enabled, Annoto dashboard will be automatically added to all the courses. If disabled the Annoto dashboard can be added manually from the “+ Add an activity or resource” on the desired course';
+$string['addingdashboard_desc'] = 'If enabled, Annoto dashboard will be automatically added to all the courses';
 $string['externaltoolsettings'] = 'Annoto dashboard (LTI)';
 $string['toolurl'] = 'URL';
 $string['toolurldesc'] = 'External tool URL';
