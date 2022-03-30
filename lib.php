@@ -67,6 +67,8 @@ function local_annoto_init() {
         }
     }
     // Start local_annoto on a specific pages only.
+    local_annoto_set_jslog('target page '. $istargetpage );
+
     if ($istargetpage) {
         $courseid = $COURSE->id;
         $modid = 0;
@@ -449,4 +451,20 @@ function local_annoto_get_all_dashboard_roles () {
     }
 
     return [$choices, $defaultchoices];
+}
+
+/**
+ * Provide log into console browser
+ * @param string $log the id of the course.
+ * @return void
+ */
+function local_annoto_set_jslog($log = '') {
+    global $PAGE;
+    $themenames = array_keys(\core_component::get_plugin_list('theme'));
+
+    $jscode = "(function () {
+        console.dir('AnnotoBackend: theme ". $themenames[0] ."');
+        console.dir('AnnotoBackend: ". $log ."');
+    }());";
+    $PAGE->requires->js_amd_inline($jscode);
 }
