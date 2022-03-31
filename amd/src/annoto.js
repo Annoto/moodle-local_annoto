@@ -58,6 +58,7 @@ define([
                         return;
                     }
 
+                    this.tilesInit();
                     this.setupKaltura();
                     this.setupWistiaIframeEmbed();
                     this.checkVimeoTime();
@@ -120,6 +121,7 @@ define([
                 playerElement = html5;
                 this.params.playerType = 'html5';
             } else {
+                log.info('AnnotoMoodle: no player was founded');
                 return;
             }
             if (!playerElement.id || playerElement.id === '') {
@@ -139,7 +141,7 @@ define([
             if (annotoPlayer) {
                 this.bootsrapDone = true;
                 require([this.params.bootstrapUrl], this.bootWidget.bind(this));
-                log.info('AnnotoMoodle: detected ' + this.params.playerType + ':' + this.params.playerId);
+                log.info(`AnnotoMoodle: detected ${this.params.playerType} : ${this.params.playerId}`);
             }
         },
         prepareConfig: function() {
@@ -471,6 +473,65 @@ define([
             if (isVimeoTime) {
                 isReady();
             }
-        }
+        },
+
+        tilesInit: function() {
+            if (!document.body.classList.contains('format-tiles')) {
+                return;
+            }
+            const self = this;
+            const formatSelectors = {
+                tiles: 'body.format-tiles #multi_section_tiles li.section.main.moveablesection'
+            };
+
+            const reloadAnnoto = function(mutationList) {
+                let mutationTarget = null;
+
+                if (mutationList) {
+                    mutationTarget = mutationList.filter(function(m) {
+                        return m.attributeName === 'class' && m.target.classList.contains('state-visible');
+                    });
+                }
+
+                if (!mutationTarget.length) {
+                    if (self.annotoAPI && self.isloaded) {
+                        self.annotoAPI.destroy().then(self.isloaded = false);
+                    }
+                    return;
+                }
+                setTimeout(function() {
+                    const player = self.findPlayer(mutationTarget[0].target);
+
+                    if (player) {
+                        self.params.playerId = `#${player.id}`;
+                        if (self.bootsrapDone) {
+                            self.prepareConfig();
+                            self.annotoAPI.load(self.config, function(err) {
+                                if (err) {
+                                    log.warn('AnnotoMoodle: Error while reloading Annoto configuration');
+                                    return;
+                                }
+                                log.info('AnnotoMoodle: Loaded new Configuration!');
+                            }).then(self.isloaded = true);
+                        } else {
+                            self.bootsrapDone = self.isloaded = true;
+                            require([self.params.bootstrapUrl], self.bootWidget.bind(self));
+                            log.info('AnnotoMoodle: detected ' + self.params.playerType + ':' + self.params.playerId);
+                        }
+                    }
+                }, 2000);
+            };
+
+            const observerNodeTargets = document.querySelectorAll(Object.values(formatSelectors).join(', '));
+
+            if (observerNodeTargets.length > 0) {
+                const observerConfig = {attributes: true, childList: false, subtree: false},
+                    observer = new MutationObserver(reloadAnnoto);
+
+                observerNodeTargets.forEach(function(target) {
+                    observer.observe(target, observerConfig);
+                });
+            }
+        },
     };
 });
