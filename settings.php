@@ -150,4 +150,17 @@ if ($hassiteconfig) {
     $settings->add(new admin_setting_configcheckbox('local_annoto/activitiescompletion', get_string('activitiescompletion', 'local_annoto'),
         get_string('activitiescompletiondesc', 'local_annoto'), 0));
 
+    $options = \local_annoto\completion::get_enabled_menu();
+    $settings->add(new admin_setting_configselect('local_annoto/completionenabled', get_string('completionenabled', 'local_annoto'),
+        get_string('completionenableddesc', 'local_annoto'), 0, $options));
+
+    $settings->add(new admin_setting_configtext('local_annoto/completionview', get_string('completionview', 'local_annoto'),
+        get_string('completionviewdesc', 'local_annoto'), 0, PARAM_INT, 3));
+
+    $settings->add(new admin_setting_configtext('local_annoto/completioncomments', get_string('completioncomments', 'local_annoto'),
+        get_string('completioncommentsdesc', 'local_annoto'), 0, PARAM_INT, 3));
+
+    $settings->add(new admin_setting_configtext('local_annoto/completionreplies', get_string('completionreplies', 'local_annoto'),
+        get_string('completiorepliesdesc', 'local_annoto'), 0, PARAM_INT, 3));
+
 }
