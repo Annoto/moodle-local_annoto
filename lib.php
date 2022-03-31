@@ -34,7 +34,10 @@ if (!defined('TOOLICONURL')) define('TOOLICONURL', 'https://assets.annoto.net/im
 if (!defined('DEFAULTWIDTH')) define('DEFAULTWIDTH', 854);
 if (!defined('DEFAULTHEIGHT')) define('DEFAULTHEIGHT', 480);
 
- /**
+
+require_once($CFG->libdir.'/completionlib.php');
+
+/**
  * Function allows plugins to injecting JS across the site, like analytics.
  *
  */
@@ -273,7 +276,7 @@ function local_annoto_extend_settings_navigation(settings_navigation $settingsna
     $type = navigation_node::TYPE_SETTING;
     $icon = new pix_icon('icon', '','local_annoto');
     $url = new moodle_url($cm->url->out());
-    
+
     // Add nav button to Annoto dashboard
     $annotodashboard = navigation_node::create($text, $url, $type , null, 'annotodashboard', $icon);
     if ($settingnode->find('coursereports', navigation_node::TYPE_CONTAINER)) {
@@ -490,4 +493,238 @@ function local_annoto_set_jslog($log = '') {
         console.dir('AnnotoBackend: ". $log ."');
     }());";
     $PAGE->requires->js_amd_inline($jscode);
+}
+
+/**
+ * Inject the competencies elements into all moodle module settings forms.
+ *
+ * @param moodleform $formwrapper The moodle quickforms wrapper object.
+ * @param MoodleQuickForm $mform The actual form object (required to modify the form).
+ */
+function local_annoto_coursemodule_standard_elements($formwrapper, $mform) {
+    global $COURSE;
+
+    $settings = get_config('local_annoto');
+    $provedmodtypes = [
+        'page',
+        'label',
+        'h5p',
+        'hvp',
+        'h5pactivity',
+    ];
+
+    if (!$settings->activitiescompletion || !in_array($formwrapper->get_current()->modulename, $provedmodtypes)) {
+        return;
+    }
+
+    $mform->addElement('header', 'annotocompletion', get_string('annotocompletion', 'local_annoto'));
+
+    $cmid = null;
+
+    if ($cm = $formwrapper->get_coursemodule()) {
+        $cmid = $cm->id;
+        if ($completionsettings = \local_annoto\completion::get_record(['cmid' => $cmid])) {
+            $data = $completionsettings->to_record();
+        } else {
+            $data = (object) [
+                'enabled' => \local_annoto\completion::COMPLETION_TRACKING_NONE,
+                'view' => 0,
+                'comments' => 0,
+                'replies' => 0,
+            ];
+        }
+    } else {
+        $data = (object) [
+            'enabled' => $settings->completionenabled,
+            'view' => $settings->completionview,
+            'comments' => $settings->completioncomments,
+            'replies' => $settings->completionreplies,
+        ];
+    }
+
+    $data->completionexpected = $data->completionexpected ?? 0;
+
+    $mform->addElement('submit', 'unlockcompletionannoto', get_string('unlockcompletion', 'completion'));
+    $mform->registerNoSubmitButton('unlockcompletionannoto');
+    $mform->addElement('hidden', 'completionunlockedannoto', 0);
+    $mform->setType('completionunlockedannoto', PARAM_INT);
+
+    $completionmenu = \local_annoto\completion::get_enabled_menu();
+    $mform->addElement('select', 'annotocompletionenabled', get_string('completionenabled', 'local_annoto'), $completionmenu);
+    $mform->setDefault('annotocompletionenabled', $data->enabled);        //Default value
+    $mform->disabledIf('annotocompletionenabled','completion', 'noteq', 0);
+    $mform->disabledIf('completion','annotocompletionenabled', 'noteq', 0);
+
+    //views
+    $group = [
+        $mform->createElement('advcheckbox', 'annotocompletionviewenabled'),
+        $mform->createElement('static', 'viewtextbefore', null, get_string('annotocompletionviewtextbefore', 'local_annoto')),
+        $mform->createElement('text', 'annotocompletionview'),
+        $mform->createElement('static', 'viewtextafter', null, html_writer::start_tag('strong') . get_string('annotocompletionviewtextafter', 'local_annoto') . html_writer::end_tag('strong')),
+    ];
+
+    $mform->addGroup($group, 'completionviewgroup', get_string('completionview', 'local_annoto'));
+    $mform->disabledIf('completionviewgroup[annotocompletionview]','completionviewgroup[annotocompletionviewenabled]','notchecked');
+    $mform->setType('completionviewgroup[annotocompletionview]', PARAM_INT);
+    $mform->setDefault('completionviewgroup[annotocompletionview]', $data->view);
+    $mform->setDefault('completionviewgroup[annotocompletionviewenabled]', $data->view > 0);
+    $grouprule = [
+        'annotocompletionview' => [
+            [get_string('numericrule', 'local_annoto'), 'numeric']
+        ]
+    ];
+    $mform->addGroupRule('completionviewgroup', $grouprule);
+
+    //comments
+    $group = [
+        $mform->createElement('advcheckbox', 'annotocompletioncommentsenabled'),
+        $mform->createElement('static', 'commentstextbefore', null, get_string('annotocompletioncommentstext', 'local_annoto')),
+        $mform->createElement('text', 'annotocompletioncomments'),
+    ];
+
+    $mform->addGroup($group, 'completioncommentsgroup', get_string('completioncomments', 'local_annoto'));
+    $mform->disabledIf('completioncommentsgroup[annotocompletioncomments]','completioncommentsgroup[annotocompletioncommentsenabled]','notchecked');
+    $mform->setType('completioncommentsgroup[annotocompletioncomments]', PARAM_INT);
+    $mform->setDefault('completioncommentsgroup[annotocompletioncomments]', $data->comments);
+    $mform->setDefault('completioncommentsgroup[annotocompletioncommentsenabled]', $data->comments > 0);
+    $grouprule = [
+        'annotocompletioncomments' => [
+            [get_string('numericrule', 'local_annoto'), 'numeric']
+        ]
+    ];
+    $mform->addGroupRule('completionviewgroup', $grouprule);
+
+    //replies
+    $group = [
+        $mform->createElement('advcheckbox', 'annotocompletionrepliesenabled'),
+        $mform->createElement('static', 'repliestextbefore', null, get_string('annotocompletionrepliestext', 'local_annoto')),
+        $mform->createElement('text', 'annotocompletionreplies'),
+    ];
+
+    $mform->addGroup($group, 'completionrepliesgroup', get_string('completionreplies', 'local_annoto'));
+    $mform->disabledIf('completionrepliesgroup[annotocompletionreplies]','completionrepliesgroup[annotocompletionrepliesenabled]','notchecked');
+    $mform->setType('completionrepliesgroup[annotocompletionreplies]', PARAM_INT);
+    $mform->setDefault('completionrepliesgroup[[annotocompletionreplies]', $data->replies);
+    $mform->setDefault('completionrepliesgroup[annotocompletionrepliesenabled]', $data->replies > 0);
+    $grouprule = [
+        'annotocompletionreplies' => [
+            [get_string('numericrule', 'local_annoto'), 'numeric']
+        ]
+    ];
+    $mform->addGroupRule('completionviewgroup', $grouprule);
+
+    $mform->addElement('date_time_selector', 'annotocompletionexpected', get_string('completionexpected', 'local_annoto'), ['optional' => true]);
+
+    $completion = new completion_info($COURSE);
+    if ($completion->is_enabled()) {
+        // If anybody has completed the activity, these options will be 'locked'
+        $completedcount = empty($cmid)
+            ? 0
+            : $completion->count_user_data($cm);
+
+        $freeze = false;
+        if (!$completedcount) {
+            if ($mform->elementExists('unlockcompletionannoto')) {
+                $mform->removeElement('unlockcompletionannoto');
+            }
+            // Automatically set to unlocked (note: this is necessary
+            // in order to make it recalculate completion once the option
+            // is changed, maybe someone has completed it now)
+            $mform->getElement('completionunlockedannoto')->setValue(1);
+        } else {
+            $unlockcompletionannoto = optional_param('unlockcompletionannoto', 0, PARAM_RAW);
+            $completionunlockedannoto = optional_param('completionunlockedannoto', 0, PARAM_INT);
+
+            // Has the element been unlocked, either by the button being pressed
+            // in this request, or the field already being set from a previous one?
+            if ($unlockcompletionannoto ||
+                $completionunlockedannoto) {
+                // Yes, add in warning text and set the hidden variable
+                $mform->insertElementBefore(
+                    $mform->createElement('static', 'completedunlockedannoto',
+                        get_string('completedunlocked', 'completion'),
+                        get_string('completedunlockedtext', 'completion')),
+                    'unlockcompletionannoto');
+                $mform->removeElement('unlockcompletionannoto');
+                $mform->getElement('completionunlockedannoto')->setValue(1);
+            } else {
+                // No, add in the warning text with the count (now we know
+                // it) before the unlock button
+                $mform->insertElementBefore(
+                    $mform->createElement('static', 'completedwarningannoto',
+                        get_string('completedwarning', 'completion'),
+                        get_string('completedwarningtext', 'completion', $completedcount)),
+                    'unlockcompletionannoto');
+                $freeze = true;
+            }
+        }
+
+        if ($freeze) {
+            $mform->freeze('annotocompletionenabled');
+            if ($mform->elementExists('completionviewgroup')) {
+                $mform->freeze('completionviewgroup'); // don't use hardFreeze or checkbox value gets lost
+            }
+            if ($mform->elementExists('completioncommentsgroup')) {
+                $mform->freeze('completioncommentsgroup');
+            }
+            if ($mform->elementExists('completionrepliesgroup')) {
+                $mform->freeze('completionrepliesgroup');
+            }
+            if ($mform->elementExists('annotocompletionexpected')) {
+                $mform->freeze('annotocompletionexpected');
+            }
+        }
+    }
+}
+
+/**
+ * Hook the add/edit of the course module.
+ *
+ * @param stdClass $data Data from the form submission.
+ * @param stdClass $course The course.
+ */
+function local_annoto_coursemodule_edit_post_actions($data, $course) {
+    global $DB;
+
+    $settings = get_config('local_annoto');
+
+    if (isset($data->annotocompletionenabled) and $settings->activitiescompletion) {
+
+        $completiontype = $data->completion;
+
+        if ($data->annotocompletionenabled > 0) {
+            $newcompletion = new stdClass();
+            $newcompletion->cmid = $data->coursemodule;
+            $newcompletion->enabled  = $data->annotocompletionenabled;
+            $newcompletion->view  = $data->completionviewgroup['annotocompletionviewenabled'] ? $data->completionviewgroup['annotocompletionview'] : 0;
+            $newcompletion->comments  = $data->completioncommentsgroup['annotocompletioncommentsenabled'] ? $data->completioncommentsgroup['annotocompletioncomments'] : 0;
+            $newcompletion->replies  = $data->completionrepliesgroup['annotocompletionrepliesenabled'] ? $data->completionrepliesgroup['annotocompletionreplies'] : 0;
+            $newcompletion->completionexpected  = $data->annotocompletionexpected;
+
+            $completiontype = $data->annotocompletionenabled + 6; // 7, 8 means Annoto completion.
+        }
+
+        if (!$record = \local_annoto\completion::get_record(['cmid' => $data->coursemodule])) {
+            $record = new \local_annoto\completion(0, $newcompletion);
+            $record->create();
+        } else {
+            $record->from_record($newcompletion);
+            $record->update();
+        }
+
+        if ($module = $DB->get_record('course_modules', ['id' => $data->coursemodule])) {
+            $module->completion = $completiontype;
+            $DB->update_record('course_modules', $module);
+        }
+    }
+
+    $completion = new completion_info($course);
+    if ($data->id) {
+        list($course, $cm) = get_course_and_cm_from_cmid($data->id);
+        if ($completion->is_enabled() && !empty($data->completionunlockedannoto)) {
+            $completion->reset_all_state($cm);
+        }
+    }
+
+    return $data;
 }

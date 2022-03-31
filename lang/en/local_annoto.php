@@ -75,6 +75,12 @@ $string['defaultwidthdesc'] = 'Media player width if a width is not specified an
 $string['defaultheight'] = 'Media height';
 $string['defaultheightdesc'] = 'Media player height if a height is not specified and the actual media file height cannot be determined by the player';
 
+// Activities completion
+$string['annotocompletion'] = 'Annoto completion';
+$string['annotocompletiontracking'] = 'Annoto Completion tracking';
+$string['completiontask'] = 'Annoto Completion Task';
+$string['numericrule'] = 'This field should be numeric';
+
 // Privacy API.
 $string['privacy:metadata:annoto'] = 'In order to integrate with a remote service, user data needs to be exchanged with that service.';
 $string['privacy:metadata:annoto:userid'] = 'The userid is sent from Moodle to allow you to access your data on the remote system.';

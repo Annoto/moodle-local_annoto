@@ -146,4 +146,8 @@ if ($hassiteconfig) {
     $settings->add($setting);
     $settings->hide_if('local_annoto/defaultheight', 'local_annoto/mediasettingsoverride', 'neq', 1);
 
+    // Activities completion.
+    $settings->add(new admin_setting_configcheckbox('local_annoto/activitiescompletion', get_string('activitiescompletion', 'local_annoto'),
+        get_string('activitiescompletiondesc', 'local_annoto'), 0));
+
 }

@@ -25,8 +25,9 @@ define([
   'jquery',
   'core/log',
   'core/notification',
-  'core/ajax'
-], function($, log, notification, Ajax) {
+  'core/ajax',
+  'local_annoto/completion',
+], function($, log, notification, Ajax, Completion) {
 
     window.moodleAnnoto = window.moodleAnnoto || {};
 
@@ -221,6 +222,11 @@ define([
             } else {
                 log.info('AnnotoMoodle: SSO auth skipped');
             }
+
+            window.Annoto.on(`my_activity`, IMyActivity => {
+                IMyActivity.cmid = this.params.cmId;
+                Completion.record(IMyActivity);
+            });
         },
 
         authKalturaPlayer: function(api) {
