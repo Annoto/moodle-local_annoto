@@ -24,10 +24,6 @@
 
 defined('MOODLE_INTERNAL') || die;
 
-if (!defined('USREGION')) define('USREGION', 'us.annoto.net');
-if (!defined('EUREGION')) define('EUREGION', 'eu.annoto.net');
-if (!defined('CUSTOM')) define('CUSTOM', 'custom');
-
 if ($hassiteconfig) {
 
     require_once($CFG->dirroot. '/local/annoto/classes/admin_setting_custompickroles.php');
@@ -82,15 +78,15 @@ if ($hassiteconfig) {
 
     // LTI name.
     $settings->add(new admin_setting_configtext('local_annoto/toolname', get_string('toolname', 'local_annoto'),
-        get_string('toolnamedesc', 'local_annoto'), 'Annoto Dashboard'));
+        get_string('toolnamedesc', 'local_annoto'), TOOLNAME));
 
     // LTI url.
     $settings->add(new admin_setting_configtext('local_annoto/toolurl', get_string('toolurl', 'local_annoto'),
-        get_string('toolurldesc', 'local_annoto'), 'https://auth.annoto.net/lti/course-insights'));
+        get_string('toolurldesc', 'local_annoto'), TOOLURL));
 
     // LTI icon url.
     $settings->add(new admin_setting_configtext('local_annoto/tooliconurl', get_string('tooliconurl', 'local_annoto'),
-        get_string('tooliconurldesc', 'local_annoto'), 'https://assets.annoto.net/images/logo_icon.png'));
+        get_string('tooliconurldesc', 'local_annoto'), TOOLICONURL));
 
     // Auto launchig.
     $setting = new admin_setting_configcheckbox('local_annoto/addingdashboard',
