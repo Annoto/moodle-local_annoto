@@ -400,13 +400,22 @@ define([
         },
 
         setupWistiaIframeEmbed: function() {
-            const annotoIframeClient = "https://cdn.annoto.net/widget-iframe-api/latest/client.js",
-                annotoIframeUrl = /https:\/\/fast.wistia.net\/embed\/iframe.*https:\/\/cdn.annoto.net/,
-                wistiaplayers = document.querySelectorAll('iframe');
+            const wistiaplayers = document.querySelectorAll('iframe');
+            const annotoIframeClient = "https://cdn.annoto.net/widget-iframe-api/latest/client.js";
+            const targetHost = 'fast.wistia.net';
+            const desiredParam = {
+                name: 'plugin[annoto][src]',
+                value: 'cdn.annoto.net'
+            };
 
             wistiaplayers.forEach((iframe) => {
-                const iframeSrc = decodeURIComponent(iframe.src);
-                if (iframeSrc.match(annotoIframeUrl)) {
+                const iframeSrc = new URL(iframe.src);
+                const targetParam = iframeSrc.searchParams.get(desiredParam.name);
+                if (iframeSrc.host !== targetHost) {
+                    return;
+                }
+
+                if (targetParam && targetParam.match(desiredParam.value)) {
                     require([annotoIframeClient], this.setupWistiaIframeEmbedPlugin.bind(this, iframe));
                     return;
                 }
