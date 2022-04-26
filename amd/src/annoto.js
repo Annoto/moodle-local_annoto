@@ -371,13 +371,7 @@ define([
 
                 self.annotoAPI.destroy().then(function() {
                     if (playerElement.offsetParent) {
-                        self.annotoAPI.load(self.config, function(err) {
-                            if (err) {
-                                log.warn('AnnotoMoodle: Error while reloading Annoto configuration');
-                                return;
-                            }
-                            log.info('AnnotoMoodle: Loaded new Configuration!');
-                        });
+                        self.annotoAPI.load(self.config);
                     }
                 });
               };
@@ -515,13 +509,7 @@ define([
                         self.params.playerId = `#${player.id}`;
                         if (self.bootsrapDone) {
                             self.prepareConfig();
-                            self.annotoAPI.load(self.config, function(err) {
-                                if (err) {
-                                    log.warn('AnnotoMoodle: Error while reloading Annoto configuration');
-                                    return;
-                                }
-                                log.info('AnnotoMoodle: Loaded new Configuration!');
-                            }).then(self.isloaded = true);
+                            self.annotoAPI.load(self.config).then(self.isloaded = true);
                         } else {
                             self.bootsrapDone = self.isloaded = true;
                             require([self.params.bootstrapUrl], self.bootWidget.bind(self));
