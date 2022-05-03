@@ -134,14 +134,14 @@ if ($hassiteconfig) {
 
     // Annoto default width.
     $setting = new admin_setting_configtext('local_annoto/defaultwidth', get_string('defaultwidth', 'local_annoto'),
-        get_string('defaultwidthdesc', 'local_annoto'), 854);
+        get_string('defaultwidthdesc', 'local_annoto'), DEFAULTWIDTH);
     $setting->set_updatedcallback('local_annoto_update_settings');
     $settings->add($setting);
     $settings->hide_if('local_annoto/defaultwidth', 'local_annoto/mediasettingsoverride', 'neq', 1);
 
     // Annoto default height.
     $setting = new admin_setting_configtext('local_annoto/defaultheight', get_string('defaultheight', 'local_annoto'),
-        get_string('defaultheightdesc', 'local_annoto'), 480);
+        get_string('defaultheightdesc', 'local_annoto'), DEFAULTHEIGHT);
     $setting->set_updatedcallback('local_annoto_update_settings');
     $settings->add($setting);
     $settings->hide_if('local_annoto/defaultheight', 'local_annoto/mediasettingsoverride', 'neq', 1);
