@@ -403,7 +403,12 @@ define([
             };
 
             wistiaplayers.forEach((iframe) => {
-                const iframeSrc = new URL(iframe.src);
+                let iframeSrc;
+                try {
+                    iframeSrc = new URL(iframe.src);
+                } catch (err) {
+                    return;
+                }
                 const targetParam = iframeSrc.searchParams.get(desiredParam.name);
                 if (iframeSrc.host !== targetHost) {
                     return;
