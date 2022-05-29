@@ -436,7 +436,7 @@ function local_annoto_update_settings($settingname) {
     }
 
     // Update media details
-    if (!$settings->mediasettingsoverride) {
+    if (!isset($settings->mediasettingsoverride) || !$settings->mediasettingsoverride) {
         return;
     }
 
