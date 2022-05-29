@@ -24,10 +24,6 @@
 
 defined('MOODLE_INTERNAL') || die;
 
-if (!defined('USREGION')) define('USREGION', 'us.annoto.net');
-if (!defined('EUREGION')) define('EUREGION', 'eu.annoto.net');
-if (!defined('CUSTOM')) define('CUSTOM', 'custom');
-
 if ($hassiteconfig) {
 
     require_once($CFG->dirroot. '/local/annoto/classes/admin_setting_custompickroles.php');
@@ -82,15 +78,15 @@ if ($hassiteconfig) {
 
     // LTI name.
     $settings->add(new admin_setting_configtext('local_annoto/toolname', get_string('toolname', 'local_annoto'),
-        get_string('toolnamedesc', 'local_annoto'), 'Annoto Dashboard'));
+        get_string('toolnamedesc', 'local_annoto'), TOOLNAME));
 
     // LTI url.
     $settings->add(new admin_setting_configtext('local_annoto/toolurl', get_string('toolurl', 'local_annoto'),
-        get_string('toolurldesc', 'local_annoto'), 'https://auth.annoto.net/lti/course-insights'));
+        get_string('toolurldesc', 'local_annoto'), TOOLURL));
 
     // LTI icon url.
     $settings->add(new admin_setting_configtext('local_annoto/tooliconurl', get_string('tooliconurl', 'local_annoto'),
-        get_string('tooliconurldesc', 'local_annoto'), 'https://assets.annoto.net/images/logo_icon.png'));
+        get_string('tooliconurldesc', 'local_annoto'), TOOLICONURL));
 
     // Auto launchig.
     $setting = new admin_setting_configcheckbox('local_annoto/addingdashboard',
@@ -138,14 +134,14 @@ if ($hassiteconfig) {
 
     // Annoto default width.
     $setting = new admin_setting_configtext('local_annoto/defaultwidth', get_string('defaultwidth', 'local_annoto'),
-        get_string('defaultwidthdesc', 'local_annoto'), 854);
+        get_string('defaultwidthdesc', 'local_annoto'), DEFAULTWIDTH);
     $setting->set_updatedcallback('local_annoto_update_settings');
     $settings->add($setting);
     $settings->hide_if('local_annoto/defaultwidth', 'local_annoto/mediasettingsoverride', 'neq', 1);
 
     // Annoto default height.
     $setting = new admin_setting_configtext('local_annoto/defaultheight', get_string('defaultheight', 'local_annoto'),
-        get_string('defaultheightdesc', 'local_annoto'), 480);
+        get_string('defaultheightdesc', 'local_annoto'), DEFAULTHEIGHT);
     $setting->set_updatedcallback('local_annoto_update_settings');
     $settings->add($setting);
     $settings->hide_if('local_annoto/defaultheight', 'local_annoto/mediasettingsoverride', 'neq', 1);

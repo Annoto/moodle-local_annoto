@@ -371,13 +371,7 @@ define([
 
                 self.annotoAPI.destroy().then(function() {
                     if (playerElement.offsetParent) {
-                        self.annotoAPI.load(self.config, function(err) {
-                            if (err) {
-                                log.warn('AnnotoMoodle: Error while reloading Annoto configuration');
-                                return;
-                            }
-                            log.info('AnnotoMoodle: Loaded new Configuration!');
-                        });
+                        self.annotoAPI.load(self.config);
                     }
                 });
               };
@@ -400,13 +394,27 @@ define([
         },
 
         setupWistiaIframeEmbed: function() {
-            const annotoIframeClient = "https://cdn.annoto.net/widget-iframe-api/latest/client.js",
-                annotoIframeUrl = /https:\/\/fast.wistia.net\/embed\/iframe.*https:\/\/cdn.annoto.net/,
-                wistiaplayers = document.querySelectorAll('iframe');
+            const wistiaplayers = document.querySelectorAll('iframe');
+            const annotoIframeClient = "https://cdn.annoto.net/widget-iframe-api/latest/client.js";
+            const targetHost = 'fast.wistia.net';
+            const desiredParam = {
+                name: 'plugin[annoto][src]',
+                value: 'cdn.annoto.net'
+            };
 
             wistiaplayers.forEach((iframe) => {
-                const iframeSrc = decodeURIComponent(iframe.src);
-                if (iframeSrc.match(annotoIframeUrl)) {
+                let iframeSrc;
+                try {
+                    iframeSrc = new URL(iframe.src);
+                } catch (err) {
+                    return;
+                }
+                const targetParam = iframeSrc.searchParams.get(desiredParam.name);
+                if (iframeSrc.host !== targetHost) {
+                    return;
+                }
+
+                if (targetParam && targetParam.match(desiredParam.value)) {
                     require([annotoIframeClient], this.setupWistiaIframeEmbedPlugin.bind(this, iframe));
                     return;
                 }
@@ -506,13 +514,7 @@ define([
                         self.params.playerId = `#${player.id}`;
                         if (self.bootsrapDone) {
                             self.prepareConfig();
-                            self.annotoAPI.load(self.config, function(err) {
-                                if (err) {
-                                    log.warn('AnnotoMoodle: Error while reloading Annoto configuration');
-                                    return;
-                                }
-                                log.info('AnnotoMoodle: Loaded new Configuration!');
-                            }).then(self.isloaded = true);
+                            self.annotoAPI.load(self.config).then(self.isloaded = true);
                         } else {
                             self.bootsrapDone = self.isloaded = true;
                             require([self.params.bootstrapUrl], self.bootWidget.bind(self));

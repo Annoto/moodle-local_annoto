@@ -23,7 +23,18 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-/**
+if (!defined('USREGION')) define('USREGION', 'us.annoto.net');
+if (!defined('EUREGION')) define('EUREGION', 'eu.annoto.net');
+if (!defined('CUSTOM')) define('CUSTOM', 'custom');
+
+if (!defined('TOOLNAME')) define('TOOLNAME', 'Annoto Dashboard');
+if (!defined('TOOLURL')) define('TOOLURL', 'https://auth.annoto.net/lti/course-insights');
+if (!defined('TOOLICONURL')) define('TOOLICONURL', 'https://assets.annoto.net/images/logo_icon.png');
+
+if (!defined('DEFAULTWIDTH')) define('DEFAULTWIDTH', 854);
+if (!defined('DEFAULTHEIGHT')) define('DEFAULTHEIGHT', 480);
+
+ /**
  * Function allows plugins to injecting JS across the site, like analytics.
  *
  */
@@ -356,7 +367,11 @@ function local_annoto_lti_add_type() {
 
     // Get plugin global settings.
     $settings = get_config('local_annoto');
-    
+
+    $settings->toolname = $settings->toolname ?: TOOLNAME;
+    $settings->toolurl = $settings->toolurl ?: TOOLURL;
+    $settings->tooliconurl = $settings->tooliconurl ?: TOOLICONURL;
+
     $type = new stdClass;
     $type->name = $settings->toolname;
     $type->baseurl = $settings->toolurl;
@@ -364,8 +379,8 @@ function local_annoto_lti_add_type() {
     $type->state = 1;
     $type->coursevisible = LTI_COURSEVISIBLE_NO;
 
-    $type->icon = $settings->tooliconurl;
-    $type->secureicon = $settings->tooliconurl;
+    $type->icon = $settings->tooliconurl ?? '';
+    $type->secureicon = $settings->tooliconurl ?? '';
     $type->description = get_string('annoto_dashboard_description', 'local_annoto');
 
     $config = new stdClass;
@@ -399,6 +414,9 @@ function local_annoto_update_settings($settingname) {
 
     // Update LTI core settings
     if (in_array($settingname, $updateltitype)) {
+        if (!isset($settings->toolname) || !isset($settings->toolurl)){
+            return;
+        }
         $lti = lti_get_tool_by_url_match($settings->toolurl);
 
         if (!$lti) {
@@ -410,8 +428,8 @@ function local_annoto_update_settings($settingname) {
         $lti->coursevisible = $coursevisible;
 
         $config = new stdClass;
-        $config->lti_resourcekey = $settings->clientid;
-        $config->lti_password = $settings->ssosecret;
+        $config->lti_resourcekey = $settings->clientid ?: '';
+        $config->lti_password = $settings->ssosecret ?: '';
         $config->lti_coursevisible = $coursevisible;
 
         lti_update_type($lti, $config);
@@ -423,11 +441,11 @@ function local_annoto_update_settings($settingname) {
     }
 
     $defaultwidth = $DB->get_record('config', ['name' => 'media_default_width']);
-    $defaultwidth->value = $settings->defaultwidth;
+    $defaultwidth->value = $settings->defaultwidth ?? DEFAULTWIDTH;
     $DB->update_record('config', $defaultwidth);
 
     $defaultheight = $DB->get_record('config', ['name' => 'media_default_height']);
-    $defaultheight->value = $settings->defaultheight;
+    $defaultheight->value = $settings->defaultheight ?? DEFAULTHEIGHT;
     $DB->update_record('config', $defaultheight);
 
     purge_caches();
