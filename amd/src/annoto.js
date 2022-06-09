@@ -395,7 +395,7 @@ define([
 
         setupWistiaIframeEmbed: function() {
             const wistiaplayers = document.querySelectorAll('iframe');
-            const annotoIframeClient = "https://cdn.annoto.net/widget-iframe-api/latest/client.js";
+            const annotoIframeClient = "https://cdn.annoto.net/widget-iframe-api/2.0.0/client.js";
             const targetHost = 'fast.wistia.net';
             const desiredParam = {
                 name: 'plugin[annoto][src]',
