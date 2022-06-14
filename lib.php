@@ -131,7 +131,7 @@ function local_annoto_get_user_token($settings, $courseid) {
         "exp" => $expire,                       // JWT token expiration time.
         "scope" => ($moderator ? 'super-mod' : 'user'),
     );
-    $enctoken = \Firebase\JWT\JWT::encode($payload, $settings->ssosecret);
+    $enctoken = \Firebase\JWT\JWT::encode($payload, $settings->ssosecret, 'HS256');
 
     return $enctoken;
 }
@@ -272,8 +272,8 @@ function local_annoto_extend_settings_navigation(settings_navigation $settingsna
     $text = get_string('lti_activity_name', 'local_annoto');
     $type = navigation_node::TYPE_SETTING;
     $icon = new pix_icon('icon', '','local_annoto');
-    $url  = $cm->url->out();
-
+    $url = new moodle_url($cm->url->out());
+    
     // Add nav button to Annoto dashboard
     $annotodashboard = navigation_node::create($text, $url, $type , null, 'annotodashboard', $icon);
     if ($settingnode->find('coursereports', navigation_node::TYPE_CONTAINER)) {
@@ -436,7 +436,7 @@ function local_annoto_update_settings($settingname) {
     }
 
     // Update media details
-    if (!$settings->mediasettingsoverride) {
+    if (!isset($settings->mediasettingsoverride) || !$settings->mediasettingsoverride) {
         return;
     }
 
