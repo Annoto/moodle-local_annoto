@@ -66,13 +66,13 @@ class completion extends \core\task\scheduled_task {
                         $data = json_decode($completiondata->get('data'));
                         $completed = true;
                         if ($record->get('view') > 0) {
-                            $completed = $record->get('view') >= $data->completion;
+                            $completed = $record->get('view') <= $data->completion;
                         }
                         if ($record->get('comments') > 0) {
-                            $completed = $record->get('comments') >= $data->comments;
+                            $completed = $record->get('comments') <= $data->comments;
                         }
                         if ($record->get('replies') > 0) {
-                            $completed = $record->get('replies') >= $data->replies;
+                            $completed = $record->get('replies') <= $data->replies;
                         }
                         if ($record->get('completionexpected') > 0) {
                             $completed = $record->get('completionexpected') >= $record->get('timemodified');
