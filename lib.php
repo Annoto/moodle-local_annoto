@@ -50,10 +50,10 @@ function local_annoto_before_footer() {
 function local_annoto_before_standard_top_of_body_html() {
     global $PAGE;
     // Prevent callback loading for all themes except theme_lambda.
-    if ($PAGE->theme->name != 'lambda') {
-        return '';
+    $themes = ['lambda', 'adaptable'];
+    if (in_array($PAGE->theme->name, $themes)) {
+        local_annoto_init();
     }
-    local_annoto_init();
     return '';
 }
 
