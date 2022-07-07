@@ -479,8 +479,13 @@ function local_annoto_get_all_dashboard_roles () {
 function local_annoto_set_jslog($log = '') {
     global $PAGE;
     $themenames = array_keys(\core_component::get_plugin_list('theme'));
+    $pluginmanager = core_plugin_manager::instance();
+    $plugininfo = $pluginmanager->get_plugin_info('local_annoto');
+    $version = $plugininfo->versiondb;
+    $release = $plugininfo->release;
 
     $jscode = "(function () {
+        console.dir('AnnotoBackend: version ". $release . ' - ' . $version ."');
         console.dir('AnnotoBackend: theme ". $themenames[0] ."');
         console.dir('AnnotoBackend: ". $log ."');
     }());";
