@@ -48,11 +48,15 @@ class local_annoto_external extends external_api {
     }
 
     /**
-     * Returns result
-     * @return result
+     * Returns description of method result value
+     * @return external_value
      */
     public static function get_jsparams_returns() {
-        return new external_value(PARAM_TEXT, 'json jsparams');
+        //return new external_value(PARAM_TEXT, 'json jsparams');
+        return new external_single_structure([
+            'result' => new external_value(PARAM_BOOL, 'True if the params was successfully sended'),
+            'params'    => new external_value(PARAM_TEXT, 'json jsparams', ),
+        ]);
     }
 
     /**
@@ -62,7 +66,7 @@ class local_annoto_external extends external_api {
      * @return array
      */
     public static function get_jsparams($courseid, $modid) {
-        global $PAGE;
+        global $USER;
         $params = self::validate_parameters(
             self::get_jsparams_parameters(),
             array(
@@ -70,18 +74,12 @@ class local_annoto_external extends external_api {
                 'modid' => $modid
             )
         );
-
         $context = context_course::instance($courseid);
-        $capabilities = 'moodle/search:query'; // Checking permission to prevent unauthorized access.
-        $response = '';
-        if (has_capability($capabilities, $context)) {
-            self::validate_context($context);
-            $response = json_encode(local_annoto_get_jsparam($courseid, $modid), JSON_HEX_TAG);
-        } else {
-            $response = json_encode(false);
-        }
+        self::validate_context(context_course::instance($courseid));
 
-        return $response;
+        list($result, $response) = !is_guest($context) ? [true, local_annoto_get_jsparam($courseid, $modid)] : [false, null];
+
+        return ['result' => $result, 'params' => json_encode($response, JSON_HEX_TAG)];
     }
 
 }
