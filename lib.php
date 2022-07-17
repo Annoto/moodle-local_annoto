@@ -131,7 +131,7 @@ function local_annoto_get_user_token($settings, $courseid) {
         "exp" => $expire,                       // JWT token expiration time.
         "scope" => ($moderator ? 'super-mod' : 'user'),
     );
-    $enctoken = \Firebase\JWT\JWT::encode($payload, $settings->ssosecret, 'HS256');
+    $enctoken = \Firebase\JWT\JWT::encode($payload, $settings->ssosecret,'HS256');
 
     return $enctoken;
 }
