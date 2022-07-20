@@ -46,11 +46,11 @@ define([
                     modid: modid
                 },
                 done: function(response) {
-                    if (!response) {
-                        log.error('AnnotoMoodle: empty params. Plugin won`t start.');
+                    if (!response.result) {
+                        log.warn('AnnotoMoodle: action not permitted for user');
                         return;
                     }
-                    this.params = JSON.parse(response);
+                    this.params = JSON.parse(response.params);
 
                     // Return if has <annoto> tag.
                     if (this.hasAnnotoTag()) {
