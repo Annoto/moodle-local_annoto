@@ -75,6 +75,36 @@ $string['defaultwidthdesc'] = 'Media player width if a width is not specified an
 $string['defaultheight'] = 'Media height';
 $string['defaultheightdesc'] = 'Media player height if a height is not specified and the actual media file height cannot be determined by the player';
 
+// Activities completion
+$string['annotocompletion'] = 'Annoto completion';
+$string['annotocompletiontracking'] = 'Annoto Completion tracking';
+$string['completiontask'] = 'Annoto Completion Task';
+$string['numericrule'] = 'This field should be numeric';
+
+$string['activitiescompletion'] = 'Annoto activities completion';
+$string['activitiescompletiondesc'] = 'Set up additional conditions for activities completion';
+
+$string['completiondefaultsheading'] = 'Annoto completion (beta)';
+
+$string['completionenabled'] = 'Completion tracking';
+$string['completionenableddesc'] = 'Select whether annoto completion should be enabled by default for new activities';
+
+$string['completionview'] = 'Require video activity completion';
+$string['completionviewdesc'] = 'How much of a video length should be viewed by student to consider this activity completed';
+$string['annotocompletionviewtextbefore'] = 'Student must view this activity to complete';
+$string['annotocompletionviewtextafter'] = '% (Range 0-100)';
+
+$string['completioncomments'] = 'Require comments';
+$string['completioncommentsdesc'] = 'How many comments should be made by student to consider this activity completed';
+$string['annotocompletioncommentstext'] = 'Student must post&nbsp;<strong>comments:</strong>&nbsp;or replies: ';
+
+$string['completionreplies'] = 'Require replies';
+$string['completiorepliesdesc'] = 'How many replies should be made by student to consider this activity completed';
+$string['annotocompletionrepliestext'] = 'Student must post replies: ';
+
+$string['completionexpected'] = 'Expect completed on';
+
+
 // Privacy API.
 $string['privacy:metadata:annoto'] = 'In order to integrate with a remote service, user data needs to be exchanged with that service.';
 $string['privacy:metadata:annoto:userid'] = 'The userid is sent from Moodle to allow you to access your data on the remote system.';

@@ -84,4 +84,90 @@ class local_annoto_external extends external_api {
         return $response;
     }
 
+
+    /**
+     * Returns description of method parameters
+     * @return external_function_parameters
+     */
+    public static function set_completion_parameters() {
+        return new external_function_parameters(
+            array(
+                'data' => new external_value(PARAM_RAW, 'JSON encoded data'),
+            )
+        );
+    }
+
+    /**
+     * @param $jsondata
+     * @return string result of submittion
+     * @throws \core\invalid_persistent_exception
+     * @throws coding_exception
+     * @throws dml_exception
+     * @throws invalid_parameter_exception
+     * @throws moodle_exception
+     */
+    public static function set_completion($jsondata) {
+        global $DB, $CFG, $USER;
+        require_once($CFG->libdir . "/completionlib.php");
+        $params = self::validate_parameters(self::set_completion_parameters(),
+            array(
+                'data' => $jsondata,
+            )
+        );
+
+        $data = json_decode($jsondata);
+
+        if (isset($data->cmid) && !empty($data->cmid)) {
+            list($course, $cm) = get_course_and_cm_from_cmid($data->cmid);
+            $enrolled = static::get_enrolled_userids($course->id);
+
+            if (in_array($USER->id, $enrolled)) {
+                $record = \local_annoto\completion::get_record(['cmid' => $data->cmid]);
+                if ($record !== false && $record->get('enabled') == \local_annoto\completion::COMPLETION_TRACKING_AUTOMATIC) {
+                    if ($completiondata = \local_annoto\completiondata::get_record(['completionid' => $record->get('id'), 'userid' => $USER->id])) {
+                        $completiondata->set('data', $jsondata);
+                        $completiondata->update();
+                    } else {
+                        $record = [
+                            'userid' => $USER->id,
+                            'completionid' => $record->get('id'),
+                            'data' => $jsondata
+                        ];
+                        $completiondata = new \local_annoto\completiondata(0, (object) $record);
+                        $completiondata->create();
+                    }
+                }
+            }
+
+        }
+
+        return true;
+    }
+
+    /**
+     * Returns description of method result value
+     * @return external_description
+     */
+    public static function set_completion_returns() {
+        return new external_value(PARAM_BOOL, 'Return status');
+    }
+
+    /**
+     * Returns array of user ids enrolled into this course with gradebook roles
+     * @param $courseid
+     * @return array
+     * @throws coding_exception
+     * @throws dml_exception
+     */
+    public static function get_enrolled_userids($courseid) {
+        global $DB, $CFG;
+
+        $context = \context_course::instance($courseid);
+
+        list($gradebookroles_sql, $params) = $DB->get_in_or_equal(explode(',', $CFG->gradebookroles), SQL_PARAMS_NAMED, 'grbr');
+        $params['contextid'] = $context->id;
+        $sql = "SELECT DISTINCT ra.userid FROM {role_assignments} ra WHERE ra.roleid $gradebookroles_sql AND contextid = :contextid";
+
+        return $DB->get_fieldset_sql($sql, $params);
+    }
 }
