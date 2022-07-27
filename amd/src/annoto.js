@@ -25,8 +25,10 @@ define([
   'jquery',
   'core/log',
   'core/notification',
-  'core/ajax'
-], function($, log, notification, Ajax) {
+  'core/ajax',
+  'https://player.vimeo.com/api/player.js',
+  'https://vjs.zencdn.net/7.20.1/video.min.js',
+], function($, log, notification, Ajax, VimeoPlayer, videoJsPlayer) {
 
     window.moodleAnnoto = window.moodleAnnoto || {};
 
@@ -38,6 +40,12 @@ define([
 
     return {
         init: function(courseid, modid) {
+
+            // if page is 'edit settings' then return
+            if ($(document).find('body#page-mod-page-mod').get(0)){
+                return;
+            }
+
             log.info('AnnotoMoodle: plugin init');
             Ajax.call([{
                 methodname: 'get_jsparams',
@@ -46,11 +54,11 @@ define([
                     modid: modid
                 },
                 done: function(response) {
-                    if (!response) {
-                        log.error('AnnotoMoodle: empty params. Plugin won`t start.');
+                    if (!response.result) {
+                        log.warn('AnnotoMoodle: action not permitted for user');
                         return;
                     }
-                    this.params = JSON.parse(response);
+                    this.params = JSON.parse(response.params);
 
                     // Return if has <annoto> tag.
                     if (this.hasAnnotoTag()) {
@@ -136,8 +144,9 @@ define([
             if (this.bootsrapDone) {
                 return;
             }
-
-            const annotoPlayer = this.findPlayer.call(this);
+            // Check if we have multiple players
+            this.findMultiplePlayers();
+            let annotoPlayer = this.findPlayer.call(this);
             if (annotoPlayer) {
                 this.bootsrapDone = true;
                 require([this.params.bootstrapUrl], this.bootWidget.bind(this));
@@ -535,5 +544,79 @@ define([
                 });
             }
         },
+
+        findMultiplePlayers: function() {
+            const self = this;
+            const vimeos = $('body').find('iframe[src*="vimeo.com"]').get();
+            const videojs = $('body').find('.video-js').get();
+            const allPlayers = {
+                ... (vimeos.length > 1) && {'vimeo': [...vimeos]},
+                ... (videojs.length > 1) && {'videojs': [...videojs]},
+            };
+
+            let multiplePlayers = false;
+            let activePlayerId = null;
+
+            if (allPlayers.length) {
+                return multiplePlayers;
+            }
+            multiplePlayers = true;
+            log.info('AnnotoMoodle: setup multiple players');
+
+            const validatePlayerId = function(element){
+                if (!element.id || element.id === '') {
+                    element.id = 'annoto_player_id_' + Math.random().toString(36).substr(2, 6);
+                }
+                return element.id;
+            };
+
+            const reloadAnnotoWidget = function(element, playerType){
+                self.params.playerId = `#${element.id}`;
+                self.params.element = element;
+                self.params.playerType = playerType;
+                self.prepareConfig();
+
+                self.annotoAPI.destroy().then(function () {
+                    self.annotoAPI.load(self.config);
+                    log.info(`AnnotoMoodle: reload Player: ${element.id}`);
+                });
+            };
+
+            for (const [playerType, players] of Object.entries(allPlayers)) {
+                players.forEach((player) => {
+                    validatePlayerId(player);
+
+                    log.info(`AnnotoMoodle: setup Player: ${player.id}`);
+                    switch (playerType) {
+                        case 'vimeo':
+                            let vimeoPlayer = new VimeoPlayer(player);
+                            vimeoPlayer.on('play', function () {
+                                if (player.id === activePlayerId) {
+                                    return;
+                                }
+                                activePlayerId = player.id;
+                                log.info(`AnnotoMoodle: Player play: ${player.id}`);
+
+                                reloadAnnotoWidget(player, playerType);
+                            });
+                            break;
+                        case 'videojs':
+                            let playerJs = videoJsPlayer(player);
+                            playerJs.player().on('play', function() {
+                                if (player.id === activePlayerId) {
+                                    return;
+                                }
+                                activePlayerId = player.id;
+                                log.info(`AnnotoMoodle: Player play: ${player.id}`);
+
+                                reloadAnnotoWidget(player, playerType);
+                            });
+                            break;
+                    }
+                })
+            }
+
+            return multiplePlayers;
+        }
     };
 });
