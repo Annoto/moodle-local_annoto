@@ -161,6 +161,7 @@ define([
                 backend: {
                   domain: params.deploymentDomain
                 },
+                demoMode: false,
                 clientId: params.clientId,
                 widgets: [{player: {}}],
                 hooks: {
