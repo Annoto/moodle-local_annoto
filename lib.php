@@ -436,7 +436,7 @@ function local_annoto_lti_add_type($ltitype) {
     $config->lti_forcessl = LTI_SETTING_ALWAYS;
     $config->lti_sendname = LTI_SETTING_ALWAYS;
     $config->lti_sendemailaddr = LTI_SETTING_ALWAYS;
-    $config->lti_acceptgrades = LTI_SETTING_DELEGATE;
+    $config->lti_acceptgrades = LTI_SETTING_ALWAYS;
 
     return lti_add_type($type, $config);
 }
@@ -500,6 +500,7 @@ function local_annoto_update_settings($settingname) {
         $lti->coursevisible = $coursevisible;
 
         $config = new stdClass;
+        $config->lti_forcessl = LTI_SETTING_ALWAYS;
         $config->lti_resourcekey = $settings->clientid ?: '';
         $config->lti_password = $settings->ssosecret ?: '';
         $config->lti_coursevisible = $coursevisible;

@@ -24,7 +24,7 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version   = 2022100200;        // The current plugin version (Date: YYYYMMDDXX).
+$plugin->version   = 2022120100;       // The current plugin version (Date: YYYYMMDDXX).
 $plugin->release  = '3.0.9';
 $plugin->requires  = 2016052300;        // Requires this Moodle version 3.1.
 $plugin->component = 'local_annoto';    // Full name of the plugin (used for diagnostics).
