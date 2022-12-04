@@ -34,7 +34,7 @@ if (!defined('TOOLICONURL')) define('TOOLICONURL', 'https://assets.annoto.net/im
 if (!defined('LTIGRADEGNAME')) define('LTIGRADEGNAME', 'Annoto Assignment');
 if (!defined('LTIGRADEURL')) define('LTIGRADEURL', 'https://auth.annoto.net');
 if (!defined('LTIGRADEICONURL')) define('LTIGRADEICONURL', 'https://cdn.annoto.net/assets/latest/images/icon.svg');
-if (!defined('LTIGRADECONTENTITEM')) define('LTIGRADECONTENTITEM', 'https://auth.annoto.net/lti/item-embed');
+if (!defined('LTIGRADECONTENTITEM')) define('LTIGRADECONTENTITEM', '/lti/item-embed');
 
 if (!defined('DEFAULTWIDTH')) define('DEFAULTWIDTH', 854);
 if (!defined('DEFAULTHEIGHT')) define('DEFAULTHEIGHT', 480);
@@ -394,7 +394,7 @@ function local_annoto_lti_add_type($ltitype) {
             $tooliconurl = $settings->gradetooliconurl ?: LTIGRADEICONURL;
             $description = get_string('annoto_grade_description', 'local_annoto');
             $contentitem = 1;
-            $gradecontentitem = LTIGRADECONTENTITEM;
+            $gradecontentitem = $toolurl . LTIGRADECONTENTITEM;
             $service_gradesynchronization = 2; // Use this service for grade sync and column management
             $service_memberships = 1; // Use this service to retrieve members' information as per privacy settings
             $service_toolsettings = 1; // Use this service
@@ -497,6 +497,9 @@ function local_annoto_update_settings($settingname) {
         }
 
         $coursevisible = $settings->gradetoggle ? LTI_COURSEVISIBLE_ACTIVITYCHOOSER : LTI_COURSEVISIBLE_NO;
+        $toolurl = $settings->gradetoolurl ?: LTIGRADEGNAME;
+        $gradecontentitem = $toolurl . LTIGRADECONTENTITEM;
+
         $lti->coursevisible = $coursevisible;
 
         $config = new stdClass;
@@ -504,6 +507,7 @@ function local_annoto_update_settings($settingname) {
         $config->lti_resourcekey = $settings->clientid ?: '';
         $config->lti_password = $settings->ssosecret ?: '';
         $config->lti_coursevisible = $coursevisible;
+        $config->lti_toolurl_ContentItemSelectionRequest = $gradecontentitem;
 
         lti_update_type($lti, $config);
     }
