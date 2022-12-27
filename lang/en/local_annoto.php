@@ -59,6 +59,18 @@ $string['lti_activity_name'] = 'Annoto Dashboard';
 $string['managementdashboard'] = 'Dashboard manager roles';
 $string['managementdashboard_desc'] = 'Specify who is allowed to access Annoto dashboard';
 
+// Annoto grading (LTI)
+$string['gradetoggle'] = 'Enable annoto assignment';
+$string['gradetoggle_desc'] = 'If disabled, Annoto assignment is not available from activity chooser.';
+$string['externalgradetoolsettings'] = 'Annoto assignment (LTI)';
+$string['gradetoolname'] = 'Name';
+$string['gradetoolnamedesc'] = 'External grade tool name';
+$string['gradetoolurl'] = 'URL';
+$string['gradetoolurldesc'] = 'External grade tool URL';
+$string['gradetooliconurl'] = 'Icon';
+$string['gradetooliconurldesc'] = 'External grade tool icon';
+$string['annoto_grade_description'] = 'Annoto grading LTI';
+
 // Annoto settings.
 $string['appsetingsheading'] = 'Annoto settings';
 $string['locale'] = 'Locale';
