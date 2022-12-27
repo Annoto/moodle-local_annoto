@@ -55,7 +55,7 @@ class local_annoto_external extends external_api {
         //return new external_value(PARAM_TEXT, 'json jsparams');
         return new external_single_structure([
             'result' => new external_value(PARAM_BOOL, 'True if the params was successfully sended'),
-            'params'    => new external_value(PARAM_TEXT, 'json jsparams', ),
+            'params'    => new external_value(PARAM_TEXT, 'json jsparams'),
         ]);
     }
 
