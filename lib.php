@@ -31,6 +31,11 @@ if (!defined('TOOLNAME')) define('TOOLNAME', 'Annoto Dashboard');
 if (!defined('TOOLURL')) define('TOOLURL', 'https://auth.annoto.net/lti/course-insights');
 if (!defined('TOOLICONURL')) define('TOOLICONURL', 'https://assets.annoto.net/images/logo_icon.png');
 
+if (!defined('LTIGRADEGNAME')) define('LTIGRADEGNAME', 'Annoto Assignment');
+if (!defined('LTIGRADEURL')) define('LTIGRADEURL', 'https://auth.annoto.net');
+if (!defined('LTIGRADEICONURL')) define('LTIGRADEICONURL', 'https://cdn.annoto.net/assets/latest/images/icon.svg');
+if (!defined('LTIGRADECONTENTITEM')) define('LTIGRADECONTENTITEM', '/lti/item-embed');
+
 if (!defined('DEFAULTWIDTH')) define('DEFAULTWIDTH', 854);
 if (!defined('DEFAULTHEIGHT')) define('DEFAULTHEIGHT', 480);
 
@@ -361,39 +366,77 @@ function local_annoto_create_lti_course_module($lti){
 /**
  * creates Annoto LTI type
  *
- * @return integer LTI type id
+ * @param string $ltitype LTI type for adding
+ * @return integer|null LTI type id or null
+
  */
-function local_annoto_lti_add_type() {
+function local_annoto_lti_add_type($ltitype) {
 
     // Get plugin global settings.
     $settings = get_config('local_annoto');
 
-    $settings->toolname = $settings->toolname ?: TOOLNAME;
-    $settings->toolurl = $settings->toolurl ?: TOOLURL;
-    $settings->tooliconurl = $settings->tooliconurl ?: TOOLICONURL;
+    switch ($ltitype) {
+        case 'dashboard':
+            $toolname = $settings->toolname ?: TOOLNAME;
+            $toolurl = $settings->toolurl ?: TOOLURL;
+            $tooliconurl = $settings->tooliconurl ?: TOOLICONURL;
+            $description = get_string('annoto_dashboard_description', 'local_annoto');
+            $contentitem = 0;
+            $gradecontentitem = '';
+            $service_gradesynchronization = 0;
+            $service_memberships = 0;
+            $service_toolsettings = 0;
+            $coursevisible = LTI_COURSEVISIBLE_NO;
+            break;
+        case 'grade':
+            $toolname = $settings->gradetoolname ?: LTIGRADEGNAME;
+            $toolurl = $settings->gradetoolurl ?: LTIGRADEGNAME;
+            $tooliconurl = $settings->gradetooliconurl ?: LTIGRADEICONURL;
+            $description = get_string('annoto_grade_description', 'local_annoto');
+            $contentitem = 1;
+            $gradecontentitem = $toolurl . LTIGRADECONTENTITEM;
+            $service_gradesynchronization = 2; // Use this service for grade sync and column management
+            $service_memberships = 1; // Use this service to retrieve members' information as per privacy settings
+            $service_toolsettings = 1; // Use this service
+            $coursevisible = LTI_COURSEVISIBLE_ACTIVITYCHOOSER;
+            break;
+        default:
+            return null;
+    }
+
+    $settings->toolname = $toolname;
+    $settings->toolurl = $toolurl;
+    $settings->tooliconurl = $tooliconurl;
 
     $type = new stdClass;
-    $type->name = $settings->toolname;
-    $type->baseurl = $settings->toolurl;
-    $type->tooldomain = parse_url($settings->toolurl, PHP_URL_HOST);
+    $type->name = $toolname;
+    $type->baseurl = $toolurl;
+    $type->tooldomain = parse_url($toolurl, PHP_URL_HOST);
     $type->state = 1;
-    $type->coursevisible = LTI_COURSEVISIBLE_NO;
+    $type->coursevisible = $coursevisible;
 
-    $type->icon = $settings->tooliconurl ?? '';
-    $type->secureicon = $settings->tooliconurl ?? '';
-    $type->description = get_string('annoto_dashboard_description', 'local_annoto');
+    $type->icon = $tooliconurl;
+    $type->secureicon = $tooliconurl;
+    $type->description = $description;
 
     $config = new stdClass;
     $config->lti_resourcekey = $settings->clientid;
     $config->lti_password = $settings->ssosecret;
-    $config->lti_coursevisible = LTI_COURSEVISIBLE_NO;
-    $config->lti_launchcontainer = 3;
+    $config->lti_coursevisible = $coursevisible;
+    $config->lti_launchcontainer = LTI_LAUNCH_CONTAINER_EMBED_NO_BLOCKS;
 
-    //Privacy setting
-    $config->lti_forcessl = 1;
-    $config->lti_sendname = 1;
-    $config->lti_sendemailaddr = 1;
-    $config->lti_acceptgrades = 2;
+    // Services settings
+    $config->lti_contentitem = $contentitem;
+    $config->lti_toolurl_ContentItemSelectionRequest = $gradecontentitem;
+    $config->ltiservice_gradesynchronization = $service_gradesynchronization;
+    $config->ltiservice_memberships = $service_memberships;
+    $config->ltiservice_toolsettings = $service_toolsettings;
+
+    // Privacy setting
+    $config->lti_forcessl = LTI_SETTING_ALWAYS;
+    $config->lti_sendname = LTI_SETTING_ALWAYS;
+    $config->lti_sendemailaddr = LTI_SETTING_ALWAYS;
+    $config->lti_acceptgrades = LTI_SETTING_ALWAYS;
 
     return lti_add_type($type, $config);
 }
@@ -407,12 +450,18 @@ function local_annoto_update_settings($settingname) {
 
     $settings = get_config('local_annoto');
     $updateltitype = [
-         's_local_annoto_addingdashboard',
-         's_local_annoto_clientid',
-         's_local_annoto_ssosecret',
+        's_local_annoto_addingdashboard',
+        's_local_annoto_clientid',
+        's_local_annoto_ssosecret',
+    ];
+    $updategradeltitype = [
+        's_local_annoto_gradetoggle',
+        's_local_annoto_gradetoolurl',
+        's_local_annoto_clientid',
+        's_local_annoto_ssosecret',
     ];
 
-    // Update LTI core settings
+    // Update dashboard LTI core settings
     if (in_array($settingname, $updateltitype)) {
         if (!isset($settings->toolname) || !isset($settings->toolurl)){
             return;
@@ -421,7 +470,7 @@ function local_annoto_update_settings($settingname) {
 
         if (!$lti) {
             $lti = new stdClass;
-            $lti->id = local_annoto_lti_add_type();
+            $lti->id = local_annoto_lti_add_type('dashboard');
         }
 
         $coursevisible = $settings->addingdashboard ? LTI_COURSEVISIBLE_NO : LTI_COURSEVISIBLE_ACTIVITYCHOOSER;
@@ -431,6 +480,34 @@ function local_annoto_update_settings($settingname) {
         $config->lti_resourcekey = $settings->clientid ?: '';
         $config->lti_password = $settings->ssosecret ?: '';
         $config->lti_coursevisible = $coursevisible;
+
+        lti_update_type($lti, $config);
+    }
+
+    // Update grade LTI core settings
+    if (in_array($settingname, $updategradeltitype)) {
+        if (!isset($settings->gradetoolname) || !isset($settings->gradetoolname)){
+            return;
+        }
+        $lti = lti_get_tool_by_url_match($settings->gradetoolurl);
+
+        if (!$lti) {
+            $lti = new stdClass;
+            $lti->id = local_annoto_lti_add_type('grade');
+        }
+
+        $coursevisible = $settings->gradetoggle ? LTI_COURSEVISIBLE_ACTIVITYCHOOSER : LTI_COURSEVISIBLE_NO;
+        $toolurl = $settings->gradetoolurl ?: LTIGRADEGNAME;
+        $gradecontentitem = $toolurl . LTIGRADECONTENTITEM;
+
+        $lti->coursevisible = $coursevisible;
+
+        $config = new stdClass;
+        $config->lti_forcessl = LTI_SETTING_ALWAYS;
+        $config->lti_resourcekey = $settings->clientid ?: '';
+        $config->lti_password = $settings->ssosecret ?: '';
+        $config->lti_coursevisible = $coursevisible;
+        $config->lti_toolurl_ContentItemSelectionRequest = $gradecontentitem;
 
         lti_update_type($lti, $config);
     }
