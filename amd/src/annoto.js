@@ -16,7 +16,6 @@
 /**
  * javscript for component 'local_annoto'.
  *
- * @package    local_annoto
  * @copyright  Annoto Ltd.
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -59,6 +58,7 @@ define([
                     }
 
                     this.tilesInit();
+                    this.icontent();
                     this.setupKaltura();
                     this.setupWistiaIframeEmbed();
                     this.checkVimeoTime();
@@ -535,6 +535,45 @@ define([
                     observer.observe(target, observerConfig);
                 });
             }
+        },
+
+        icontent: function(){
+            if (!document.body.classList.contains('path-mod-icontent')) {
+                return;
+            }
+            const wrapper = document.getElementById('region-main');
+            const idIcontentPages = document.getElementById('idicontentpages');
+            const self = this;
+
+            const reloadAnnoto = function() {
+
+                if (self.annotoAPI && self.isloaded) {
+                    self.annotoAPI.destroy().then(self.isloaded = false);
+                }
+
+                setTimeout(function() {
+                    const player = self.findPlayer(idIcontentPages);
+
+                    if (player) {
+                        self.params.playerId = `#${player.id}`;
+                        if (self.bootsrapDone) {
+                            self.prepareConfig();
+                            self.annotoAPI.load(self.config).then(self.isloaded = true);
+                        } else {
+                            self.bootsrapDone = self.isloaded = true;
+                            require([self.params.bootstrapUrl], self.bootWidget.bind(self));
+                            log.info('AnnotoMoodle: detected ' + self.params.playerType + ':' + self.params.playerId);
+                        }
+                    }
+                }, 2000);
+            };
+
+            wrapper.addEventListener('click', function(event){
+                if (!event.target.matches('.load-page')) {
+                    return;
+                }
+                reloadAnnoto();
+            });
         },
     };
 });
