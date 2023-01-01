@@ -170,6 +170,9 @@ define([
                             details: {
                                 title: params.mediaTitle,
                                 description: params.mediaDescription,
+                            },
+                           outcomes: {
+                                isExpected: true
                             }
                         };
                     },
@@ -305,7 +308,7 @@ define([
 
             retVal.title = retVal.title || this.params.mediaTitle;
             retVal.description = retVal.description || this.params.mediaDescription;
-
+            
             return retVal;
         },
 
@@ -435,6 +438,9 @@ define([
                                 details: {
                                     title: params.mediaTitle,
                                     description: params.mediaDescription,
+                                },
+                                outcomes: {
+                                    isExpected: true
                                 }
                             };
                         },
