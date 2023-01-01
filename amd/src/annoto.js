@@ -16,6 +16,7 @@
 /**
  * javscript for component 'local_annoto'.
  *
+ * @package
  * @copyright  Annoto Ltd.
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -171,7 +172,7 @@ define([
                                 title: params.mediaTitle,
                                 description: params.mediaDescription,
                             },
-                           outcomes: {
+                            outcomes: {
                                 isExpected: true
                             }
                         };
@@ -308,7 +309,7 @@ define([
 
             retVal.title = retVal.title || this.params.mediaTitle;
             retVal.description = retVal.description || this.params.mediaDescription;
-            
+
             return retVal;
         },
 
