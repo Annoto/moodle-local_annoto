@@ -261,7 +261,7 @@ function local_annoto_extend_settings_navigation(settings_navigation $settingsna
     $lti = lti_get_tool_by_url_match($settings->toolurl);
     if (!$lti){
         $lti = new stdClass();
-        $lti->id = local_annoto_lti_add_type();
+        $lti->id = local_annoto_lti_add_type('dashboard');
     }
 
     // Create a dashboard instance if not available
