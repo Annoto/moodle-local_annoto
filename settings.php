@@ -108,7 +108,7 @@ if ($hassiteconfig) {
 
     // Enable / disable lti grading.
     $setting = new admin_setting_configcheckbox('local_annoto/gradetoggle',
-        get_string('gradetoggle', 'local_annoto'), get_string('gradetoggle_desc', 'local_annoto'), 0);
+        get_string('gradetoggle', 'local_annoto'), get_string('gradetoggle_desc', 'local_annoto'), 1);
     $setting->set_updatedcallback('local_annoto_update_settings');
     $settings->add($setting);
 
