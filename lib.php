@@ -70,7 +70,7 @@ function local_annoto_init() {
     global $PAGE, $COURSE;
 
     // Disable widget if the page is in editing mode.
-    if($PAGE->user_is_editing()) {
+    if($PAGE->user_is_editing() && $PAGE->pagelayout == 'incourse') {
         return '';
     }
 
