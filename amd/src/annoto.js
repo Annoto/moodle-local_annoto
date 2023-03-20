@@ -139,6 +139,9 @@ define([
             this.params.playerId = `#${playerElement.id}`;
             this.params.element = playerElement;
 
+            if (playerElement) { // Temp fix for moodle 4. Disable custom scroll on page.
+                $('#page.drawers').css('overflow-y', 'visible');
+            }
             return playerElement;
         },
         bootstrap: function() {
