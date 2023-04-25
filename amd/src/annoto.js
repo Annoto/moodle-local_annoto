@@ -62,6 +62,7 @@ define([
                     this.setupKaltura();
                     this.setupWistiaIframeEmbed();
                     this.checkVimeoTime();
+                    this.moodleversion = JSON.parse(response.params).moodleversion;
                     $(document).ready(this.bootstrap.bind(this));
 
                 }.bind(this),
@@ -133,6 +134,13 @@ define([
             return playerElement;
         },
         bootstrap: function() {
+            if(this.moodleversion[0] === "4") {
+                const innerPage = document.querySelector("#page");
+                const newDiv = document.createElement("div");
+                newDiv.id="annoto-app";
+                innerPage.appendChild(newDiv);
+            }
+
             if (this.bootsrapDone) {
                 return;
             }

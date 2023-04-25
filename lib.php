@@ -189,7 +189,7 @@ function local_annoto_has_capability($allowedroles, $courseid, $capability) {
 function local_annoto_get_jsparam($courseid, $modid) {
     global $CFG;
     $course = get_course($courseid);
-
+    $moodleversion = $CFG->release;
     // Get plugin global settings.
     $settings = get_config('local_annoto');
 
@@ -218,6 +218,7 @@ function local_annoto_get_jsparam($courseid, $modid) {
         'mediaGroupTitle' => $course->fullname,
         'mediaGroupDescription' => $course->summary,
         'locale' => $settings->locale ? local_annoto_get_lang($course) : false,
+        'moodleversion' => $moodleversion
     );
 
     return $jsparams;
