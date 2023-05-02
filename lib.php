@@ -228,6 +228,7 @@ function local_annoto_get_jsparam($courseid, $modid) {
         'mediaGroupTitle' => $course->fullname,
         'mediaGroupDescription' => $course->summary,
         'locale' => $settings->locale ? local_annoto_get_lang($course) : false,
+        'moodleversion' => $CFG->version,
     );
 
     return $jsparams;
