@@ -27,8 +27,8 @@ define([
   'core/notification',
   'core/ajax',
   'local_annoto/completion',
-    'https://player.vimeo.com/api/player.js',
-    'https://vjs.zencdn.net/7.20.1/video.min.js',
+  'https://player.vimeo.com/api/player.js',
+  'https://vjs.zencdn.net/7.20.1/video.min.js',
 ], function($, log, notification, Ajax, Completion, VimeoPlayer, videoJsPlayer) {
 
     window.moodleAnnoto = window.moodleAnnoto || {};
@@ -240,6 +240,9 @@ define([
             window.Annoto.on(`my_activity`, IMyActivity => {
                 IMyActivity.cmid = this.params.cmId;
                 Completion.record(IMyActivity);
+                log.info(`AnnotoCompletion full log:`);
+                console.dir(IMyActivity);
+
             });
         },
 

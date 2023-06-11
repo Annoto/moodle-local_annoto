@@ -97,7 +97,7 @@ class local_annoto_external extends external_api {
 
     /**
      * @param $jsondata
-     * @return string result of submittion
+     * @return array result of submittion
      * @throws \core\invalid_persistent_exception
      * @throws coding_exception
      * @throws dml_exception
@@ -105,7 +105,7 @@ class local_annoto_external extends external_api {
      * @throws moodle_exception
      */
     public static function set_completion($jsondata) {
-        global $DB, $CFG, $USER;
+        global $CFG, $USER;
         require_once($CFG->libdir . "/completionlib.php");
         $params = self::validate_parameters(self::set_completion_parameters(),
             array(
@@ -114,6 +114,8 @@ class local_annoto_external extends external_api {
         );
 
         $data = json_decode($jsondata);
+        $status = false;
+        $message = 'Completion nod defined';
 
         if (isset($data->cmid) && !empty($data->cmid)) {
             list($course, $cm) = get_course_and_cm_from_cmid($data->cmid);
@@ -122,9 +124,11 @@ class local_annoto_external extends external_api {
             if (in_array($USER->id, $enrolled)) {
                 $record = \local_annoto\completion::get_record(['cmid' => $data->cmid]);
                 if ($record !== false && $record->get('enabled') == \local_annoto\completion::COMPLETION_TRACKING_AUTOMATIC) {
+                    $status = true;
                     if ($completiondata = \local_annoto\completiondata::get_record(['completionid' => $record->get('id'), 'userid' => $USER->id])) {
                         $completiondata->set('data', $jsondata);
                         $completiondata->update();
+                        $message = "Update completion for user {$USER->id} modid {$data->cmid} completion {$data->completion}";
                     } else {
                         $record = [
                             'userid' => $USER->id,
@@ -133,13 +137,13 @@ class local_annoto_external extends external_api {
                         ];
                         $completiondata = new \local_annoto\completiondata(0, (object) $record);
                         $completiondata->create();
+                        $message = "Set completion for user {$USER->id} modid {$data->cmid} completion {$data->completion}";
                     }
                 }
             }
-
         }
 
-        return true;
+        return ['status' => $status, 'message' => $message];
     }
 
     /**
@@ -147,7 +151,10 @@ class local_annoto_external extends external_api {
      * @return external_description
      */
     public static function set_completion_returns() {
-        return new external_value(PARAM_BOOL, 'Return status');
+        return new external_single_structure([
+            'status' => new external_value(PARAM_BOOL, 'The processing result'),
+            'message' => new external_value(PARAM_TEXT, 'Message'),
+        ]);
     }
 
     /**
