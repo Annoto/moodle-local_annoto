@@ -115,7 +115,7 @@ class local_annoto_external extends external_api {
 
         $data = json_decode($jsondata);
         $status = false;
-        $message = 'Completion nod defined';
+        $message = 'Completion not defined';
 
         if (isset($data->cmid) && !empty($data->cmid)) {
             list($course, $cm) = get_course_and_cm_from_cmid($data->cmid);
