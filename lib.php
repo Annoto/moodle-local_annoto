@@ -28,11 +28,11 @@ if (!defined('EUREGION')) define('EUREGION', 'eu.annoto.net');
 if (!defined('CUSTOM')) define('CUSTOM', 'custom');
 
 if (!defined('TOOLNAME')) define('TOOLNAME', 'Annoto Dashboard');
-if (!defined('TOOLURL')) define('TOOLURL', 'https://auth.annoto.net/lti/course-insights');
+if (!defined('TOOLURL')) define('TOOLURL', 'https://auth.eu.annoto.net/lti/course-insights');
 if (!defined('TOOLICONURL')) define('TOOLICONURL', 'https://assets.annoto.net/images/logo_icon.png');
 
 if (!defined('LTIGRADEGNAME')) define('LTIGRADEGNAME', 'Annoto Assignment');
-if (!defined('LTIGRADEURL')) define('LTIGRADEURL', 'https://auth.annoto.net');
+if (!defined('LTIGRADEURL')) define('LTIGRADEURL', 'https://auth.eu.annoto.net');
 if (!defined('LTIGRADEICONURL')) define('LTIGRADEICONURL', 'https://cdn.annoto.net/assets/latest/images/icon.svg');
 if (!defined('LTIGRADECONTENTITEM')) define('LTIGRADECONTENTITEM', '/lti/item-embed');
 
