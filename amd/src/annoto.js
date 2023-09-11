@@ -238,11 +238,13 @@ define([
             }
 
             window.Annoto.on(`my_activity`, IMyActivity => {
+                if (!this.params.cmId) {
+                    return
+                }
                 IMyActivity.cmid = this.params.cmId;
                 Completion.record(IMyActivity);
                 log.info(`AnnotoCompletion full log:`);
                 console.dir(IMyActivity);
-
             });
         },
 
