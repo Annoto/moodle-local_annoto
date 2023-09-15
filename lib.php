@@ -589,6 +589,7 @@ function local_annoto_coursemodule_standard_elements($formwrapper, $mform) {
         'h5p',
         'hvp',
         'h5pactivity',
+        'kalvidres',
     ];
 
     if (!$settings->activitiescompletion || !in_array($formwrapper->get_current()->modulename, $provedmodtypes)) {
