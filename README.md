@@ -7,6 +7,8 @@ https://moodle.org/plugins/local_annoto
 Setup instructions:
 https://docs.annoto.net/setup/moodle/widget-integration
 
+Test Annoto:
+https://www.youtube.com/watch?v=IKg1PNLPLwQ
 
 <p>
     <span style="font-size: 14pt;"><strong>Please Note: Subscription is required to use this service.</strong></span>
