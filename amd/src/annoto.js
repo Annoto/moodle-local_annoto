@@ -40,12 +40,7 @@ define([
 
     return {
         init: function(courseid, modid) {
-
-            // If page is 'edit settings' then return
-            if ($(document).find('body#page-mod-page-mod').get(0)) {
-                return;
-            }
-
+          
             log.info('AnnotoMoodle: plugin init');
             Ajax.call([{
                 methodname: 'get_jsparams',
