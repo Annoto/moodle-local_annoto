@@ -146,9 +146,12 @@ define([
             if (annotoPlayer) {
                 
                 const innerPage = document.getElementById('page-wrapper');
-                const annotoWrapper = document.createElement('div');
-                annotoWrapper.id = "annoto-app";
-                innerPage.appendChild(annotoWrapper);
+                if(innerPage){
+                  const annotoWrapper = document.createElement('div');
+                  annotoWrapper.id = "annoto-app";
+                  innerPage.appendChild(annotoWrapper);
+                  log.info('AnnotoMoodle: updating annoto-app');
+                }
                 
                 this.bootsrapDone = true;
                 require([this.params.bootstrapUrl], this.bootWidget.bind(this));
