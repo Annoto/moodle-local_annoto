@@ -145,6 +145,7 @@ define([
             let annotoPlayer = this.findPlayer.call(this);
             if (annotoPlayer) {
                 if (this.params.moodleversion > 2021051714){ // Update widget position for moodle 4
+                    log.info('AnnotoMoodle: Update widget position for moodle 4');
                     const innerPage = document.getElementById('page-wrapper');
                     const annotoWrapper = document.createElement('div');
                     annotoWrapper.id = "annoto-app";
