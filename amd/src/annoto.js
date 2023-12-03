@@ -144,13 +144,12 @@ define([
             this.findMultiplePlayers();
             let annotoPlayer = this.findPlayer.call(this);
             if (annotoPlayer) {
-                if (this.params.moodleversion > 2021051714){ // Update widget position for moodle 4
-                    log.info('AnnotoMoodle: Update widget position for moodle 4');
-                    const innerPage = document.getElementById('page-wrapper');
-                    const annotoWrapper = document.createElement('div');
-                    annotoWrapper.id = "annoto-app";
-                    innerPage.appendChild(annotoWrapper);
-                }
+                
+                const innerPage = document.getElementById('page-wrapper');
+                const annotoWrapper = document.createElement('div');
+                annotoWrapper.id = "annoto-app";
+                innerPage.appendChild(annotoWrapper);
+                
                 this.bootsrapDone = true;
                 require([this.params.bootstrapUrl], this.bootWidget.bind(this));
                 log.info(`AnnotoMoodle: detected ${this.params.playerType} : ${this.params.playerId}`);
