@@ -55,11 +55,13 @@ define([
                     }
                     this.params = JSON.parse(response.params);
 
-                    // Return if has <annoto> tag.
-                    if (this.hasAnnotoTag()) {
-                        log.info('AnnotoMoodle: plugin is disabled for this page using the Atto plugin.');
-                        return;
-                    }
+                     const innerPageWrapper = document.getElementById('page-wrapper');
+                      if(innerPageWrapper){
+                        const annotoWrapper = document.createElement('div');
+                        annotoWrapper.id = "annoto-app";
+                        innerPageWrapper.appendChild(annotoWrapper);
+                        log.info('AnnotoMoodle: updating annoto-app');
+                      }
 
                     this.tilesInit();
                     this.icontent();
@@ -144,15 +146,6 @@ define([
             this.findMultiplePlayers();
             let annotoPlayer = this.findPlayer.call(this);
             if (annotoPlayer) {
-                
-                const innerPage = document.getElementById('page-wrapper');
-                if(innerPage){
-                  const annotoWrapper = document.createElement('div');
-                  annotoWrapper.id = "annoto-app";
-                  innerPage.appendChild(annotoWrapper);
-                  log.info('AnnotoMoodle: updating annoto-app');
-                }
-                
                 this.bootsrapDone = true;
                 require([this.params.bootstrapUrl], this.bootWidget.bind(this));
                 log.info(`AnnotoMoodle: detected ${this.params.playerType} : ${this.params.playerId}`);
