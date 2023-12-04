@@ -140,14 +140,15 @@ define([
             let annotoPlayer = this.findPlayer.call(this);
             
             if (annotoPlayer) {
+                
                 const innerPageWrapper = document.getElementById('page-wrapper');
                 if(innerPageWrapper){
-                const annotoWrapper = document.createElement('div');
-                annotoWrapper.id = "annoto-app";
-                innerPageWrapper.appendChild(annotoWrapper);
-                log.info('AnnotoMoodle:bootstrap updating annoto-app');
+                  const annotoWrapper = document.createElement('div');
+                  annotoWrapper.id = "annoto-app";
+                  innerPageWrapper.appendChild(annotoWrapper);
+                  log.info('AnnotoMoodle: updating annoto-app');
                 }
-                
+              
                 this.bootsrapDone = true;
                 require([this.params.bootstrapUrl], this.bootWidget.bind(this));
                 log.info(`AnnotoMoodle: bootstrap detected ${this.params.playerType} : ${this.params.playerId}`);
