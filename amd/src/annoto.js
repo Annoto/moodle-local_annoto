@@ -16,7 +16,7 @@
 /**
  * javscript for component 'local_annoto'.
  *
- * @package    local_annoto
+ * @package
  * @copyright  Annoto Ltd.
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -27,7 +27,9 @@ define([
   'core/notification',
   'core/ajax',
   'local_annoto/completion',
-], function($, log, notification, Ajax, Completion) {
+  'https://player.vimeo.com/api/player.js',
+  'https://vjs.zencdn.net/7.20.1/video.min.js',
+], function($, log, notification, Ajax, Completion, VimeoPlayer, videoJsPlayer) {
 
     window.moodleAnnoto = window.moodleAnnoto || {};
 
@@ -39,6 +41,12 @@ define([
 
     return {
         init: function(courseid, modid) {
+
+            // if page is 'edit settings' then return
+            if ($(document).find('body#page-mod-page-mod').get(0)){
+                return;
+            }
+
             log.info('AnnotoMoodle: plugin init');
             Ajax.call([{
                 methodname: 'get_jsparams',
@@ -47,11 +55,11 @@ define([
                     modid: modid
                 },
                 done: function(response) {
-                    if (!response) {
-                        log.error('AnnotoMoodle: empty params. Plugin won`t start.');
+                    if (!response.result) {
+                        log.warn('AnnotoMoodle: action not permitted for user');
                         return;
                     }
-                    this.params = JSON.parse(response);
+                    this.params = JSON.parse(response.params);
 
                     // Return if has <annoto> tag.
                     if (this.hasAnnotoTag()) {
@@ -60,6 +68,7 @@ define([
                     }
 
                     this.tilesInit();
+                    this.icontent();
                     this.setupKaltura();
                     this.setupWistiaIframeEmbed();
                     this.checkVimeoTime();
@@ -137,8 +146,9 @@ define([
             if (this.bootsrapDone) {
                 return;
             }
-
-            const annotoPlayer = this.findPlayer.call(this);
+            // Check if we have multiple players
+            this.findMultiplePlayers();
+            let annotoPlayer = this.findPlayer.call(this);
             if (annotoPlayer) {
                 this.bootsrapDone = true;
                 require([this.params.bootstrapUrl], this.bootWidget.bind(this));
@@ -162,6 +172,7 @@ define([
                 backend: {
                   domain: params.deploymentDomain
                 },
+                demoMode: false,
                 clientId: params.clientId,
                 widgets: [{player: {}}],
                 hooks: {
@@ -170,6 +181,9 @@ define([
                             details: {
                                 title: params.mediaTitle,
                                 description: params.mediaDescription,
+                            },
+                            outcomes: {
+                                isExpected: true
                             }
                         };
                     },
@@ -224,8 +238,13 @@ define([
             }
 
             window.Annoto.on(`my_activity`, IMyActivity => {
+                if (!this.params.cmId) {
+                    return
+                }
                 IMyActivity.cmid = this.params.cmId;
                 Completion.record(IMyActivity);
+                log.info(`AnnotoCompletion full log:`);
+                console.dir(IMyActivity);
             });
         },
 
@@ -241,6 +260,16 @@ define([
             } else {
                 log.info('AnnotoMoodle: SSO auth skipped');
             }
+          
+            window.Annoto.on(`my_activity`, IMyActivity => {
+                if (!this.params.cmId) {
+                    return
+                }
+                IMyActivity.cmid = this.params.cmId;
+                Completion.record(IMyActivity);
+                log.info(`AnnotoCompletion full log:`);
+                console.dir(IMyActivity);
+            });
         },
 
         setupKalturaKdpMap: function(kdpMap) {
@@ -380,7 +409,7 @@ define([
                         self.annotoAPI.load(self.config);
                     }
                 });
-              };
+            };
 
             const observerNodeTargets = document.querySelectorAll(Object.values(formatSelectors).join(', '));
 
@@ -440,6 +469,9 @@ define([
                                 details: {
                                     title: params.mediaTitle,
                                     description: params.mediaDescription,
+                                },
+                                outcomes: {
+                                    isExpected: true
                                 }
                             };
                         },
@@ -541,5 +573,119 @@ define([
                 });
             }
         },
+
+        icontent: function(){
+            if (!document.body.classList.contains('path-mod-icontent')) {
+                return;
+            }
+            const wrapper = document.getElementById('region-main');
+            const idIcontentPages = document.getElementById('idicontentpages');
+            const self = this;
+
+            const reloadAnnoto = function() {
+
+                if (self.annotoAPI && self.isloaded) {
+                    self.annotoAPI.destroy().then(self.isloaded = false);
+                }
+
+                setTimeout(function() {
+                    const player = self.findPlayer(idIcontentPages);
+
+                    if (player) {
+                        self.params.playerId = `#${player.id}`;
+                        if (self.bootsrapDone) {
+                            self.prepareConfig();
+                            self.annotoAPI.load(self.config).then(self.isloaded = true);
+                        } else {
+                            self.bootsrapDone = self.isloaded = true;
+                            require([self.params.bootstrapUrl], self.bootWidget.bind(self));
+                            log.info('AnnotoMoodle: detected ' + self.params.playerType + ':' + self.params.playerId);
+                        }
+                    }
+                }, 2000);
+            };
+
+            wrapper.addEventListener('click', function(event){
+                if (!event.target.matches('.load-page')) {
+                    return;
+                }
+                reloadAnnoto();
+            });
+        },
+
+        findMultiplePlayers: function() {
+            const self = this;
+            const vimeos = $('body').find('iframe[src*="vimeo.com"]').get();
+            const videojs = $('body').find('.video-js').get();
+            const allPlayers = {
+                ... (vimeos.length > 1) && {'vimeo': [...vimeos]},
+                ... (videojs.length > 1) && {'videojs': [...videojs]},
+            };
+
+            let multiplePlayers = false;
+            let activePlayerId = null;
+
+            if (allPlayers.length) {
+                return multiplePlayers;
+            }
+            multiplePlayers = true;
+            log.info('AnnotoMoodle: setup multiple players');
+
+            const validatePlayerId = function(element){
+                if (!element.id || element.id === '') {
+                    element.id = 'annoto_player_id_' + Math.random().toString(36).substr(2, 6);
+                }
+                return element.id;
+            };
+
+            const reloadAnnotoWidget = function(element, playerType){
+                self.params.playerId = `#${element.id}`;
+                self.params.element = element;
+                self.params.playerType = playerType;
+                self.prepareConfig();
+
+                self.annotoAPI.destroy().then(function () {
+                    self.annotoAPI.load(self.config);
+                    log.info(`AnnotoMoodle: reload Player: ${element.id}`);
+                });
+            };
+
+            for (const [playerType, players] of Object.entries(allPlayers)) {
+                players.forEach((player) => {
+                    validatePlayerId(player);
+
+                    log.info(`AnnotoMoodle: setup Player: ${player.id}`);
+                    switch (playerType) {
+                        case 'vimeo':
+                            let vimeoPlayer = new VimeoPlayer(player);
+                            vimeoPlayer.on('play', function () {
+                                if (player.id === activePlayerId) {
+                                    return;
+                                }
+                                activePlayerId = player.id;
+                                log.info(`AnnotoMoodle: Player play: ${player.id}`);
+
+                                reloadAnnotoWidget(player, playerType);
+                            });
+                            break;
+                        case 'videojs':
+                            let playerJs = videoJsPlayer(player);
+                            playerJs.player().on('play', function() {
+                                if (player.id === activePlayerId) {
+                                    return;
+                                }
+                                activePlayerId = player.id;
+                                log.info(`AnnotoMoodle: Player play: ${player.id}`);
+
+                                reloadAnnotoWidget(player, playerType);
+                            });
+                            break;
+                    }
+                });
+            }
+
+            return multiplePlayers;
+        }
+
     };
 });

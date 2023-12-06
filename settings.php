@@ -76,6 +76,12 @@ if ($hassiteconfig) {
     /* Annoto dashboard (LTI) */
     $settings->add(new admin_setting_heading('local_annoto/externaltoolsettings', get_string('externaltoolsettings', 'local_annoto'), ''));
 
+    // Auto launching.
+    $setting = new admin_setting_configcheckbox('local_annoto/addingdashboard',
+        get_string('addingdashboard', 'local_annoto'), get_string('addingdashboard_desc', 'local_annoto'), 0);
+    $setting->set_updatedcallback('local_annoto_update_settings');
+    $settings->add($setting);
+    
     // LTI name.
     $settings->add(new admin_setting_configtext('local_annoto/toolname', get_string('toolname', 'local_annoto'),
         get_string('toolnamedesc', 'local_annoto'), TOOLNAME));
@@ -88,12 +94,6 @@ if ($hassiteconfig) {
     $settings->add(new admin_setting_configtext('local_annoto/tooliconurl', get_string('tooliconurl', 'local_annoto'),
         get_string('tooliconurldesc', 'local_annoto'), TOOLICONURL));
 
-    // Auto launchig.
-    $setting = new admin_setting_configcheckbox('local_annoto/addingdashboard',
-        get_string('addingdashboard', 'local_annoto'), get_string('addingdashboard_desc', 'local_annoto'), 1);
-    $setting->set_updatedcallback('local_annoto_update_settings');
-    $settings->add($setting);
-
     // Management dashboard
     list($roles, $defaultroles) = local_annoto_get_all_dashboard_roles();
     $settings->add(new admin_setting_configmulticheckbox('local_annoto/managementdashboard',
@@ -101,7 +101,30 @@ if ($hassiteconfig) {
         get_string('managementdashboard_desc', 'local_annoto'),
         $defaultroles,
         $roles
-        ));
+    ));
+
+    /* Annoto assignment (LTI) */
+    $settings->add(new admin_setting_heading('local_annoto/externalgradetoolsettings', get_string('externalgradetoolsettings', 'local_annoto'), ''));
+
+    // Enable / disable lti grading.
+    $setting = new admin_setting_configcheckbox('local_annoto/gradetoggle',
+        get_string('gradetoggle', 'local_annoto'), get_string('gradetoggle_desc', 'local_annoto'), 1);
+    $setting->set_updatedcallback('local_annoto_update_settings');
+    $settings->add($setting);
+
+    // LTI grade name.
+    $settings->add(new admin_setting_configtext('local_annoto/gradetoolname', get_string('gradetoolname', 'local_annoto'),
+        get_string('gradetoolnamedesc', 'local_annoto'), LTIGRADEGNAME));
+
+    // LTI grade url.
+    $setting = new admin_setting_configtext('local_annoto/gradetoolurl', get_string('gradetoolurl', 'local_annoto'),
+        get_string('gradetoolurldesc', 'local_annoto'), LTIGRADEURL);
+    $setting->set_updatedcallback('local_annoto_update_settings');
+    $settings->add($setting);
+
+    // LTI grade icon url.
+    $settings->add(new admin_setting_configtext('local_annoto/gradetooliconurl', get_string('gradetooliconurl', 'local_annoto'),
+        get_string('gradetooliconurldesc', 'local_annoto'), LTIGRADEICONURL));
 
     /* Annoto settings */
     $settings->add(new admin_setting_heading('local_annoto/appsetingsheading', get_string('appsetingsheading', 'local_annoto'),

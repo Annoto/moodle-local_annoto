@@ -48,11 +48,15 @@ class local_annoto_external extends external_api {
     }
 
     /**
-     * Returns result
-     * @return result
+     * Returns description of method result value
+     * @return external_value
      */
     public static function get_jsparams_returns() {
-        return new external_value(PARAM_TEXT, 'json jsparams');
+        //return new external_value(PARAM_TEXT, 'json jsparams');
+        return new external_single_structure([
+            'result' => new external_value(PARAM_BOOL, 'True if the params was successfully sended'),
+            'params'    => new external_value(PARAM_TEXT, 'json jsparams'),
+        ]);
     }
 
     /**
@@ -62,7 +66,7 @@ class local_annoto_external extends external_api {
      * @return array
      */
     public static function get_jsparams($courseid, $modid) {
-        global $PAGE;
+        global $USER;
         $params = self::validate_parameters(
             self::get_jsparams_parameters(),
             array(
@@ -70,18 +74,12 @@ class local_annoto_external extends external_api {
                 'modid' => $modid
             )
         );
-
         $context = context_course::instance($courseid);
-        $capabilities = 'moodle/search:query'; // Checking permission to prevent unauthorized access.
-        $response = '';
-        if (has_capability($capabilities, $context)) {
-            self::validate_context($context);
-            $response = json_encode(local_annoto_get_jsparam($courseid, $modid), JSON_HEX_TAG);
-        } else {
-            $response = json_encode(false);
-        }
+        self::validate_context(context_course::instance($courseid));
 
-        return $response;
+        list($result, $response) = !is_guest($context) ? [true, local_annoto_get_jsparam($courseid, $modid)] : [false, null];
+
+        return ['result' => $result, 'params' => json_encode($response, JSON_HEX_TAG)];
     }
 
 
@@ -99,7 +97,7 @@ class local_annoto_external extends external_api {
 
     /**
      * @param $jsondata
-     * @return string result of submittion
+     * @return array result of submittion
      * @throws \core\invalid_persistent_exception
      * @throws coding_exception
      * @throws dml_exception
@@ -107,7 +105,7 @@ class local_annoto_external extends external_api {
      * @throws moodle_exception
      */
     public static function set_completion($jsondata) {
-        global $DB, $CFG, $USER;
+        global $DB,$CFG, $USER;
         require_once($CFG->libdir . "/completionlib.php");
         $params = self::validate_parameters(self::set_completion_parameters(),
             array(
@@ -116,6 +114,11 @@ class local_annoto_external extends external_api {
         );
 
         $data = json_decode($jsondata);
+                   
+        // print_r($data);
+        // die;
+        $status = false;
+        $message = 'Completion not defined';
 
         if (isset($data->cmid) && !empty($data->cmid)) {
             list($course, $cm) = get_course_and_cm_from_cmid($data->cmid);
@@ -124,9 +127,27 @@ class local_annoto_external extends external_api {
             if (in_array($USER->id, $enrolled)) {
                 $record = \local_annoto\completion::get_record(['cmid' => $data->cmid]);
                 if ($record !== false && $record->get('enabled') == \local_annoto\completion::COMPLETION_TRACKING_AUTOMATIC) {
+                    $status = true;
                     if ($completiondata = \local_annoto\completiondata::get_record(['completionid' => $record->get('id'), 'userid' => $USER->id])) {
-                        $completiondata->set('data', $jsondata);
-                        $completiondata->update();
+                        $Act_comp = $DB->get_record('local_annoto_completion',array('cmid'=>$data->cmid));
+                        $current_time = time();
+                        // echo $Act_comp->completionexpected;
+                        // echo "------------";
+                        // echo time();
+                        // echo $Act_comp->view; && 
+                        // print_r($data);
+                        // die; 
+                        if(($data->completion >= (int)$Act_comp->view) && ($data->comments >= (int)$Act_comp->comments) && ($data->replies >= (int)$Act_comp->replies) && (($Act_comp->completionexpected != 0 && $current_time <= $Act_comp->completionexpected) ||  $Act_comp->completionexpected == 0)){
+                            $data->completion = 100;
+                            $jsondata2 = json_encode($data);
+                            $completiondata->set('data', $jsondata2);
+                            $completiondata->update();
+                            $message = "Update completion for user {$USER->id} modid {$data->cmid} completion {$data->completion}";
+                        }else{
+                            // $completiondata->set('data', $jsondata);
+                            // $completiondata->update();
+                            $message = "Update completion for user {$USER->id} modid {$data->cmid} completion {$data->completion}";
+                        }
                     } else {
                         $record = [
                             'userid' => $USER->id,
@@ -135,13 +156,13 @@ class local_annoto_external extends external_api {
                         ];
                         $completiondata = new \local_annoto\completiondata(0, (object) $record);
                         $completiondata->create();
+                        $message = "Set completion for user {$USER->id} modid {$data->cmid} completion {$data->completion}";
                     }
                 }
             }
-
         }
 
-        return true;
+        return ['status' => $status, 'message' => $message];
     }
 
     /**
@@ -149,7 +170,10 @@ class local_annoto_external extends external_api {
      * @return external_description
      */
     public static function set_completion_returns() {
-        return new external_value(PARAM_BOOL, 'Return status');
+        return new external_single_structure([
+            'status' => new external_value(PARAM_BOOL, 'The processing result'),
+            'message' => new external_value(PARAM_TEXT, 'Message'),
+        ]);
     }
 
     /**
