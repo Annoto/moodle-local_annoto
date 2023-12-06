@@ -105,7 +105,9 @@ class local_annoto_external extends external_api {
      * @throws moodle_exception
      */
     public static function set_completion($jsondata) {
+
         global $DB,$CFG, $USER;
+
         require_once($CFG->libdir . "/completionlib.php");
         $params = self::validate_parameters(self::set_completion_parameters(),
             array(
@@ -114,9 +116,12 @@ class local_annoto_external extends external_api {
         );
 
         $data = json_decode($jsondata);
+
                    
         // print_r($data);
         // die;
+
+
         $status = false;
         $message = 'Completion not defined';
 
@@ -129,6 +134,7 @@ class local_annoto_external extends external_api {
                 if ($record !== false && $record->get('enabled') == \local_annoto\completion::COMPLETION_TRACKING_AUTOMATIC) {
                     $status = true;
                     if ($completiondata = \local_annoto\completiondata::get_record(['completionid' => $record->get('id'), 'userid' => $USER->id])) {
+
                         $Act_comp = $DB->get_record('local_annoto_completion',array('cmid'=>$data->cmid));
                         $current_time = time();
                         // echo $Act_comp->completionexpected;
@@ -148,6 +154,11 @@ class local_annoto_external extends external_api {
                             // $completiondata->update();
                             $message = "Update completion for user {$USER->id} modid {$data->cmid} completion {$data->completion}";
                         }
+
+                        $completiondata->set('data', $jsondata);
+                        $completiondata->update();
+                        $message = "Update completion for user {$USER->id} modid {$data->cmid} completion {$data->completion}";
+
                     } else {
                         $record = [
                             'userid' => $USER->id,
