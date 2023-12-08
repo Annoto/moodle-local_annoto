@@ -28,7 +28,7 @@ if ($hassiteconfig) {
 
     require_once($CFG->dirroot. '/local/annoto/classes/admin_setting_custompickroles.php');
     require_once($CFG->dirroot . '/local/annoto/lib.php');
-    $PAGE->requires->js_call_amd('local_annoto/annotosettings', 'init', array());
+
     $pluginmanager = core_plugin_manager::instance();
     $plugininfo = $pluginmanager->get_plugin_info('local_annoto');
     $version = $plugininfo->versiondb;
@@ -168,5 +168,30 @@ if ($hassiteconfig) {
     $setting->set_updatedcallback('local_annoto_update_settings');
     $settings->add($setting);
     $settings->hide_if('local_annoto/defaultheight', 'local_annoto/mediasettingsoverride', 'neq', 1);
+
+    /* Activities completion */
+    $settings->add(new admin_setting_heading('local_annoto/activitiescompletionheading', get_string('activitiescompletion', 'local_annoto'),
+        ''));
+
+    // Activities completion.
+    $settings->add(new admin_setting_configcheckbox('local_annoto/activitiescompletion', get_string('activitiescompletion', 'local_annoto'),
+        get_string('activitiescompletiondesc', 'local_annoto'), 0));
+
+    // Completion tracking
+    $options = \local_annoto\completion::get_enabled_menu();
+    $settings->add(new admin_setting_configselect('local_annoto/completionenabled', get_string('completionenabled', 'local_annoto'),
+        get_string('completionenableddesc', 'local_annoto'), 0, $options));
+
+    // Require video activity completion
+    $settings->add(new admin_setting_configtext('local_annoto/completionview', get_string('completionview', 'local_annoto'),
+        get_string('completionviewdesc', 'local_annoto'), 0, PARAM_INT, 3));
+
+    // Require comments
+    $settings->add(new admin_setting_configtext('local_annoto/completioncomments', get_string('completioncomments', 'local_annoto'),
+        get_string('completioncommentsdesc', 'local_annoto'), 0, PARAM_INT, 3));
+
+    // Require replies
+    $settings->add(new admin_setting_configtext('local_annoto/completionreplies', get_string('completionreplies', 'local_annoto'),
+        get_string('completiorepliesdesc', 'local_annoto'), 0, PARAM_INT, 3));
 
 }

@@ -43,13 +43,12 @@ $functions = array(
         'ajax' => true,
         'services' => array(MOODLE_OFFICIAL_MOBILE_SERVICE)
     ),
-    'local_annoto_get_defaults' => array(
+    'local_annoto_set_completion' => array(
         'classname' => 'local_annoto_external',
-        'methodname' => 'get_defaults',
+        'methodname' => 'set_completion',
         'classpath' => 'local/annoto/externallib.php',
-        'description' => 'Get defaults for Annotosettings JS script',
-        'type' => 'read',
+        'description' => 'Update mod completion status',
         'ajax' => true,
         'services' => array(MOODLE_OFFICIAL_MOBILE_SERVICE)
-    )
+    ),
 );

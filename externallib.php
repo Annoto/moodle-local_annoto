@@ -82,45 +82,116 @@ class local_annoto_external extends external_api {
         return ['result' => $result, 'params' => json_encode($response, JSON_HEX_TAG)];
     }
 
+
     /**
      * Returns description of method parameters
      * @return external_function_parameters
      */
-    public static function get_defaults_parameters() {
+    public static function set_completion_parameters() {
         return new external_function_parameters(
-                array(
-                )
+            array(
+                'data' => new external_value(PARAM_RAW, 'JSON encoded data'),
+            )
         );
+    }
+
+    /**
+     * @param $jsondata
+     * @return array result of submittion
+     * @throws \core\invalid_persistent_exception
+     * @throws coding_exception
+     * @throws dml_exception
+     * @throws invalid_parameter_exception
+     * @throws moodle_exception
+     */
+    public static function set_completion($jsondata) {
+        global $DB,$CFG, $USER;
+        require_once($CFG->libdir . "/completionlib.php");
+        $params = self::validate_parameters(self::set_completion_parameters(),
+            array(
+                'data' => $jsondata,
+            )
+        );
+
+        $data = json_decode($jsondata);
+                   
+        // print_r($data);
+        // die;
+        $status = false;
+        $message = 'Completion not defined';
+
+        if (isset($data->cmid) && !empty($data->cmid)) {
+            list($course, $cm) = get_course_and_cm_from_cmid($data->cmid);
+            $enrolled = static::get_enrolled_userids($course->id);
+
+            if (in_array($USER->id, $enrolled)) {
+                $record = \local_annoto\completion::get_record(['cmid' => $data->cmid]);
+                if ($record !== false && $record->get('enabled') == \local_annoto\completion::COMPLETION_TRACKING_AUTOMATIC) {
+                    $status = true;
+                    if ($completiondata = \local_annoto\completiondata::get_record(['completionid' => $record->get('id'), 'userid' => $USER->id])) {
+                        $Act_comp = $DB->get_record('local_annoto_completion',array('cmid'=>$data->cmid));
+                        $current_time = time();
+                        // echo $Act_comp->completionexpected;
+                        // echo "------------";
+                        // echo time();
+                        // echo $Act_comp->view; && 
+                        // print_r($data);
+                        // die; 
+                        if(($data->completion >= (int)$Act_comp->view) && ($data->comments >= (int)$Act_comp->comments) && ($data->replies >= (int)$Act_comp->replies) && (($Act_comp->completionexpected != 0 && $current_time <= $Act_comp->completionexpected) ||  $Act_comp->completionexpected == 0)){
+                            $data->completion = 100;
+                            $jsondata2 = json_encode($data);
+                            $completiondata->set('data', $jsondata2);
+                            $completiondata->update();
+                            $message = "Update completion for user {$USER->id} modid {$data->cmid} completion {$data->completion}";
+                        }else{
+                            // $completiondata->set('data', $jsondata);
+                            // $completiondata->update();
+                            $message = "Update completion for user {$USER->id} modid {$data->cmid} completion {$data->completion}";
+                        }
+                    } else {
+                        $record = [
+                            'userid' => $USER->id,
+                            'completionid' => $record->get('id'),
+                            'data' => $jsondata
+                        ];
+                        $completiondata = new \local_annoto\completiondata(0, (object) $record);
+                        $completiondata->create();
+                        $message = "Set completion for user {$USER->id} modid {$data->cmid} completion {$data->completion}";
+                    }
+                }
+            }
+        }
+
+        return ['status' => $status, 'message' => $message];
     }
 
     /**
      * Returns description of method result value
-     * @return external_value
+     * @return external_description
      */
-    public static function get_defaults_returns() {
-        //return new external_value(PARAM_TEXT, 'json jsparams');
+    public static function set_completion_returns() {
         return new external_single_structure([
-            'result' => new external_value(PARAM_BOOL, 'True if the params was successfully sended'),
-            'params'    => new external_value(PARAM_TEXT, 'json jsparams'),
+            'status' => new external_value(PARAM_BOOL, 'The processing result'),
+            'message' => new external_value(PARAM_TEXT, 'Message'),
         ]);
     }
 
     /**
-     * Get parameters for Anooto's JS script
-     * @param int $courseid the id of the course.
-     * @param int $modid mod id.
+     * Returns array of user ids enrolled into this course with gradebook roles
+     * @param $courseid
      * @return array
+     * @throws coding_exception
+     * @throws dml_exception
      */
-    public static function get_defaults() {
-        global $USER;
-        $params = self::validate_parameters(
-            self::get_jsparams_parameters(),
-            array()
-        );
+    public static function get_enrolled_userids($courseid) {
+        global $DB, $CFG;
 
-        list($result, $response) = [true, local_annoto_get_defaults()];
+        $context = \context_course::instance($courseid);
 
-        return ['result' => $result, 'params' => json_encode($response, JSON_HEX_TAG)];
+        list($gradebookroles_sql, $params) = $DB->get_in_or_equal(explode(',', $CFG->gradebookroles), SQL_PARAMS_NAMED, 'grbr');
+        $params['contextid'] = $context->id;
+        $sql = "SELECT DISTINCT ra.userid FROM {role_assignments} ra WHERE ra.roleid $gradebookroles_sql AND contextid = :contextid";
+
+        return $DB->get_fieldset_sql($sql, $params);
     }
-
 }
