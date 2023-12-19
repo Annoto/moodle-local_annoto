@@ -15,17 +15,21 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Version details
- *
- * @package    local_annoto
- * @copyright  Annoto Ltd.
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package local_annoto
+ * @author Mike Churchward <mike.churchward@poetgroup.org>
+ * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @copyright 2016 POET
  */
 
-defined('MOODLE_INTERNAL') || die();
+defined('MOODLE_INTERNAL') || die;
 
-
-$plugin->version   = 2023102300;        // The current plugin version (Date: YYYYMMDDXX).
-$plugin->release  = '4.0.z1';
-$plugin->requires  = 2016052300;        // Requires this Moodle version 3.1.
-$plugin->component = 'local_annoto';    // Full name of the plugin (used for diagnostics).
+$observers = [
+    [
+        'eventname' => '\core\event\course_module_deleted',
+        'callback' => 'local_annoto\observer::course_module_deleted'
+    ],
+    [
+        'eventname' => '\core\event\user_enrolment_deleted',
+        'callback' => 'local_annoto\observer::user_enrolment_deleted'
+    ],
+];

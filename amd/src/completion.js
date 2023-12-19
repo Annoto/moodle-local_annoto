@@ -1,4 +1,3 @@
-<?php
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -15,17 +14,32 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Version details
+ * javscript for component 'local_annoto'.
  *
  * @package    local_annoto
- * @copyright  Annoto Ltd.
+ * @copyright  Devlion.co
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die();
-
-
-$plugin->version   = 2023102300;        // The current plugin version (Date: YYYYMMDDXX).
-$plugin->release  = '4.0.z1';
-$plugin->requires  = 2016052300;        // Requires this Moodle version 3.1.
-$plugin->component = 'local_annoto';    // Full name of the plugin (used for diagnostics).
+define([
+    'jquery',
+    'core/ajax',
+    'core/log',
+    'core/notification',
+],function($, Ajax,log, Notification) {
+    return {
+        record: function(data) {
+            Ajax.call([{
+                methodname: 'local_annoto_set_completion',
+                args: {
+                    data: JSON.stringify(data),
+                },
+                done: function(result) {
+                    log.info(`AnnotoCompletion result: ${result.message}`);
+                    log.info(`AnnotoCompletion result: ${data}`);
+                },
+                fail: Notification.exception
+            }]);
+        }
+    };
+});
