@@ -29,9 +29,6 @@ if (!defined('CUSTOM')) define('CUSTOM', 'custom');
 
 if (!defined('TOOLNAME')) define('TOOLNAME', 'Annoto Dashboard');
 if (!defined('TOOLURL')) define('TOOLURL', 'https://auth.eu.annoto.net/lti/course-insights');
-if (!defined('TOOLURL_EU')) define('TOOLURL_EU', 'https://auth.eu.annoto.net');
-if (!defined('TOOLURL_US')) define('TOOLURL_US', 'https://auth.us.annoto.net');
-if (!defined('TOOLURLPART')) define('TOOLURLPART', '/lti/course-insights');
 if (!defined('TOOLICONURL')) define('TOOLICONURL', 'https://assets.annoto.net/images/logo_icon.png');
 
 if (!defined('LTIGRADEGNAME')) define('LTIGRADEGNAME', 'Annoto Assignment');
@@ -229,25 +226,6 @@ function local_annoto_get_jsparam($courseid, $modid) {
         'moodleversion' => $CFG->version,
     );
 
-    return $jsparams;
-}
-
-/**
- * Get parameters for Anooto's JS script
- * @param int $courseid the id of the course.
- * @param string $pageurl url of the current page.
- * @param int $modid mod id.
- * @return array
- */
-function local_annoto_get_defaults() {
-    global $CFG;
-
-    $jsparams = array(
-        'toolurl' => TOOLURL,
-        'toolurl_eu' => TOOLURL_EU,
-        'toolurl_us' => TOOLURL_US,
-        'toolurlpart' => TOOLURLPART
-    );
     return $jsparams;
 }
 

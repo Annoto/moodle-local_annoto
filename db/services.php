@@ -42,14 +42,5 @@ $functions = array(
         'type' => 'read',
         'ajax' => true,
         'services' => array(MOODLE_OFFICIAL_MOBILE_SERVICE)
-    ),
-    'local_annoto_get_defaults' => array(
-        'classname' => 'local_annoto_external',
-        'methodname' => 'get_defaults',
-        'classpath' => 'local/annoto/externallib.php',
-        'description' => 'Get defaults for Annotosettings JS script',
-        'type' => 'read',
-        'ajax' => true,
-        'services' => array(MOODLE_OFFICIAL_MOBILE_SERVICE)
     )
 );
