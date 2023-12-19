@@ -82,45 +82,4 @@ class local_annoto_external extends external_api {
         return ['result' => $result, 'params' => json_encode($response, JSON_HEX_TAG)];
     }
 
-    /**
-     * Returns description of method parameters
-     * @return external_function_parameters
-     */
-    public static function get_defaults_parameters() {
-        return new external_function_parameters(
-                array(
-                )
-        );
-    }
-
-    /**
-     * Returns description of method result value
-     * @return external_value
-     */
-    public static function get_defaults_returns() {
-        //return new external_value(PARAM_TEXT, 'json jsparams');
-        return new external_single_structure([
-            'result' => new external_value(PARAM_BOOL, 'True if the params was successfully sended'),
-            'params'    => new external_value(PARAM_TEXT, 'json jsparams'),
-        ]);
-    }
-
-    /**
-     * Get parameters for Anooto's JS script
-     * @param int $courseid the id of the course.
-     * @param int $modid mod id.
-     * @return array
-     */
-    public static function get_defaults() {
-        global $USER;
-        $params = self::validate_parameters(
-            self::get_jsparams_parameters(),
-            array()
-        );
-
-        list($result, $response) = [true, local_annoto_get_defaults()];
-
-        return ['result' => $result, 'params' => json_encode($response, JSON_HEX_TAG)];
-    }
-
 }
