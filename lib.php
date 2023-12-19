@@ -816,7 +816,6 @@ function local_annoto_coursemodule_edit_post_actions($data, $course) {
         if ($module = $DB->get_record('course_modules', ['id' => $data->coursemodule])) {
             $module->completion = $completiontype;
             $DB->update_record('course_modules', $module);
-            rebuild_course_cache($module->course, true);
         }
     }
 
