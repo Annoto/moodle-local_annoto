@@ -28,7 +28,7 @@ if ($hassiteconfig) {
 
     require_once($CFG->dirroot. '/local/annoto/classes/admin_setting_custompickroles.php');
     require_once($CFG->dirroot . '/local/annoto/lib.php');
-
+    $PAGE->requires->js_call_amd('local_annoto/annotosettings', 'init', array());
     $pluginmanager = core_plugin_manager::instance();
     $plugininfo = $pluginmanager->get_plugin_info('local_annoto');
     $version = $plugininfo->versiondb;
