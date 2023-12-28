@@ -30,7 +30,7 @@ define([
   'https://vjs.zencdn.net/7.20.1/video.min.js', // TODO: use media_videojs/video-lazy instead?
 ], function($, log, notification, Ajax, VimeoPlayer, videoJsPlayer) {
 
-    window.moodleAnnoto = window.moodleAnnoto || {
+    const moodleAnnotoExports = {
         $,
         log,
         notification,
@@ -38,6 +38,7 @@ define([
         videoJsPlayer,
         require,
     };
+    window.moodleAnnoto = window.moodleAnnoto ? Object.assign(window.moodleAnnoto, moodleAnnotoExports) : moodleAnnotoExports;
 
     try {
         if (window.sessionStorage.getItem('moodleAnnotoDebug')) {
