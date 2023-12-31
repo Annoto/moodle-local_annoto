@@ -48,7 +48,7 @@ define([
 
     return {
         init: function(courseid, modid) {
-          
+
             log.info('AnnotoMoodle: starting plugin init');
             Ajax.call([{
                 methodname: 'get_jsparams',
@@ -62,9 +62,10 @@ define([
                         return;
                     }
                     const params = JSON.parse(response.params);
-                    moodleAnnoto.params = params;
+                    window.moodleAnnoto.params = params;
 
-                    const annotoMoodleCdnUrl = params.annotoMoodleCdnUrl || 'https://cdn.annoto.net/moodle-local-js/latest/annoto.js';
+                    const annotoMoodleCdnUrl = params.annotoMoodleCdnUrl ||
+                        'https://cdn.annoto.net/moodle-local-js/latest/annoto.js';
                     require([annotoMoodleCdnUrl], function(AnnotoMooodle) {
                         window.AnnotoMooodle = window.AnnotoMooodle || AnnotoMooodle;
                         AnnotoMooodle.setup();
