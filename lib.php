@@ -58,7 +58,7 @@ function local_annoto_before_footer() {
 function local_annoto_before_standard_top_of_body_html() {
     global $PAGE;
     // Prevent callback loading for all themes except theme_lambda.
-    $themes = ['lambda', 'adaptable'];
+    $themes = ['lambda', 'adaptable','academi'];
     if (in_array($PAGE->theme->name, $themes)) {
         local_annoto_init();
     }
@@ -602,18 +602,11 @@ function local_annoto_coursemodule_standard_elements($formwrapper, $mform) {
     $mform->addElement('header', 'annotocompletion', get_string('annotocompletion', 'local_annoto'));
 
     $cmid = null;
-      // echo "<pre>----=---";
-      //   print_r($settings);
-      //   echo "</pre>";
 
     if ($cm = $formwrapper->get_coursemodule()) {
         $cmid = $cm->id;
         if ($completionsettings = \local_annoto\completion::get_record(['cmid' => $cmid])) {
             $data = $completionsettings->to_record();
-        // echo "<pre>---+---";
-        // print_r($data);
-        // echo "</pre>";
-
         } else {
             $data = (object) [
                 'enabled' => \local_annoto\completion::COMPLETION_TRACKING_NONE,
@@ -708,10 +701,6 @@ function local_annoto_coursemodule_standard_elements($formwrapper, $mform) {
 
     $completion = new completion_info($COURSE);
 
-    //   echo "<pre>-----";
-    // print_r($data); 
-    // echo "</pre>";
-    // // die;
     if ($completion->is_enabled()) {
         // If anybody has completed the activity, these options will be 'locked'
         $completedcount = empty($cmid)
@@ -780,7 +769,6 @@ function local_annoto_coursemodule_standard_elements($formwrapper, $mform) {
  */
 function local_annoto_coursemodule_edit_post_actions($data, $course) {
     global $DB;
-
     $settings = get_config('local_annoto');
 
     if (isset($data->annotocompletionenabled) and $settings->activitiescompletion) {
@@ -788,12 +776,6 @@ function local_annoto_coursemodule_edit_post_actions($data, $course) {
         $completiontype = $data->completion;
 
         if ($data->annotocompletionenabled > 0) {
-
-            // echo "<pre>";
-            // print_r($data);
-            // echo "</pre>";
-            // die;
-
             $newcompletion = new stdClass();
             $newcompletion->cmid = $data->coursemodule;
             $newcompletion->enabled  = $data->annotocompletionenabled;
@@ -803,6 +785,7 @@ function local_annoto_coursemodule_edit_post_actions($data, $course) {
             $newcompletion->completionexpected  = $data->annotocompletionexpected;
 
             $completiontype = $data->annotocompletionenabled + 6; // 7, 8 means Annoto completion.
+
         }
 
         if (!$record = \local_annoto\completion::get_record(['cmid' => $data->coursemodule])) {
@@ -821,12 +804,6 @@ function local_annoto_coursemodule_edit_post_actions($data, $course) {
     }
 
     $completion = new completion_info($course);
-    if ($data->id) {
-        list($course, $cm) = get_course_and_cm_from_cmid($data->id);
-        if ($completion->is_enabled() && !empty($data->completionunlockedannoto)) {
-            $completion->reset_all_state($cm);
-        }
-    }
-
+    
     return $data;
 }

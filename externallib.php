@@ -114,9 +114,6 @@ class local_annoto_external extends external_api {
         );
 
         $data = json_decode($jsondata);
-                   
-        // print_r($data);
-        // die;
         $status = false;
         $message = 'Completion not defined';
 
@@ -129,25 +126,10 @@ class local_annoto_external extends external_api {
                 if ($record !== false && $record->get('enabled') == \local_annoto\completion::COMPLETION_TRACKING_AUTOMATIC) {
                     $status = true;
                     if ($completiondata = \local_annoto\completiondata::get_record(['completionid' => $record->get('id'), 'userid' => $USER->id])) {
-                        $Act_comp = $DB->get_record('local_annoto_completion',array('cmid'=>$data->cmid));
-                        $current_time = time();
-                        // echo $Act_comp->completionexpected;
-                        // echo "------------";
-                        // echo time();
-                        // echo $Act_comp->view; && 
-                        // print_r($data);
-                        // die; 
-                        if(($data->completion >= (int)$Act_comp->view) && ($data->comments >= (int)$Act_comp->comments) && ($data->replies >= (int)$Act_comp->replies) && (($Act_comp->completionexpected != 0 && $current_time <= $Act_comp->completionexpected) ||  $Act_comp->completionexpected == 0)){
-                            $data->completion = 100;
-                            $jsondata2 = json_encode($data);
-                            $completiondata->set('data', $jsondata2);
-                            $completiondata->update();
-                            $message = "Update completion for user {$USER->id} modid {$data->cmid} completion {$data->completion}";
-                        }else{
-                            // $completiondata->set('data', $jsondata);
-                            // $completiondata->update();
-                            $message = "Update completion for user {$USER->id} modid {$data->cmid} completion {$data->completion}";
-                        }
+                        $jsondata2 = json_encode($data);
+                        $completiondata->set('data', $jsondata2);
+                        $completiondata->update();
+                        $message = "Update completion for user {$USER->id} modid {$data->cmid} completion {$data->completion}";
                     } else {
                         $record = [
                             'userid' => $USER->id,
