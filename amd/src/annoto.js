@@ -260,6 +260,16 @@ define([
             } else {
                 log.info('AnnotoMoodle: SSO auth skipped');
             }
+          
+            window.Annoto.on(`my_activity`, IMyActivity => {
+                if (!this.params.cmId) {
+                    return
+                }
+                IMyActivity.cmid = this.params.cmId;
+                Completion.record(IMyActivity);
+                log.info(`AnnotoCompletion full log:`);
+                console.dir(IMyActivity);
+            });
         },
 
         setupKalturaKdpMap: function(kdpMap) {
@@ -399,7 +409,7 @@ define([
                         self.annotoAPI.load(self.config);
                     }
                 });
-              };
+            };
 
             const observerNodeTargets = document.querySelectorAll(Object.values(formatSelectors).join(', '));
 

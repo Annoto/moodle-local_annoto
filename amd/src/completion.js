@@ -26,7 +26,7 @@ define([
     'core/ajax',
     'core/log',
     'core/notification',
-], function($, Ajax,log, Notification) {
+],function($, Ajax,log, Notification) {
     return {
         record: function(data) {
             Ajax.call([{
@@ -36,6 +36,7 @@ define([
                 },
                 done: function(result) {
                     log.info(`AnnotoCompletion result: ${result.message}`);
+                    log.info(`AnnotoCompletion result: ${data}`);
                 },
                 fail: Notification.exception
             }]);

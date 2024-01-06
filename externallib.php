@@ -105,7 +105,7 @@ class local_annoto_external extends external_api {
      * @throws moodle_exception
      */
     public static function set_completion($jsondata) {
-        global $CFG, $USER;
+        global $DB,$CFG, $USER;
         require_once($CFG->libdir . "/completionlib.php");
         $params = self::validate_parameters(self::set_completion_parameters(),
             array(
@@ -126,7 +126,8 @@ class local_annoto_external extends external_api {
                 if ($record !== false && $record->get('enabled') == \local_annoto\completion::COMPLETION_TRACKING_AUTOMATIC) {
                     $status = true;
                     if ($completiondata = \local_annoto\completiondata::get_record(['completionid' => $record->get('id'), 'userid' => $USER->id])) {
-                        $completiondata->set('data', $jsondata);
+                        $jsondata2 = json_encode($data);
+                        $completiondata->set('data', $jsondata2);
                         $completiondata->update();
                         $message = "Update completion for user {$USER->id} modid {$data->cmid} completion {$data->completion}";
                     } else {

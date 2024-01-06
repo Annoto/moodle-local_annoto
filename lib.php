@@ -58,7 +58,7 @@ function local_annoto_before_footer() {
 function local_annoto_before_standard_top_of_body_html() {
     global $PAGE;
     // Prevent callback loading for all themes except theme_lambda.
-    $themes = ['lambda', 'adaptable'];
+    $themes = ['lambda', 'adaptable','academi'];
     if (in_array($PAGE->theme->name, $themes)) {
         local_annoto_init();
     }
@@ -583,12 +583,16 @@ function local_annoto_coursemodule_standard_elements($formwrapper, $mform) {
     global $COURSE;
 
     $settings = get_config('local_annoto');
+
+
+
     $provedmodtypes = [
         'page',
         'label',
         'h5p',
         'hvp',
         'h5pactivity',
+        'kalvidres',
     ];
 
     if (!$settings->activitiescompletion || !in_array($formwrapper->get_current()->modulename, $provedmodtypes)) {
@@ -618,6 +622,7 @@ function local_annoto_coursemodule_standard_elements($formwrapper, $mform) {
             'comments' => $settings->completioncomments,
             'replies' => $settings->completionreplies,
         ];
+
     }
 
     $data->completionexpected = $data->completionexpected ?? 0;
@@ -682,7 +687,7 @@ function local_annoto_coursemodule_standard_elements($formwrapper, $mform) {
     $mform->addGroup($group, 'completionrepliesgroup', get_string('completionreplies', 'local_annoto'));
     $mform->disabledIf('completionrepliesgroup[annotocompletionreplies]','completionrepliesgroup[annotocompletionrepliesenabled]','notchecked');
     $mform->setType('completionrepliesgroup[annotocompletionreplies]', PARAM_INT);
-    $mform->setDefault('completionrepliesgroup[[annotocompletionreplies]', $data->replies);
+    $mform->setDefault('completionrepliesgroup[annotocompletionreplies]', $data->replies);
     $mform->setDefault('completionrepliesgroup[annotocompletionrepliesenabled]', $data->replies > 0);
     $grouprule = [
         'annotocompletionreplies' => [
@@ -693,12 +698,14 @@ function local_annoto_coursemodule_standard_elements($formwrapper, $mform) {
 
     $mform->addElement('date_time_selector', 'annotocompletionexpected', get_string('completionexpected', 'local_annoto'), ['optional' => true]);
 
+
     $completion = new completion_info($COURSE);
+
     if ($completion->is_enabled()) {
         // If anybody has completed the activity, these options will be 'locked'
         $completedcount = empty($cmid)
-            ? 0
-            : $completion->count_user_data($cm);
+            ? 0 : $data->completionexpected;
+            // : $completion->count_user_data($cm);
 
         $freeze = false;
         if (!$completedcount) {
@@ -715,8 +722,7 @@ function local_annoto_coursemodule_standard_elements($formwrapper, $mform) {
 
             // Has the element been unlocked, either by the button being pressed
             // in this request, or the field already being set from a previous one?
-            if ($unlockcompletionannoto ||
-                $completionunlockedannoto) {
+            if ($unlockcompletionannoto || $completionunlockedannoto) {
                 // Yes, add in warning text and set the hidden variable
                 $mform->insertElementBefore(
                     $mform->createElement('static', 'completedunlockedannoto',
@@ -763,7 +769,6 @@ function local_annoto_coursemodule_standard_elements($formwrapper, $mform) {
  */
 function local_annoto_coursemodule_edit_post_actions($data, $course) {
     global $DB;
-
     $settings = get_config('local_annoto');
 
     if (isset($data->annotocompletionenabled) and $settings->activitiescompletion) {
@@ -780,6 +785,7 @@ function local_annoto_coursemodule_edit_post_actions($data, $course) {
             $newcompletion->completionexpected  = $data->annotocompletionexpected;
 
             $completiontype = $data->annotocompletionenabled + 6; // 7, 8 means Annoto completion.
+
         }
 
         if (!$record = \local_annoto\completion::get_record(['cmid' => $data->coursemodule])) {
@@ -793,16 +799,11 @@ function local_annoto_coursemodule_edit_post_actions($data, $course) {
         if ($module = $DB->get_record('course_modules', ['id' => $data->coursemodule])) {
             $module->completion = $completiontype;
             $DB->update_record('course_modules', $module);
+            rebuild_course_cache($module->course, true);
         }
     }
 
     $completion = new completion_info($course);
-    if ($data->id) {
-        list($course, $cm) = get_course_and_cm_from_cmid($data->id);
-        if ($completion->is_enabled() && !empty($data->completionunlockedannoto)) {
-            $completion->reset_all_state($cm);
-        }
-    }
-
+    
     return $data;
 }
