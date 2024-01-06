@@ -41,13 +41,7 @@ define([
 
     return {
         init: function(courseid, modid) {
-
-            // if page is 'edit settings' then return
-            if ($(document).find('body#page-mod-page-mod').get(0)){
-                return;
-            }
-
-            log.info('AnnotoMoodle: plugin init');
+        log.info('AnnotoMoodle: starting plugin init');
             Ajax.call([{
                 methodname: 'get_jsparams',
                 args: {
@@ -60,12 +54,6 @@ define([
                         return;
                     }
                     this.params = JSON.parse(response.params);
-
-                    // Return if has <annoto> tag.
-                    if (this.hasAnnotoTag()) {
-                        log.info('AnnotoMoodle: plugin is disabled for this page using the Atto plugin.');
-                        return;
-                    }
 
                     this.tilesInit();
                     this.icontent();
@@ -143,16 +131,26 @@ define([
             return playerElement;
         },
         bootstrap: function() {
+            log.info('AnnotoMoodle: bootstrap');
             if (this.bootsrapDone) {
                 return;
             }
             // Check if we have multiple players
             this.findMultiplePlayers();
             let annotoPlayer = this.findPlayer.call(this);
+            
             if (annotoPlayer) {
+                const innerPageWrapper = document.getElementById('page-wrapper');
+                if(innerPageWrapper){
+                  const annotoWrapper = document.createElement('div');
+                  annotoWrapper.id = "annoto-app";
+                  innerPageWrapper.appendChild(annotoWrapper);
+                  log.info('AnnotoMoodle: updating annoto-app');
+                }
+              
                 this.bootsrapDone = true;
                 require([this.params.bootstrapUrl], this.bootWidget.bind(this));
-                log.info(`AnnotoMoodle: detected ${this.params.playerType} : ${this.params.playerId}`);
+                log.info(`AnnotoMoodle: bootstrap detected ${this.params.playerType} : ${this.params.playerId}`);
             }
         },
         prepareConfig: function() {
@@ -614,6 +612,7 @@ define([
         },
 
         findMultiplePlayers: function() {
+            log.info('AnnotoMoodle: find Multiple Players');
             const self = this;
             const vimeos = $('body').find('iframe[src*="vimeo.com"]').get();
             const videojs = $('body').find('.video-js').get();
