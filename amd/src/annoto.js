@@ -409,7 +409,7 @@ define([
                         self.annotoAPI.load(self.config);
                     }
                 });
-              };
+            };
 
             const observerNodeTargets = document.querySelectorAll(Object.values(formatSelectors).join(', '));
 

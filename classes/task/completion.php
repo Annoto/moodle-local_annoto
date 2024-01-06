@@ -59,25 +59,26 @@ class completion extends \core\task\scheduled_task {
             if ($record->get('cmid') > 0) {
                 list($course, $cm) = get_course_and_cm_from_cmid($record->get('cmid'));
                 $completion = new \completion_info($course);
-
                 foreach ($completiondatas = \local_annoto\completiondata::get_records(['completionid' => $record->get('id')]) as $completiondata) {
                     $currentdata = $completion->get_data($cm, 0, $completiondata->get('userid'));
                     if (!$currentdata->completionstate) {
                         $data = json_decode($completiondata->get('data'));
                         $completed = true;
-                        if ($record->get('view') > 0) {
+                        if($record->get('view') <= 0 && $record->get('comments') <= 0 && $record->get('replies') <= 0 && $record->get('completionexpected') <= 0){
+                            $completed = false;
+                        }
+                        if ($record->get('view') > 0 && $completed) {
                             $completed = $record->get('view') <= $data->completion;
                         }
-                        if ($record->get('comments') > 0) {
+                        if ($record->get('comments') > 0 && $completed) {
                             $completed = $record->get('comments') <= $data->comments;
                         }
-                        if ($record->get('replies') > 0) {
+                        if ($record->get('replies') > 0 && $completed) {
                             $completed = $record->get('replies') <= $data->replies;
                         }
-                        if ($record->get('completionexpected') > 0) {
+                        if ($record->get('completionexpected') > 0 && $completed) {
                             $completed = $record->get('completionexpected') >= $record->get('timemodified');
                         }
-
                         if ($completed) {
                             $completion->update_state($cm, COMPLETION_COMPLETE, $completiondata->get('userid'));
                         }
