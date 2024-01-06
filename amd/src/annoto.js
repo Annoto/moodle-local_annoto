@@ -27,15 +27,15 @@ define([
   'core/notification',
   'core/ajax',
   'https://player.vimeo.com/api/player.js',
-  'https://vjs.zencdn.net/7.20.1/video.min.js', // TODO: use media_videojs/video-lazy instead?
-], function($, log, notification, Ajax, VimeoPlayer, videoJsPlayer) {
+  'media_videojs/video-lazy',
+], function($, log, notification, Ajax, VimeoPlayer, videojs) {
 
     const moodleAnnotoExports = {
         $,
         log,
         notification,
         VimeoPlayer,
-        videoJsPlayer,
+        videojs,
         require,
     };
     window.moodleAnnoto = window.moodleAnnoto ? Object.assign(window.moodleAnnoto, moodleAnnotoExports) : moodleAnnotoExports;
