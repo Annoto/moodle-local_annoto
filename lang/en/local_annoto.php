@@ -88,15 +88,15 @@ $string['defaultheight'] = 'Media height';
 $string['defaultheightdesc'] = 'Media player height if a height is not specified and the actual media file height cannot be determined by the player';
 
 // Activities completion
+
+$string['activitycompletion_settings'] = 'Activity completion (Beta)';
+$string['activitycompletion_enable'] = 'Enable Annoto activity completion';
+$string['activitycompletion_enabledesc'] = 'If enabled Annoto activity completion will be visible in activity settings';
+
 $string['annotocompletion'] = 'Annoto completion';
 $string['annotocompletiontracking'] = 'Annoto Completion tracking';
 $string['completiontask'] = 'Annoto Completion Task';
 $string['numericrule'] = 'This field should be numeric';
-
-$string['activitiescompletion'] = 'Annoto activities completion';
-$string['activitiescompletiondesc'] = 'Set up additional conditions for activities completion';
-
-$string['completiondefaultsheading'] = 'Annoto completion (beta)';
 
 $string['completionenabled'] = 'Completion tracking';
 $string['completionenableddesc'] = 'Select whether annoto completion should be enabled by default for new activities';

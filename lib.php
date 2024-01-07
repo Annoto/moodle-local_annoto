@@ -28,11 +28,11 @@ if (!defined('EUREGION')) define('EUREGION', 'eu.annoto.net');
 if (!defined('CUSTOM')) define('CUSTOM', 'custom');
 
 if (!defined('TOOLNAME')) define('TOOLNAME', 'Annoto Dashboard');
-if (!defined('TOOLURL')) define('TOOLURL', 'https://auth.annoto.net/lti/course-insights');
+if (!defined('TOOLURL')) define('TOOLURL', 'https://auth.eu.annoto.net/lti/course-insights');
 if (!defined('TOOLICONURL')) define('TOOLICONURL', 'https://assets.annoto.net/images/logo_icon.png');
 
 if (!defined('LTIGRADEGNAME')) define('LTIGRADEGNAME', 'Annoto Assignment');
-if (!defined('LTIGRADEURL')) define('LTIGRADEURL', 'https://auth.annoto.net');
+if (!defined('LTIGRADEURL')) define('LTIGRADEURL', 'https://auth.eu.annoto.net');
 if (!defined('LTIGRADEICONURL')) define('LTIGRADEICONURL', 'https://cdn.annoto.net/assets/latest/images/icon.svg');
 if (!defined('LTIGRADECONTENTITEM')) define('LTIGRADECONTENTITEM', '/lti/item-embed');
 
@@ -595,7 +595,7 @@ function local_annoto_coursemodule_standard_elements($formwrapper, $mform) {
         'kalvidres',
     ];
 
-    if (!$settings->activitiescompletion || !in_array($formwrapper->get_current()->modulename, $provedmodtypes)) {
+    if (!$settings->activitycompletion || !in_array($formwrapper->get_current()->modulename, $provedmodtypes)) {
         return;
     }
 
@@ -617,10 +617,10 @@ function local_annoto_coursemodule_standard_elements($formwrapper, $mform) {
         }
     } else {
         $data = (object) [
-            'enabled' => $settings->completionenabled,
-            'view' => $settings->completionview,
-            'comments' => $settings->completioncomments,
-            'replies' => $settings->completionreplies,
+            'enabled' => \local_annoto\completion::COMPLETION_TRACKING_NONE,
+            'view' => 0,
+            'comments' => 0,
+            'replies' => 0,
         ];
 
     }
@@ -771,7 +771,7 @@ function local_annoto_coursemodule_edit_post_actions($data, $course) {
     global $DB;
     $settings = get_config('local_annoto');
 
-    if (isset($data->annotocompletionenabled) and $settings->activitiescompletion) {
+    if (isset($data->annotocompletionenabled) and $settings->activitycompletion) {
 
         $completiontype = $data->completion;
 
