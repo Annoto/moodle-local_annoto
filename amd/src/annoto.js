@@ -26,10 +26,9 @@ define([
   'core/log',
   'core/notification',
   'core/ajax',
-  'local_annoto/completion',
-  'https://player.vimeo.com/api/player.js',
-  'https://vjs.zencdn.net/7.20.1/video.min.js',
-], function($, log, notification, Ajax, Completion, VimeoPlayer, videoJsPlayer) {
+  // 'https://player.vimeo.com/api/player.js',
+  // 'https://vjs.zencdn.net/7.20.1/video.min.js',
+], function($, log, notification, Ajax/* , VimeoPlayer, videoJsPlayer */) {
 
     window.moodleAnnoto = window.moodleAnnoto || {};
 
@@ -136,9 +135,9 @@ define([
                 return;
             }
             // Check if we have multiple players
-            this.findMultiplePlayers();
+            // this.findMultiplePlayers();
             let annotoPlayer = this.findPlayer.call(this);
-            
+
             if (annotoPlayer) {
                 const innerPageWrapper = document.getElementById('page-wrapper');
                 if(innerPageWrapper){
@@ -147,7 +146,7 @@ define([
                   innerPageWrapper.appendChild(annotoWrapper);
                   log.info('AnnotoMoodle: updating annoto-app');
                 }
-              
+
                 this.bootsrapDone = true;
                 require([this.params.bootstrapUrl], this.bootWidget.bind(this));
                 log.info(`AnnotoMoodle: bootstrap detected ${this.params.playerType} : ${this.params.playerId}`);
@@ -235,15 +234,28 @@ define([
                 log.info('AnnotoMoodle: SSO auth skipped');
             }
 
-            window.Annoto.on(`my_activity`, IMyActivity => {
+            window.Annoto.on(`my_activity`, myActivity => {
                 if (!this.params.cmId) {
-                    return
+                    return;
                 }
-                IMyActivity.cmid = this.params.cmId;
-                Completion.record(IMyActivity);
-                log.info(`AnnotoCompletion full log:`);
-                console.dir(IMyActivity);
+                myActivity.cmid = this.params.cmId;
+                log.info(`AnnotoMoodle: got my_activity event`);
+                window.moodleAnnoto.myActivity = myActivity;
+                this.recordCompletion(myActivity);
             });
+        },
+
+        recordCompletion: function(data) {
+            Ajax.call([{
+                methodname: 'local_annoto_set_completion',
+                args: {
+                    data: JSON.stringify(data),
+                },
+                done: function(result) {
+                    log.info(`AnnotoCompletion result: ${result.message}`);
+                },
+                fail: notification.exception
+            }]);
         },
 
         authKalturaPlayer: function(api) {
@@ -258,8 +270,7 @@ define([
             } else {
                 log.info('AnnotoMoodle: SSO auth skipped');
             }
-          
-            window.Annoto.on(`my_activity`, IMyActivity => {
+            /* window.Annoto.on(`my_activity`, IMyActivity => {
                 if (!this.params.cmId) {
                     return
                 }
@@ -267,7 +278,7 @@ define([
                 Completion.record(IMyActivity);
                 log.info(`AnnotoCompletion full log:`);
                 console.dir(IMyActivity);
-            });
+            }); */
         },
 
         setupKalturaKdpMap: function(kdpMap) {
@@ -572,7 +583,7 @@ define([
             }
         },
 
-        icontent: function(){
+        icontent: function() {
             if (!document.body.classList.contains('path-mod-icontent')) {
                 return;
             }
@@ -603,7 +614,7 @@ define([
                 }, 2000);
             };
 
-            wrapper.addEventListener('click', function(event){
+            wrapper.addEventListener('click', function(event) {
                 if (!event.target.matches('.load-page')) {
                     return;
                 }
@@ -611,7 +622,7 @@ define([
             });
         },
 
-        findMultiplePlayers: function() {
+        /* findMultiplePlayers: function() {
             log.info('AnnotoMoodle: find Multiple Players');
             const self = this;
             const vimeos = $('body').find('iframe[src*="vimeo.com"]').get();
@@ -630,20 +641,20 @@ define([
             multiplePlayers = true;
             log.info('AnnotoMoodle: setup multiple players');
 
-            const validatePlayerId = function(element){
+            const validatePlayerId = function(element) {
                 if (!element.id || element.id === '') {
                     element.id = 'annoto_player_id_' + Math.random().toString(36).substr(2, 6);
                 }
                 return element.id;
             };
 
-            const reloadAnnotoWidget = function(element, playerType){
+            const reloadAnnotoWidget = function(element, playerType) {
                 self.params.playerId = `#${element.id}`;
                 self.params.element = element;
                 self.params.playerType = playerType;
                 self.prepareConfig();
 
-                self.annotoAPI.destroy().then(function () {
+                self.annotoAPI.destroy().then(function() {
                     self.annotoAPI.load(self.config);
                     log.info(`AnnotoMoodle: reload Player: ${element.id}`);
                 });
@@ -657,7 +668,7 @@ define([
                     switch (playerType) {
                         case 'vimeo':
                             let vimeoPlayer = new VimeoPlayer(player);
-                            vimeoPlayer.on('play', function () {
+                            vimeoPlayer.on('play', function() {
                                 if (player.id === activePlayerId) {
                                     return;
                                 }
@@ -684,7 +695,7 @@ define([
             }
 
             return multiplePlayers;
-        }
+        } */
 
     };
 });
