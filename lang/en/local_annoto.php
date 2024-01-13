@@ -94,27 +94,27 @@ $string['activitycompletion_enable'] = 'Enable Annoto activity completion';
 $string['activitycompletion_enabledesc'] = 'If enabled Annoto activity completion will be visible in activity settings';
 
 $string['annotocompletion'] = 'Annoto completion';
-$string['annotocompletiontracking'] = 'Annoto Completion tracking';
 $string['completiontask'] = 'Annoto Completion Task';
 $string['numericrule'] = 'This field should be numeric';
 
 $string['completionenabled'] = 'Completion tracking';
 $string['completionenableddesc'] = 'Select whether annoto completion should be enabled by default for new activities';
 
-$string['completionview'] = 'Require video activity completion';
-$string['completionviewdesc'] = 'How much of a video length should be viewed by student to consider this activity completed';
-$string['annotocompletionviewtextbefore'] = 'Student must view this activity to complete';
-$string['annotocompletionviewtextafter'] = '% (Range 0-100)';
+$string['annotocompletionview'] = 'Require video activity completion';
+$string['annotocompletionviewhelp'] = 'How much of a video length should be viewed by student to consider this activity completed';
+$string['annotocompletionviewprefix'] = 'Student must view this activity to complete';
+$string['annotocompletionviewsuffix'] = '%';
 
-$string['completioncomments'] = 'Require comments';
-$string['completioncommentsdesc'] = 'How many comments should be made by student to consider this activity completed';
-$string['annotocompletioncommentstext'] = 'Student must post&nbsp;<strong>comments:</strong>&nbsp;or replies: ';
+$string['annotocompletioncomments'] = 'Require comments';
+$string['annotocompletioncommentshelp'] = 'How many comments should be made by student to consider this activity completed';
+$string['annotocompletioncommentsprefix'] = 'Student must post&nbsp;<strong>comments:</strong>&nbsp;or replies: ';
 
-$string['completionreplies'] = 'Require replies';
-$string['completiorepliesdesc'] = 'How many replies should be made by student to consider this activity completed';
-$string['annotocompletionrepliestext'] = 'Student must post replies: ';
+$string['annotocompletionreplies'] = 'Require replies';
+$string['annotocompletionreplieshelp'] = 'How many replies should be made by student to consider this activity completed';
+$string['annotocompletionrepliesprefix'] = 'Student must post replies: ';
 
-$string['completionexpected'] = 'Expect completed on';
+$string['annotocompletionexpected'] = 'Set reminder in Timeline';
+$string['annotocompletionexpectedhelp'] = 'Set reminder for student to work on this activity';
 
 
 // Privacy API.

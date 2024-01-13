@@ -23,17 +23,19 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+ defined('MOODLE_INTERNAL') || die();
+ 
 namespace local_annoto;
 
 use core\persistent;
+use \local_annoto\annoto_completiondata;
 
-defined('MOODLE_INTERNAL') || die();
-
-class completion extends persistent
+class annoto_completion extends persistent
 {
     const TABLE = 'local_annoto_completion';
-    const COMPLETION_TRACKING_NONE = 0;
-    const COMPLETION_TRACKING_AUTOMATIC = 1;
+    const COMPLETION_TRACKING_NONE = COMPLETION_TRACKING_NONE;
+    // see moodle/lib/completionlib.php definitions of COMPLETION_TRACKING_AUTOMATIC we need it to be higher than any other value
+    const COMPLETION_TRACKING_AUTOMATIC = 9;
 
     static function get_enabled_menu() {
         return [
@@ -56,7 +58,7 @@ class completion extends persistent
             'enabled' => array(
                 'type' => PARAM_INT,
             ),
-            'view' => array(
+            'totalview' => array(
                 'type' => PARAM_INT,
             ),
             'comments' => array(
@@ -71,9 +73,10 @@ class completion extends persistent
         ];
     }
 
+    // TODO: check if needed with foreign keys defined
     public function after_delete($result)
     {
-        if ($records = \local_annoto\completiondata::get_records(['completionid' => $this->raw_get('id')])) {
+        if ($records = annoto_completiondata::get_records(['completionid' => $this->raw_get('id')])) {
             foreach ($records as $record) {
                 $record->delete();
             }

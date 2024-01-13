@@ -26,6 +26,9 @@ defined('MOODLE_INTERNAL') || die;
 require_once($CFG->libdir . "/externallib.php");
 require_once($CFG->dirroot . "/local/annoto/lib.php");
 
+use \local_annoto\annoto_completion;
+use \local_annoto\annoto_completiondata;
+
 /**
  * Class local_annoto_external
  *
@@ -122,10 +125,10 @@ class local_annoto_external extends external_api {
             $enrolled = static::get_enrolled_userids($course->id);
 
             if (in_array($USER->id, $enrolled)) {
-                $record = \local_annoto\completion::get_record(['cmid' => $data->cmid]);
-                if ($record !== false && $record->get('enabled') == \local_annoto\completion::COMPLETION_TRACKING_AUTOMATIC) {
+                $record = annoto_completion::get_record(['cmid' => $data->cmid]);
+                if ($record !== false && $record->get('enabled') == annoto_completion::COMPLETION_TRACKING_AUTOMATIC) {
                     $status = true;
-                    if ($completiondata = \local_annoto\completiondata::get_record(['completionid' => $record->get('id'), 'userid' => $USER->id])) {
+                    if ($completiondata = annoto_completion::get_record(['completionid' => $record->get('id'), 'userid' => $USER->id])) {
                         $jsondata2 = json_encode($data);
                         $completiondata->set('data', $jsondata2);
                         $completiondata->update();
@@ -136,7 +139,7 @@ class local_annoto_external extends external_api {
                             'completionid' => $record->get('id'),
                             'data' => $jsondata
                         ];
-                        $completiondata = new \local_annoto\completiondata(0, (object) $record);
+                        $completiondata = new annoto_completiondata(0, (object) $record);
                         $completiondata->create();
                         $message = "Set completion for user {$USER->id} modid {$data->cmid} completion {$data->completion}";
                     }

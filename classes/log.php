@@ -18,47 +18,30 @@
 /**
  * @package    local
  * @subpackage annoto
- * @copyright  2021 Devlion.co
- * @author  Evgeniy Voevodin
+ * @copyright  2024 annoto.net
+ * @author  Genadi Sokolov
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 namespace local_annoto;
 
-use core\persistent;
-
 defined('MOODLE_INTERNAL') || die();
 
-class annoto_completiondata extends persistent
+class log
 {
-    const TABLE = 'local_annoto_completiondata';
-
-    static function get_enabled_menu() {
-        return [
-            COMPLETION_TRACKING_NONE => get_string('completion_none', 'completion'),
-            COMPLETION_TRACKING_AUTOMATIC => get_string('completion_automatic', 'completion'),
-        ];
+    static function debug($message = '') {
+        debugging('Annoto: ' . $message, DEBUG_DEVELOPER);
     }
 
-    /**
-     * Return the list of properties.
-     *
-     * @return array
-     */
-    protected static function define_properties()
-    {
-        return [
-            'completionid' => array(
-                'type' => PARAM_INT,
-            ),
-            'userid' => array(
-                'type' => PARAM_INT,
-            ),
-            'data' => array(
-                'type' => PARAM_RAW,
-            )
-        ];
+    static function info($message = '') {
+        debugging('Annoto: ' . $message, DEBUG_ALL);
+    }
+
+    static function warning($message = '') {
+        debugging('Annoto: ' . $message, DEBUG_NORMAL);
+    }
+
+    static function error($message = '') {
+        debugging('Annoto: ' . $message, DEBUG_MINIMAL);
     }
 }
-
-

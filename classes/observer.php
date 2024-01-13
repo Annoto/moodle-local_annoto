@@ -24,9 +24,12 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+ defined('MOODLE_INTERNAL') || die();
+
 namespace local_annoto;
 
-defined('MOODLE_INTERNAL') || die();
+use \local_annoto\annoto_completion;
+use \local_annoto\annoto_completiondata;
 
 /**
  * Event observers supported by this module
@@ -46,7 +49,7 @@ class observer {
      * @return void
      */
     public static function course_module_deleted(\core\event\course_module_deleted $event) {
-        if ($records = \local_annoto\completion::get_records(['cmid' => $event->objectid])) {
+        if ($records = annoto_completion::get_records(['cmid' => $event->objectid])) {
             foreach ($records as $record) {
                 $record->delete();
             }
@@ -64,8 +67,8 @@ class observer {
         $modinfo = get_fast_modinfo($event->courseid);
 
         foreach ($modinfo->get_cms() as $cmid => $cm_info) {
-            if ($record = \local_annoto\completion::get_record(['cmid' => $cmid])) {
-                foreach (\local_annoto\completiondata::get_records(['completionid' => $record->get('id'), 'userid' => $event->relateduserid]) as $data) {
+            if ($record = annoto_completion::get_record(['cmid' => $cmid])) {
+                foreach (annoto_completiondata::get_records(['completionid' => $record->get('id'), 'userid' => $event->relateduserid]) as $data) {
                     $data->delete();
                 }
             }

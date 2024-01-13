@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<XMLDB PATH="local/annoto/db" VERSION="20161026" COMMENT="XMLDB file for Moodle local/annoto"
+<XMLDB PATH="local/annoto/db" VERSION="20240107" COMMENT="XMLDB file for Moodle local/annoto"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:noNamespaceSchemaLocation="../../../lib/xmldb/xmldb.xsd"
 >
@@ -7,32 +7,37 @@
     <TABLE NAME="local_annoto_completion" COMMENT="annoto completion cm settings">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="course" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="course id"/>
         <FIELD NAME="cmid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="course module id"/>
         <FIELD NAME="enabled" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Enabled annoto completion"/>
-        <FIELD NAME="view" TYPE="int" LENGTH="3" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Viewed percentage"/>
+        <FIELD NAME="totalview" TYPE="int" LENGTH="3" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="total Viewed completion percentage"/>
         <FIELD NAME="comments" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Required comments"/>
         <FIELD NAME="replies" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Required replies"/>
-        <FIELD NAME="completionexpected" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false" COMMENT="Expected by"/>
-        <FIELD NAME="usermodified" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="completionexpected" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false" COMMENT="Set reminder in Timeline"/>
+        <FIELD NAME="usermodified" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="The user id that last modified this record"/>
         <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
         <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
       </KEYS>
+      <INDEXES>
+        <INDEX NAME="course" UNIQUE="false" FIELDS="course"/>
+        <INDEX NAME="cmid" UNIQUE="false" FIELDS="cmid"/>
+      </INDEXES>
     </TABLE>
     <TABLE NAME="local_annoto_completiondata" COMMENT="annoto completion user data">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
-        <FIELD NAME="completionid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="course module id"/>
+        <FIELD NAME="completionid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="course module id"/>
         <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="user id"/>
-        <FIELD NAME="data" TYPE="binary" LENGTH="medium" NOTNULL="false" SEQUENCE="false" COMMENT="Data"/>
-        <FIELD NAME="usermodified" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="data" TYPE="binary" NOTNULL="false" SEQUENCE="false" COMMENT="Data"/>
         <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
         <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="completionid" TYPE="foreign" FIELDS="completionid" REFTABLE="local_annoto_completion" REFFIELDS="id" COMMENT="Reference to the local_annoto_completion table row"/>
       </KEYS>
     </TABLE>
   </TABLES>

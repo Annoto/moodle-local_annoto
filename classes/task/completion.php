@@ -22,9 +22,12 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+defined('MOODLE_INTERNAL') || die();
+
 namespace local_annoto\task;
 
-defined('MOODLE_INTERNAL') || die();
+use \local_annoto\annoto_completion;
+use \local_annoto\annoto_completiondata;
 
 /**
  * The local_annoto cache task class.
@@ -54,30 +57,28 @@ class completion extends \core\task\scheduled_task {
         global $CFG, $DB;
         require_once($CFG->libdir . "/completionlib.php");
 
-        $records = \local_annoto\completion::get_records(['enabled' => \local_annoto\completion::COMPLETION_TRACKING_AUTOMATIC]);
+        // TODO: add logic for cleaning up in case $settings->activitycompletion is set to false or true. what should we do in this case?
+        $records = annoto_completion::get_records(['enabled' => annoto_completion::COMPLETION_TRACKING_AUTOMATIC]);
         foreach ($records as $record) {
             if ($record->get('cmid') > 0) {
                 list($course, $cm) = get_course_and_cm_from_cmid($record->get('cmid'));
                 $completion = new \completion_info($course);
-                foreach ($completiondatas = \local_annoto\completiondata::get_records(['completionid' => $record->get('id')]) as $completiondata) {
+                foreach ($completiondatas = annoto_completiondata::get_records(['completionid' => $record->get('id')]) as $completiondata) {
                     $currentdata = $completion->get_data($cm, 0, $completiondata->get('userid'));
                     if (!$currentdata->completionstate) {
                         $data = json_decode($completiondata->get('data'));
                         $completed = true;
-                        if($record->get('view') <= 0 && $record->get('comments') <= 0 && $record->get('replies') <= 0 && $record->get('completionexpected') <= 0){
+                        if($record->get('totalview') <= 0 && $record->get('comments') <= 0 && $record->get('replies') <= 0){
                             $completed = false;
                         }
-                        if ($record->get('view') > 0 && $completed) {
-                            $completed = $record->get('view') <= $data->completion;
+                        if ($record->get('totalview') > 0 && $completed) {
+                            $completed = $record->get('totalview') <= $data->completion;
                         }
                         if ($record->get('comments') > 0 && $completed) {
                             $completed = $record->get('comments') <= $data->comments;
                         }
                         if ($record->get('replies') > 0 && $completed) {
                             $completed = $record->get('replies') <= $data->replies;
-                        }
-                        if ($record->get('completionexpected') > 0 && $completed) {
-                            $completed = $record->get('completionexpected') >= $record->get('timemodified');
                         }
                         if ($completed) {
                             $completion->update_state($cm, COMPLETION_COMPLETE, $completiondata->get('userid'));

@@ -28,80 +28,58 @@ function xmldb_local_annoto_upgrade($oldversion = 0) {
     global $DB;
     $dbman = $DB->get_manager();
 
-    if ($oldversion < 2021051001) {
-        // Rename table format_topcoll_layout if it exists.
+    if ($oldversion < 2024010700) {
+
+        // Define table local_annoto_completion to be created.
         $table = new xmldb_table('local_annoto_completion');
 
+        // Adding fields to table local_annoto_completion.
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+        $table->add_field('course', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+        $table->add_field('cmid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+        $table->add_field('enabled', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '0');
+        $table->add_field('totalview', XMLDB_TYPE_INTEGER, '3', null, XMLDB_NOTNULL, null, '0');
+        $table->add_field('comments', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+        $table->add_field('replies', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+        $table->add_field('completionexpected', XMLDB_TYPE_INTEGER, '10', null, null, null, null);
+        $table->add_field('usermodified', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('timecreated', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('timemodified', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+
+        // Adding keys to table local_annoto_completion.
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
+
+        // Adding indexes to table local_annoto_completion.
+        $table->add_index('course', XMLDB_INDEX_NOTUNIQUE, ['course']);
+        $table->add_index('cmid', XMLDB_INDEX_NOTUNIQUE, ['cmid']);
+
+        // Conditionally launch create table for local_annoto_completion.
         if (!$dbman->table_exists($table)) {
-            // Adding fields.
-            $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
-            $table->add_field('module', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
-            $table->add_field('type', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
-            $table->add_field('grade', XMLDB_TYPE_INTEGER, '10', null, null, null, null);
-            $table->add_field('timecreated', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
-            $table->add_field('timemodified', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
-
-            // Adding key.
-            $table->add_key('primary', XMLDB_KEY_PRIMARY, array('id'));
-
-            $table->add_index('module', XMLDB_INDEX_NOTUNIQUE, ['module']);
-
-            // Create table.
             $dbman->create_table($table);
         }
 
-        upgrade_plugin_savepoint(true, 2021051001, 'local', 'annoto');
-    }
-
-    if ($oldversion < 2021102500) {
-        // Rename table format_topcoll_layout if it exists.
-        $table = new xmldb_table('local_annoto_completion');
-        if ($dbman->table_exists($table)) {
-            $dbman->drop_table($table);
-        }
-
-        $table = new xmldb_table('local_annoto_completion');
-
-        if (!$dbman->table_exists($table)) {
-            // Adding fields.
-            $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE);
-            $table->add_field('cmid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, 0);
-            $table->add_field('enabled', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, 0);
-            $table->add_field('view', XMLDB_TYPE_INTEGER, '3', null, XMLDB_NOTNULL, null, 0);
-            $table->add_field('completionexpected', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, 0);
-            $table->add_field('comments', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, 0);
-            $table->add_field('replies', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, 0);
-            $table->add_field('usermodified', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, 0);
-            $table->add_field('timecreated', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, 0);
-            $table->add_field('timemodified', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, 0);
-
-            // Adding key.
-            $table->add_key('primary', XMLDB_KEY_PRIMARY, array('id'));
-
-            // Create table.
-            $dbman->create_table($table);
-        }
-
+        // Define table local_annoto_completiondata to be created.
         $table = new xmldb_table('local_annoto_completiondata');
 
+        // Adding fields to table local_annoto_completiondata.
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+        $table->add_field('completionid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('userid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+        $table->add_field('data', XMLDB_TYPE_BINARY, null, null, null, null, null);
+        $table->add_field('timecreated', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('timemodified', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+
+        // Adding keys to table local_annoto_completiondata.
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
+        $table->add_key('completionid', XMLDB_KEY_FOREIGN, ['completionid'], 'local_annoto_completion', ['id']);
+
+        // Conditionally launch create table for local_annoto_completiondata.
         if (!$dbman->table_exists($table)) {
-            // Adding fields.
-            $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE);
-            $table->add_field('completionid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, 0);
-            $table->add_field('userid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, 0);
-            $table->add_field('data', XMLDB_TYPE_BINARY, 'medium');
-            $table->add_field('usermodified', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, 0);
-            $table->add_field('timecreated', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, 0);
-            $table->add_field('timemodified', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, 0);
-
-            // Adding key.
-            $table->add_key('primary', XMLDB_KEY_PRIMARY, array('id'));
-
-            // Create table.
             $dbman->create_table($table);
         }
 
-        upgrade_plugin_savepoint(true, 2021102500, 'local', 'annoto');
+        // Annoto savepoint reached.
+        upgrade_plugin_savepoint(true, 2024010700, 'local', 'annoto');
     }
 
     return true;
