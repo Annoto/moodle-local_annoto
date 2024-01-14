@@ -231,7 +231,9 @@ function local_annoto_get_jsparam($courseid, $modid) {
         'mediaGroupTitle' => $course->fullname,
         'mediaGroupDescription' => $course->summary,
         'locale' => $settings->locale ? local_annoto_get_lang($course) : false,
-        'cmId' => $modid ?? null,
+        'cmid' => $modid ?? null,
+        'moodleVersion' => $CFG->version,
+        'moodleRelease' => $CFG->release,
     );
 
     return $jsparams;
@@ -564,6 +566,7 @@ function local_annoto_get_all_dashboard_roles() {
  */
 function local_annoto_set_jslog($log = '') {
     global $PAGE;
+    global $CFG;
     $themename = $PAGE->theme->get_theme_name();
     $pluginmanager = core_plugin_manager::instance();
     $plugininfo = $pluginmanager->get_plugin_info('local_annoto');
@@ -571,9 +574,10 @@ function local_annoto_set_jslog($log = '') {
     $release = $plugininfo->release;
 
     $jscode = "(function () {
-        console.dir('AnnotoBackend: version " . $release . ' - ' . $version . "');
-        console.dir('AnnotoBackend: theme " . $themename . "');
-        console.dir('AnnotoBackend: " . $log . "');
+        console.dir('AnnotoBackend: Moodle version ". $CFG->release ."');
+        console.dir('AnnotoBackend: Plugin version ". $release . ' - ' . $version ."');
+        console.dir('AnnotoBackend: theme ". $themename ."');
+        console.dir('AnnotoBackend: ". $log ."');
     }());";
     $PAGE->requires->js_amd_inline($jscode);
 }
