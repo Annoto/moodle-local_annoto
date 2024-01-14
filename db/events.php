@@ -16,9 +16,9 @@
 
 /**
  * @package local_annoto
- * @author Mike Churchward <mike.churchward@poetgroup.org>
+ * @copyright 2024 annoto.net
+ * @author  Genadi sokolov
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @copyright 2016 POET
  */
 
 defined('MOODLE_INTERNAL') || die;
@@ -26,10 +26,10 @@ defined('MOODLE_INTERNAL') || die;
 $observers = [
     [
         'eventname' => '\core\event\course_module_deleted',
-        'callback' => 'local_annoto\observer::course_module_deleted'
+        'callback' => '\local_annoto\observer::course_module_deleted'
     ],
     [
         'eventname' => '\core\event\user_enrolment_deleted',
-        'callback' => 'local_annoto\observer::user_enrolment_deleted'
+        'callback' => '\local_annoto\observer::user_enrolment_deleted'
     ],
 ];

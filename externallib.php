@@ -26,6 +26,9 @@ defined('MOODLE_INTERNAL') || die;
 require_once($CFG->libdir . "/externallib.php");
 require_once($CFG->dirroot . "/local/annoto/lib.php");
 
+require_once(__DIR__ . '/classes/completion.php');
+require_once(__DIR__ . '/classes/completiondata.php');
+
 use \local_annoto\annoto_completion;
 use \local_annoto\annoto_completiondata;
 
@@ -128,7 +131,7 @@ class local_annoto_external extends external_api {
                 $record = annoto_completion::get_record(['cmid' => $data->cmid]);
                 if ($record !== false && $record->get('enabled') == annoto_completion::COMPLETION_TRACKING_AUTOMATIC) {
                     $status = true;
-                    if ($completiondata = annoto_completion::get_record(['completionid' => $record->get('id'), 'userid' => $USER->id])) {
+                    if ($completiondata = annoto_completiondata::get_record(['completionid' => $record->get('id'), 'userid' => $USER->id])) {
                         $jsondata2 = json_encode($data);
                         $completiondata->set('data', $jsondata2);
                         $completiondata->update();

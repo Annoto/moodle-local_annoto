@@ -17,14 +17,17 @@
 /**
  * @package    local
  * @subpackage annoto
- * @copyright  2021 Devlion.co
- * @author  Evgeniy Voevodin
+ * @copyright  2024 annoto.net
+ * @author     Genadi sokolov
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+namespace local_annoto\task;
+
 defined('MOODLE_INTERNAL') || die();
 
-namespace local_annoto\task;
+require_once(__DIR__ . '/../completion.php');
+require_once(__DIR__ . '/../completiondata.php');
 
 use \local_annoto\annoto_completion;
 use \local_annoto\annoto_completiondata;

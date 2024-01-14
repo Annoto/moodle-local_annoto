@@ -19,27 +19,21 @@
  *
  * @package    local
  * @subpackage annoto
- * @copyright  2021 Devlion.co
- * @author  Evgeniy Voevodin
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @copyright 2024 annoto.net
+ * @author  Genadi sokolov
+ * @license  http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+
+ namespace local_annoto;
 
  defined('MOODLE_INTERNAL') || die();
 
-namespace local_annoto;
+require_once(__DIR__ . '/completion.php');
+require_once(__DIR__ . '/completiondata.php');
 
 use \local_annoto\annoto_completion;
 use \local_annoto\annoto_completiondata;
 
-/**
- * Event observers supported by this module
- *
- * @package    local
- * @subpackage annoto
- * @copyright  2021 Devlion.co
- * @author  Evgeniy Voevodin
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
 class observer {
 
     /**
@@ -63,14 +57,12 @@ class observer {
      * @return bool true on success.
      */
     public static function user_enrolment_deleted(\core\event\user_enrolment_deleted $event) {
+        $comprecords = annoto_completion::get_records(['courseid' => $event->courseid]);
 
-        $modinfo = get_fast_modinfo($event->courseid);
-
-        foreach ($modinfo->get_cms() as $cmid => $cm_info) {
-            if ($record = annoto_completion::get_record(['cmid' => $cmid])) {
-                foreach (annoto_completiondata::get_records(['completionid' => $record->get('id'), 'userid' => $event->relateduserid]) as $data) {
-                    $data->delete();
-                }
+        // TODO: optimize this
+        foreach ($comprecords as $record) {
+            foreach (annoto_completiondata::get_records(['completionid' => $record->get('id'), 'userid' => $event->relateduserid]) as $data) {
+                $data->delete();
             }
         }
 

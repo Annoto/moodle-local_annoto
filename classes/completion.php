@@ -18,14 +18,14 @@
 /**
  * @package    local
  * @subpackage annoto
- * @copyright  2021 Devlion.co
- * @author  Evgeniy Voevodin
+ * @copyright  2024 annoto.net
+ * @author     Genadi sokolov
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+ namespace local_annoto;
+
  defined('MOODLE_INTERNAL') || die();
- 
-namespace local_annoto;
 
 use core\persistent;
 use \local_annoto\annoto_completiondata;
@@ -52,6 +52,10 @@ class annoto_completion extends persistent
     protected static function define_properties()
     {
         return[
+            'courseid' => array(
+                'type' => PARAM_INT,
+                'default' => 0,
+            ),
             'cmid' => array(
                 'type' => PARAM_INT,
             ),
@@ -69,13 +73,15 @@ class annoto_completion extends persistent
             ),
             'completionexpected' => array(
                 'type' => PARAM_INT,
+                'default' => null,
+                'null' => NULL_ALLOWED,
             ),
         ];
     }
 
-    // TODO: check if needed with foreign keys defined
     public function after_delete($result)
     {
+        // TODO: oprimize this
         if ($records = annoto_completiondata::get_records(['completionid' => $this->raw_get('id')])) {
             foreach ($records as $record) {
                 $record->delete();

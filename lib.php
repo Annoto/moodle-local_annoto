@@ -41,6 +41,8 @@ if (!defined('DEFAULTHEIGHT')) define('DEFAULTHEIGHT', 480);
 
 
 require_once($CFG->libdir . '/completionlib.php');
+require_once(__DIR__ . '/classes/completion.php');
+require_once(__DIR__ . '/classes/log.php');
 
 use \local_annoto\log;
 use \local_annoto\annoto_completion;
@@ -586,7 +588,6 @@ function local_annoto_set_jslog($log = '') {
  * Note: original completion form is located in moodle/completion/classes/form/form_trait.php
  */
 function local_annoto_coursemodule_standard_elements($formwrapper, $mform) {
-    global $COURSE;
 
     $settings = get_config('local_annoto');
 
@@ -639,12 +640,6 @@ function local_annoto_coursemodule_standard_elements($formwrapper, $mform) {
     print_r($completionOptions);
     echo "</pre>"; */
 
-    // locking elements
-    $unlockcompletionel = 'annotounlockcompletion';
-    $completionunlockedel = 'annotocompletionunlocked';
-    $completedunlockedel = 'annotocompletedunlocked';
-    $completedwarningel = 'annotocompletedwarning';
-
     $completionenabledel = 'annotocompletionenabled';
     $completionview = 'annotocompletionview';
     $completioncomments = 'annotocompletioncomments';
@@ -652,11 +647,6 @@ function local_annoto_coursemodule_standard_elements($formwrapper, $mform) {
     // $completionexpected = 'annotocompletionexpected';
     $enabledel = 'enabled';
     $valueel = 'value';
-
-    $mform->addElement('submit', $unlockcompletionel, get_string('unlockcompletion', 'completion'));
-    $mform->registerNoSubmitButton($unlockcompletionel);
-    $mform->addElement('hidden', $completionunlockedel, 0);
-    $mform->setType($completionunlockedel, PARAM_INT);
 
     $completionmenu = annoto_completion::get_enabled_menu();
     $mform->addElement('select', $completionenabledel, get_string('completionenabled', 'local_annoto'), $completionmenu);
@@ -735,74 +725,6 @@ function local_annoto_coursemodule_standard_elements($formwrapper, $mform) {
     );
 
     // $mform->addElement('date_time_selector', $completionexpected, get_string($completionexpected, 'local_annoto'), ['optional' => true]);
-
-    $completion = new completion_info($COURSE);
-
-    log::debug('start check of completedunlocked and freeze: ' . print_r($mform, true));
-
-    // If anybody has completed the activity, lock the options.
-    // see definition_after_data_completion() in moodle/completion/classes/form/form_trait.php
-    if ($completion->is_enabled()) {
-        $completedcount = empty($cmid) || !isset($cmid) ? 0 : $completion->count_user_data($cm);
-
-        $freeze = false;
-        if (!$completedcount) {
-            if ($mform->elementExists($unlockcompletionel)) {
-                $mform->removeElement($unlockcompletionel);
-            }
-            // Automatically set to unlocked. Note: this is necessary in order to make it recalculate completion once
-            // the option is changed, maybe someone has completed it now.
-            if ($mform->elementExists($completionunlockedel)) {
-                $mform->getElement($completionunlockedel)->setValue(1);
-            }
-        } else {
-            // Has the element been unlocked, either by the button being pressed
-            // in this request, or the field already being set from a previous one?
-            if ($mform->exportValue($unlockcompletionel) || $mform->exportValue($completionunlockedel)) {
-                // Yes, add in warning text and set the hidden variable
-                $mform->insertElementBefore(
-                    $mform->createElement(
-                        'static',
-                        $completedunlockedel,
-                        get_string('completedunlocked', 'completion'),
-                        get_string('completedunlockedtext', 'completion')
-                    ),
-                    $unlockcompletionel
-                );
-                $mform->removeElement($unlockcompletionel);
-                $mform->getElement($completionunlockedel)->setValue(1);
-            } else {
-                // No, add in the warning text with the count (now we know it) before the unlock button.
-                $mform->insertElementBefore(
-                    $mform->createElement(
-                        'static',
-                        $completedwarningel,
-                        get_string('completedwarning', 'completion'),
-                        get_string('completedwarningtext', 'completion', $completedcount)
-                    ),
-                    $unlockcompletionel
-                );
-                $freeze = true;
-            }
-        }
-
-        if ($freeze) {
-            $mform->freeze($completionenabledel);
-            if ($mform->elementExists($completionview)) {
-                // don't use hardFreeze or checkbox value gets lost
-                $mform->freeze($completionview);
-            }
-            if ($mform->elementExists($completioncomments)) {
-                $mform->freeze($completioncomments);
-            }
-            if ($mform->elementExists($completionreplies)) {
-                $mform->freeze($completionreplies);
-            }
-            /* if ($mform->elementExists($completionexpected)) {
-                $mform->freeze($completionexpected);
-            } */
-        }
-    }
 }
 
 /**
@@ -829,28 +751,29 @@ function local_annoto_coursemodule_edit_post_actions($data, $course) {
         $completioncomments = $data->annotocompletioncomments;
         $completionreplies = $data->annotocompletionreplies;
         // $completionexpected = $data->annotocompletionexpected;
-        $completionunlocked = $data->annotocompletionunlocked;
-        $completiondata = new stdClass();
-        $completiondata->cmid = $cmid;
-        $completiondata->enabled  = $completionenabled;
-        $completiondata->totalview  = $completionview['enabled'] ? $completionview['value'] : 0;
-        $completiondata->comments  = $completioncomments['enabled'] ? $completioncomments['value'] : 0;
-        $completiondata->replies  = $completionreplies['enabled'] ? $completionreplies['value'] : 0;
+        $completionrecord = new stdClass();
+        // $completionrecord->id = $data->completionid ?? 0;
+        $completionrecord->courseid = $course->id;
+        $completionrecord->cmid = $cmid;
+        $completionrecord->enabled  = $completionenabled;
+        $completionrecord->totalview  = $completionview['enabled'] ? $completionview['value'] : 0;
+        $completionrecord->comments  = $completioncomments['enabled'] ? $completioncomments['value'] : 0;
+        $completionrecord->replies  = $completionreplies['enabled'] ? $completionreplies['value'] : 0;
         // $completiondata->completionexpected  = $completionexpected;
 
-        log::debug('coursemodule_edit_post_actions - completiondata: ' . print_r($completiondata, true));
+        log::debug('coursemodule_edit_post_actions - completiondata: ' . print_r($completionrecord, true));
 
         if (!$record = annoto_completion::get_record(['cmid' => $cmid])) {
-            $record = new annoto_completion(0, $completiondata);
+            $record = new annoto_completion(0, $completionrecord);
             $record->create();
         } else {
-            $record->from_record($completiondata);
+            $record->from_record($completionrecord);
             $record->update();
         }
 
         $completiontracking = $data->completion;
         if ($completionenabled == annoto_completion::COMPLETION_TRACKING_AUTOMATIC) {
-            $completiontracking = $completionenabled + 6; // 7, 8 means Annoto completion.
+            $completiontracking = annoto_completion::COMPLETION_TRACKING_AUTOMATIC; // 7, 8 means Annoto completion.
         }
 
         if ($cm = $DB->get_record('course_modules', ['id' => $cmid])) {
