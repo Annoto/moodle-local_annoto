@@ -23,14 +23,15 @@
  */
 defined('MOODLE_INTERNAL') || die;
 
-require_once($CFG->libdir . "/externallib.php");
-require_once($CFG->dirroot . "/local/annoto/lib.php");
-
+require_once($CFG->libdir . '/externallib.php');
+require_once(__DIR__ . '/lib.php');
 require_once(__DIR__ . '/classes/completion.php');
 require_once(__DIR__ . '/classes/completiondata.php');
+require_once(__DIR__ . '/classes/log.php');
 
 use \local_annoto\annoto_completion;
 use \local_annoto\annoto_completiondata;
+use \local_annoto\log;
 
 /**
  * Class local_annoto_external
@@ -103,17 +104,12 @@ class local_annoto_external extends external_api {
 
     /**
      * @param $jsondata
-     * @return array result of submittion
-     * @throws \core\invalid_persistent_exception
-     * @throws coding_exception
-     * @throws dml_exception
-     * @throws invalid_parameter_exception
-     * @throws moodle_exception
+     * @return array result of set_completion
      */
     public static function set_completion($jsondata) {
-        global $DB,$CFG, $USER;
-        require_once($CFG->libdir . "/completionlib.php");
-        $params = self::validate_parameters(self::set_completion_parameters(),
+        global $USER;
+        
+        self::validate_parameters(self::set_completion_parameters(),
             array(
                 'data' => $jsondata,
             )
@@ -121,35 +117,52 @@ class local_annoto_external extends external_api {
 
         $data = json_decode($jsondata);
         $status = false;
-        $message = 'Completion not defined';
+        $message = 'user completion not saved';
+        $userid = $USER->id;
 
         if (isset($data->cmid) && !empty($data->cmid)) {
-            list($course, $cm) = get_course_and_cm_from_cmid($data->cmid);
-            $enrolled = static::get_enrolled_userids($course->id);
+            $cmid = $data->cmid;
+            $cleandata = new stdClass();
+            $cleandata->completion = isset($data->completion) ? $data->completion : 0;
+            $cleandata->comments = isset($data->comments) ? $data->comments : 0;
+            $cleandata->replies = isset($data->replies) ? $data->replies : 0;
+            $cleandata->heatmap = isset($data->heatmap) ? $data->heatmap : null;
+            $cleandata->watch_time = isset($data->watch_time) ? $data->watch_time : null;
+            $cleandata->media_src = isset($data->media_src) ? $data->media_src : null;
+            $cleandata->session_id = isset($data->session_id) ? $data->session_id : null;
+            $cleandata->group_id = isset($data->group_id) ? $data->group_id : null;
+            $cleandata->sso_id = isset($data->sso_id) ? $data->sso_id : null;
+            $cleandata->widget_index = isset($data->widget_index) ? $data->widget_index : null;
 
-            if (in_array($USER->id, $enrolled)) {
-                $record = annoto_completion::get_record(['cmid' => $data->cmid]);
-                if ($record !== false && $record->get('enabled') == annoto_completion::COMPLETION_TRACKING_AUTOMATIC) {
-                    $status = true;
-                    if ($completiondata = annoto_completiondata::get_record(['completionid' => $record->get('id'), 'userid' => $USER->id])) {
-                        $jsondata2 = json_encode($data);
-                        $completiondata->set('data', $jsondata2);
+            list($course, $cm) = get_course_and_cm_from_cmid($cmid);
+            $context = \context_course::instance($course->id);
+
+            if (is_enrolled($context, $USER, '', true)) {
+                $completionrecord = annoto_completion::get_record(['cmid' => $cmid]);
+                if ($completionrecord && $completionrecord->get('enabled') === annoto_completion::COMPLETION_TRACKING_AUTOMATIC) {
+                    $completionid = $completionrecord->get('id');
+                    
+                    if ($completiondata = annoto_completiondata::get_record(['completionid' => $completionid, 'userid' => $userid])) {
+                        $completiondata->set('data', json_encode($cleandata));
                         $completiondata->update();
-                        $message = "Update completion for user {$USER->id} modid {$data->cmid} completion {$data->completion}";
+                        $message = 'Updated completion for user '. $userid . ' cmid ' . $cmid;
                     } else {
-                        $record = [
-                            'userid' => $USER->id,
-                            'completionid' => $record->get('id'),
-                            'data' => $jsondata
+                        $record = (object) [
+                            'userid' => $userid,
+                            'completionid' => $completionid,
+                            'data' => json_encode($cleandata),
                         ];
-                        $completiondata = new annoto_completiondata(0, (object) $record);
+                        $completiondata = new annoto_completiondata(0, $record);
                         $completiondata->create();
-                        $message = "Set completion for user {$USER->id} modid {$data->cmid} completion {$data->completion}";
+                        $message = 'Set completion for user ' . $userid . ' cmid ' . $cmid;
                     }
+                    $status = true;
                 }
             }
         }
 
+        log::debug('set_completion - ' . $message . ($status ? ' data ' . print_r($cleandata, true) : ''));
+        
         return ['status' => $status, 'message' => $message];
     }
 
@@ -162,24 +175,5 @@ class local_annoto_external extends external_api {
             'status' => new external_value(PARAM_BOOL, 'The processing result'),
             'message' => new external_value(PARAM_TEXT, 'Message'),
         ]);
-    }
-
-    /**
-     * Returns array of user ids enrolled into this course with gradebook roles
-     * @param $courseid
-     * @return array
-     * @throws coding_exception
-     * @throws dml_exception
-     */
-    public static function get_enrolled_userids($courseid) {
-        global $DB, $CFG;
-
-        $context = \context_course::instance($courseid);
-
-        list($gradebookroles_sql, $params) = $DB->get_in_or_equal(explode(',', $CFG->gradebookroles), SQL_PARAMS_NAMED, 'grbr');
-        $params['contextid'] = $context->id;
-        $sql = "SELECT DISTINCT ra.userid FROM {role_assignments} ra WHERE ra.roleid $gradebookroles_sql AND contextid = :contextid";
-
-        return $DB->get_fieldset_sql($sql, $params);
     }
 }
