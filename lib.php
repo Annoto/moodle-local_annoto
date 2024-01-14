@@ -636,10 +636,6 @@ function local_annoto_coursemodule_standard_elements($formwrapper, $mform) {
         }
     }
 
-    /* echo "<pre>----completionOptions---";
-    print_r($completionOptions);
-    echo "</pre>"; */
-
     $completionenabledel = 'annotocompletionenabled';
     $completionview = 'annotocompletionview';
     $completioncomments = 'annotocompletioncomments';
@@ -752,7 +748,6 @@ function local_annoto_coursemodule_edit_post_actions($data, $course) {
         $completionreplies = $data->annotocompletionreplies;
         // $completionexpected = $data->annotocompletionexpected;
         $completionrecord = new stdClass();
-        // $completionrecord->id = $data->completionid ?? 0;
         $completionrecord->courseid = $course->id;
         $completionrecord->cmid = $cmid;
         $completionrecord->enabled  = $completionenabled;
@@ -773,14 +768,14 @@ function local_annoto_coursemodule_edit_post_actions($data, $course) {
 
         $completiontracking = $data->completion;
         if ($completionenabled == annoto_completion::COMPLETION_TRACKING_AUTOMATIC) {
-            $completiontracking = annoto_completion::COMPLETION_TRACKING_AUTOMATIC; // 7, 8 means Annoto completion.
+            $completiontracking = annoto_completion::COMPLETION_TRACKING_AUTOMATIC;
         }
 
         if ($cm = $DB->get_record('course_modules', ['id' => $cmid])) {
-            $cm->completion = $completiontracking; // TODO: need to cleanup this override if $settings->activitycompletio changes to false for all the courses
+            $cm->completion = $completiontracking; // TODO: need to cleanup this override if $settings->activitycompletion changes to false for all the courses
             $DB->update_record('course_modules', $cm);
 
-            // See edit_module_post_actions() in moodle/course/modlib.php coursemodule_edit_post_actions is callsed after edit_module_post_actions() clears the cache
+            // See edit_module_post_actions() in moodle/course/modlib.php coursemodule_edit_post_actions is called after edit_module_post_actions() clears the cache
             // because we change the cm we need to clear it again 
             \course_modinfo::purge_course_module_cache($cm->course, $cmid);
             rebuild_course_cache($cm->course, true, true);
