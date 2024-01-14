@@ -18,8 +18,8 @@
 /**
  * @package    local
  * @subpackage annoto
- * @copyright  2021 Devlion.co
- * @author  Evgeniy Voevodin
+ * @copyright  2024 annoto.net
+ * @author     Genadi sokolov
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -32,13 +32,6 @@ defined('MOODLE_INTERNAL') || die();
 class annoto_completiondata extends persistent
 {
     const TABLE = 'local_annoto_completiondata';
-
-    static function get_enabled_menu() {
-        return [
-            COMPLETION_TRACKING_NONE => get_string('completion_none', 'completion'),
-            COMPLETION_TRACKING_AUTOMATIC => get_string('completion_automatic', 'completion'),
-        ];
-    }
 
     /**
      * Return the list of properties.
