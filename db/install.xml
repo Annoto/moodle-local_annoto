@@ -24,6 +24,7 @@
       <INDEXES>
         <INDEX NAME="cmid" UNIQUE="true" FIELDS="cmid"/>
         <INDEX NAME="courseid" UNIQUE="false" FIELDS="courseid"/>
+        <INDEX NAME="enabled" UNIQUE="false" FIELDS="enabled" COMMENT="Index to quickly find only active records"/>
       </INDEXES>
     </TABLE>
     <TABLE NAME="local_annoto_completiondata" COMMENT="annoto completion user data">

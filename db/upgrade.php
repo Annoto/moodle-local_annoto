@@ -52,6 +52,7 @@ function xmldb_local_annoto_upgrade($oldversion = 0) {
         // Adding indexes to table local_annoto_completion.
         $table->add_index('cmid', XMLDB_INDEX_UNIQUE, ['cmid']);
         $table->add_index('courseid', XMLDB_INDEX_NOTUNIQUE, ['courseid']);
+        $table->add_index('enabled', XMLDB_INDEX_NOTUNIQUE, ['enabled']);
 
         // Conditionally launch create table for local_annoto_completion.
         if (!$dbman->table_exists($table)) {
