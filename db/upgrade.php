@@ -83,7 +83,7 @@ function xmldb_local_annoto_upgrade($oldversion = 0) {
         }
 
         // Annoto savepoint reached.
-        upgrade_plugin_savepoint(true, 2024010700, 'local', 'annoto');
+        upgrade_plugin_savepoint(true, 2024011000, 'local', 'annoto');
     }
 
     return true;
