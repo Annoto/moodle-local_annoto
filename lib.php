@@ -653,8 +653,6 @@ function local_annoto_coursemodule_standard_elements($formwrapper, $mform) {
     $completioncomments = 'annotocompletioncomments';
     $completionreplies = 'annotocompletionreplies';
     // $completionexpected = 'annotocompletionexpected';
-    $enabledel = 'enabled';
-    $valueel = 'value';
 
     $completionmenu = annoto_completion::get_enabled_menu();
     $mform->addElement('select', $completionenabledel, get_string('completionenabled', 'local_annoto'), $completionmenu);
@@ -662,12 +660,9 @@ function local_annoto_coursemodule_standard_elements($formwrapper, $mform) {
     $mform->disabledIf($completionenabledel, 'completion', 'noteq', 0);
     $mform->disabledIf('completion', $completionenabledel, 'noteq', annoto_completion::COMPLETION_TRACKING_NONE);
 
-    $add_group = function ($groupname, $value, $valuerules, $info) use (
-        $mform,
-        $enabledel,
-        $completionenabledel,
-        $valueel,
-    ) {
+    $add_group = function ($groupname, $value, $valuerules, $info) use ($mform, $completionenabledel) {
+        $enabledel = 'enabled';
+        $valueel = 'value';
         $get_value_in_group = function ($groupname) use ($valueel) {
             return $groupname . '[' . $valueel . ']';
         };
