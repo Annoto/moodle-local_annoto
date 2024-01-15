@@ -17,8 +17,7 @@
 /**
  * @package    local
  * @subpackage annoto
- * @copyright  2024 annoto.net
- * @author     Genadi sokolov
+ * @copyright  Annoto Ltd.
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -26,6 +25,7 @@ namespace local_annoto\task;
 
 defined('MOODLE_INTERNAL') || die();
 
+require_once($CFG->libdir . '/completionlib.php');
 require_once(__DIR__ . '/../completion.php');
 require_once(__DIR__ . '/../completiondata.php');
 
@@ -53,40 +53,62 @@ class completion extends \core\task\scheduled_task {
     /**
      * Execute scheduled task
      *
-     * @return boolean
+     * @return void
      */
     public function execute() {
-
-        global $CFG, $DB;
-        require_once($CFG->libdir . "/completionlib.php");
+        global $CFG;
+        $settings = get_config('local_annoto');
+        mtrace('AnnotoCompletionTask: Running annoto completion task, activitycompletion enabled: : ' . $settings->activitycompletion);
+        if (!$settings->activitycompletion) {
+            return;
+        }
 
         // TODO: add logic for cleaning up in case $settings->activitycompletion is set to false or true. what should we do in this case?
-        $records = annoto_completion::get_records(['enabled' => annoto_completion::COMPLETION_TRACKING_AUTOMATIC]);
-        foreach ($records as $record) {
-            if ($record->get('cmid') > 0) {
-                list($course, $cm) = get_course_and_cm_from_cmid($record->get('cmid'));
-                $completion = new \completion_info($course);
-                foreach ($completiondatas = annoto_completiondata::get_records(['completionid' => $record->get('id')]) as $completiondata) {
-                    $currentdata = $completion->get_data($cm, 0, $completiondata->get('userid'));
-                    if (!$currentdata->completionstate) {
-                        $data = json_decode($completiondata->get('data'));
-                        $completed = true;
-                        if($record->get('totalview') <= 0 && $record->get('comments') <= 0 && $record->get('replies') <= 0){
-                            $completed = false;
-                        }
-                        if ($record->get('totalview') > 0 && $completed) {
-                            $completed = $record->get('totalview') <= $data->completion;
-                        }
-                        if ($record->get('comments') > 0 && $completed) {
-                            $completed = $record->get('comments') <= $data->comments;
-                        }
-                        if ($record->get('replies') > 0 && $completed) {
-                            $completed = $record->get('replies') <= $data->replies;
-                        }
-                        if ($completed) {
-                            $completion->update_state($cm, COMPLETION_COMPLETE, $completiondata->get('userid'));
-                        }
-                    }
+        //TODO: implementing update completed state on extenal call of set_completion. and make this task to run less frequently.
+
+        $activecompletionrecords = annoto_completion::get_records(['enabled' => annoto_completion::COMPLETION_TRACKING_AUTOMATIC]);
+        mtrace('AnnotoCompletionTask: Found ' . count($activecompletionrecords) . ' active completion records');
+
+        foreach ($activecompletionrecords as $record) {
+            $cmid = $record->get('cmid');
+            if (empty($cmid) || $cmid <= 0) {
+                continue;
+            }
+
+            list($course, $cm) = get_course_and_cm_from_cmid($cmid);
+            $completion = new \completion_info($course);
+            $completiondatarecords = annoto_completiondata::get_records(['completionid' => $record->get('id')]);
+            $totalview = $record->get('totalview');
+            $comments = $record->get('comments');
+            $replies = $record->get('replies');
+
+            // mtrace('AnnotoCompletionTask: Found ' . count($completiondatarecords) . ' completion data records for cmid: ' . $cmid);
+
+            foreach ($completiondatarecords as $completiondata) {
+                $userid = $completiondata->get('userid');
+                $currentdata = $completion->get_data($cm, 0, $userid);
+                $completionstate = $currentdata->completionstate;
+                $useractivity = json_decode($completiondata->get('data'));
+
+                // determine if user has completed the activity
+                // activity completion is enalbed, but no completion requirements set. mark as completed to prevent blocking of other activities.
+                $emptycompletionrequirement = $totalview <= 0 && $comments <= 0 && $replies <= 0;
+
+                $totalviewcompleted = $totalview === 0 || (isset($useractivity->completion) && $totalview <= $useractivity->completion);
+                $commentscompleted = $comments === 0 || (isset($useractivity->comments) && $comments <= $useractivity->comments);
+                $repliescompleted = $replies === 0 || (isset($useractivity->replies) && $replies <= $useractivity->replies);
+
+                $completed = $emptycompletionrequirement || ($totalviewcompleted && $commentscompleted && $repliescompleted);
+
+                // mtrace('AnnotoCompletionTask: User ' . $userid . ' completionstate: '  . $completionstate . ' completed: ' . var_export($completed, true) . ' totalview: ' . var_export($totalviewcompleted, true) . ' comments: ' . var_export($commentscompleted, true) . ' replies: ' . var_export($repliescompleted, true));
+
+                if ($completed && $completionstate <= COMPLETION_INCOMPLETE) {
+                    // mtrace('AnnotoCompletionTask: Updating completion state for user ' . $userid . ' to COMPLETION_COMPLETE');
+                    $completion->update_state($cm, COMPLETION_COMPLETE, $userid);
+                } else if (!$completed && $completionstate > COMPLETION_INCOMPLETE) {
+                    // mtrace('AnnotoCompletionTask: Updating completion state for user ' . $userid . ' to COMPLETION_INCOMPLETE');
+                    // need to set override param to true, otherwise completion will not be updated
+                    $completion->update_state($cm, COMPLETION_INCOMPLETE, $userid, true);
                 }
             }
         }
