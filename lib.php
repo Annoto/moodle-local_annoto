@@ -210,12 +210,19 @@ function local_annoto_get_jsparam($courseid, $modid) {
     $loginurl = $CFG->wwwroot . "/login/index.php";
     $logouturl = $CFG->wwwroot . "/login/logout.php?sesskey=" . sesskey();
 
+    $activityCompletionEnabled = false;
     // Get activity data for mediaDetails.
     if ($modid) {
         $modinfo = get_fast_modinfo($course);
         $cm = $modinfo->get_cm($modid);
         $cmtitle = $cm->name;
         $cmintro = $cm->content;
+        if ($settings->activitycompletion) {
+            $completionrecord = annoto_completion::get_record(['cmid' => $modid]);
+                if ($completionrecord && $completionrecord->get('enabled') === annoto_completion::COMPLETION_TRACKING_AUTOMATIC) {
+                    $activityCompletionEnabled = true;
+                }
+            }
     }
 
     $jsparams = array(
@@ -234,6 +241,7 @@ function local_annoto_get_jsparam($courseid, $modid) {
         'cmid' => $modid ?? null,
         'moodleVersion' => $CFG->version,
         'moodleRelease' => $CFG->release,
+        'activityCompletionEnabled' => $activityCompletionEnabled,
     );
 
     return $jsparams;

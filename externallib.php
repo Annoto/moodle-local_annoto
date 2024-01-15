@@ -108,6 +108,7 @@ class local_annoto_external extends external_api {
      */
     public static function set_completion($jsondata) {
         global $USER;
+        $settings = get_config('local_annoto');
         
         self::validate_parameters(self::set_completion_parameters(),
             array(
@@ -119,6 +120,13 @@ class local_annoto_external extends external_api {
         $status = false;
         $message = 'user completion not saved';
         $userid = $USER->id;
+
+        if (!$settings->activitycompletion) {
+            $message = 'activity completion is disabled';
+            log::info('set_completion - ' . $message);
+            
+            return ['status' => $status, 'message' => $message];
+        }
 
         if (isset($data->cmid) && !empty($data->cmid)) {
             $cmid = $data->cmid;
