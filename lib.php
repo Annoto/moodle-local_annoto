@@ -707,7 +707,7 @@ function local_annoto_coursemodule_standard_elements($formwrapper, $mform) {
         (object) [
             'prefix' => true,
             'suffix' => true,
-        ],
+        ]
     );
     $add_group(
         $completioncomments,
@@ -718,7 +718,7 @@ function local_annoto_coursemodule_standard_elements($formwrapper, $mform) {
         (object) [
             'prefix' => true,
             'suffix' => false,
-        ],
+        ]
     );
     $add_group(
         $completionreplies,
@@ -729,7 +729,7 @@ function local_annoto_coursemodule_standard_elements($formwrapper, $mform) {
         (object) [
             'prefix' => true,
             'suffix' => false,
-        ],
+        ]
     );
 
     // $mform->addElement('date_time_selector', $completionexpected, get_string($completionexpected, 'local_annoto'), ['optional' => true]);
