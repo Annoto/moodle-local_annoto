@@ -147,7 +147,8 @@ class local_annoto_external extends external_api {
 
             if (is_enrolled($context, $USER, '', true)) {
                 $completionrecord = annoto_completion::get_record(['cmid' => $cmid]);
-                if ($completionrecord && $completionrecord->get('enabled') === annoto_completion::COMPLETION_TRACKING_AUTOMATIC) {
+                // moodle v3 do not have clean_param and returns type string
+                if ($completionrecord && (int)$completionrecord->get('enabled') == annoto_completion::COMPLETION_TRACKING_AUTOMATIC) {
                     $completionid = $completionrecord->get('id');
                     
                     if ($completiondata = annoto_completiondata::get_record(['completionid' => $completionid, 'userid' => $userid])) {

@@ -219,7 +219,8 @@ function local_annoto_get_jsparam($courseid, $modid) {
         $cmintro = $cm->content;
         if ($settings->activitycompletion) {
             $completionrecord = annoto_completion::get_record(['cmid' => $modid]);
-                if ($completionrecord && $completionrecord->get('enabled') === annoto_completion::COMPLETION_TRACKING_AUTOMATIC) {
+                // moodle v3 do not have clean_param and returns type string
+                if ($completionrecord && (int)$completionrecord->get('enabled') == annoto_completion::COMPLETION_TRACKING_AUTOMATIC) {
                     $activityCompletionEnabled = true;
                 }
             }

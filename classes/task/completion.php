@@ -78,9 +78,10 @@ class completion extends \core\task\scheduled_task {
             list($course, $cm) = get_course_and_cm_from_cmid($cmid);
             $completion = new \completion_info($course);
             $completiondatarecords = annoto_completiondata::get_records(['completionid' => $record->get('id')]);
-            $totalview = $record->get('totalview');
-            $comments = $record->get('comments');
-            $replies = $record->get('replies');
+            // moodle v3 do not have clean_param and returns type string
+            $totalview = (int)$record->get('totalview');
+            $comments = (int)$record->get('comments');
+            $replies = (int)$record->get('replies');
 
             // mtrace('AnnotoCompletionTask: Found ' . count($completiondatarecords) . ' completion data records for cmid: ' . $cmid);
 
@@ -94,9 +95,9 @@ class completion extends \core\task\scheduled_task {
                 // activity completion is enalbed, but no completion requirements set. mark as completed to prevent blocking of other activities.
                 $emptycompletionrequirement = $totalview <= 0 && $comments <= 0 && $replies <= 0;
 
-                $totalviewcompleted = $totalview === 0 || (isset($useractivity->completion) && $totalview <= $useractivity->completion);
-                $commentscompleted = $comments === 0 || (isset($useractivity->comments) && $comments <= $useractivity->comments);
-                $repliescompleted = $replies === 0 || (isset($useractivity->replies) && $replies <= $useractivity->replies);
+                $totalviewcompleted = $totalview == 0 || (isset($useractivity->completion) && $totalview <= $useractivity->completion);
+                $commentscompleted = $comments == 0 || (isset($useractivity->comments) && $comments <= $useractivity->comments);
+                $repliescompleted = $replies == 0 || (isset($useractivity->replies) && $replies <= $useractivity->replies);
 
                 $completed = $emptycompletionrequirement || ($totalviewcompleted && $commentscompleted && $repliescompleted);
 
