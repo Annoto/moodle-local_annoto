@@ -67,9 +67,9 @@ define([
 
                     const annotoMoodleCdnUrl = params.annotoMoodleCdnUrl ||
                         'https://cdn.annoto.net/moodle-local-js/latest/annoto.js';
-                    require([annotoMoodleCdnUrl], function(AnnotoMooodle) {
-                        window.AnnotoMooodle = window.AnnotoMooodle || AnnotoMooodle;
-                        AnnotoMooodle.setup();
+                    require([annotoMoodleCdnUrl], function(AnnotoMoodle) {
+                        window.AnnotoMoodle = window.AnnotoMoodle || AnnotoMoodle;
+                        AnnotoMoodle.setup();
                     });
                 }.bind(this),
                 fail: notification.exception,
