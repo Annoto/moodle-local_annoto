@@ -783,9 +783,17 @@ function local_annoto_coursemodule_edit_post_actions($data, $course) {
             $DB->update_record('course_modules', $cm);
 
             // See edit_module_post_actions() in moodle/course/modlib.php coursemodule_edit_post_actions is called after edit_module_post_actions() clears the cache
-            // because we change the cm we need to clear it again 
-            \course_modinfo::purge_course_module_cache($cm->course, $cmid);
-            rebuild_course_cache($cm->course, true, true);
+            // because we change the cm we need to clear it again
+            if (method_exists(\course_modinfo::class, 'purge_course_module_cache')) {
+                log::debug('coursemodule_edit_post_actions - purge_course_module_cache and partial rebuild_course_cache v4');
+                // moodle v4 and up
+                \course_modinfo::purge_course_module_cache($cm->course, $cmid);
+                rebuild_course_cache($cm->course, true, true);
+            } else {
+                // moodle v3
+                log::debug('coursemodule_edit_post_actions - rebuild_course_cache v3');
+                rebuild_course_cache($cm->course, true);
+            }
         }
     }
 
