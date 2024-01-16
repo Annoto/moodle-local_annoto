@@ -28,7 +28,7 @@ function xmldb_local_annoto_upgrade($oldversion = 0) {
     global $DB;
     $dbman = $DB->get_manager();
 
-    if ($oldversion < 2024011000) {
+    if ($oldversion < 2024011500) {
 
         // Define table local_annoto_completion to be created.
         $table = new xmldb_table('local_annoto_completion');
@@ -83,7 +83,7 @@ function xmldb_local_annoto_upgrade($oldversion = 0) {
         }
 
         // Annoto savepoint reached.
-        upgrade_plugin_savepoint(true, 2024011000, 'local', 'annoto');
+        upgrade_plugin_savepoint(true, 2024011500, 'local', 'annoto');
     }
 
     return true;
