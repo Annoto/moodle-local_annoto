@@ -1,4 +1,5 @@
 <?php
+
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -15,17 +16,41 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Version details
- *
- * @package    local_annoto
+ * @package    local
+ * @subpackage annoto
  * @copyright  Annoto Ltd.
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+namespace local_annoto;
+
+use core\persistent;
+
 defined('MOODLE_INTERNAL') || die();
 
+class annoto_completiondata extends persistent
+{
+    const TABLE = 'local_annoto_completiondata';
 
-$plugin->version   = 2024011600;        // The current plugin version (Date: YYYYMMDDXX).
-$plugin->release  = '5.1.0';
-$plugin->requires  = 2018051700;        // Requires this Moodle version 3.5.
-$plugin->component = 'local_annoto';    // Full name of the plugin (used for diagnostics).
+    /**
+     * Return the list of properties.
+     *
+     * @return array
+     */
+    protected static function define_properties()
+    {
+        return [
+            'completionid' => array(
+                'type' => PARAM_INT,
+            ),
+            'userid' => array(
+                'type' => PARAM_INT,
+            ),
+            'data' => array(
+                'type' => PARAM_RAW,
+            )
+        ];
+    }
+}
+
+

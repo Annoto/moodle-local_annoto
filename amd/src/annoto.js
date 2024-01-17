@@ -26,14 +26,17 @@ define([
   'core/log',
   'core/notification',
   'core/ajax',
+  'core/str',
   'https://player.vimeo.com/api/player.js',
   'media_videojs/video-lazy',
-], function($, log, notification, Ajax, VimeoPlayer, videojs) {
+], function($, log, notification, Ajax, tr, VimeoPlayer, videojs) {
 
     const moodleAnnotoExports = {
         $,
         log,
         notification,
+        Ajax,
+        tr,
         VimeoPlayer,
         videojs,
         require,
@@ -66,11 +69,11 @@ define([
 
                     const annotoMoodleCdnUrl = params.annotoMoodleCdnUrl ||
                         'https://cdn.annoto.net/moodle-local-js/latest/annoto.js';
-                    require([annotoMoodleCdnUrl], function(AnnotoMooodle) {
-                        window.AnnotoMooodle = window.AnnotoMooodle || AnnotoMooodle;
-                        AnnotoMooodle.setup();
+                    require([annotoMoodleCdnUrl], function(AnnotoMoodle) {
+                        window.AnnotoMoodle = window.AnnotoMoodle || AnnotoMoodle;
+                        AnnotoMoodle.setup();
                     });
-                }.bind(this),
+                },
                 fail: notification.exception,
             }]);
         },

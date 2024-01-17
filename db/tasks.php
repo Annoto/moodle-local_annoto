@@ -15,17 +15,21 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Version details
- *
- * @package    local_annoto
+ * @package    local
+ * @subpackage annoto
  * @copyright  Annoto Ltd.
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-
 defined('MOODLE_INTERNAL') || die();
 
-
-$plugin->version   = 2024011600;        // The current plugin version (Date: YYYYMMDDXX).
-$plugin->release  = '5.1.0';
-$plugin->requires  = 2018051700;        // Requires this Moodle version 3.5.
-$plugin->component = 'local_annoto';    // Full name of the plugin (used for diagnostics).
+$tasks = array(
+    array(
+         'classname' => 'local_annoto\task\completion',
+         'blocking'  => 0,
+         'minute'    => '*',
+         'hour'      => '*',
+         'day'       => '*',
+         'dayofweek' => '*',
+         'month'     => '*',
+     ),
+);

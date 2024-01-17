@@ -1,4 +1,5 @@
 <?php
+
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -15,17 +16,31 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Version details
- *
- * @package    local_annoto
+ * @package    local
+ * @subpackage annoto
  * @copyright  Annoto Ltd.
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+namespace local_annoto;
+
 defined('MOODLE_INTERNAL') || die();
 
+class log
+{
+    static function debug($message = '') {
+        debugging('Annoto: ' . $message, DEBUG_DEVELOPER);
+    }
 
-$plugin->version   = 2024011600;        // The current plugin version (Date: YYYYMMDDXX).
-$plugin->release  = '5.1.0';
-$plugin->requires  = 2018051700;        // Requires this Moodle version 3.5.
-$plugin->component = 'local_annoto';    // Full name of the plugin (used for diagnostics).
+    static function info($message = '') {
+        debugging('Annoto: ' . $message, DEBUG_ALL);
+    }
+
+    static function warning($message = '') {
+        debugging('Annoto: ' . $message, DEBUG_NORMAL);
+    }
+
+    static function error($message = '') {
+        debugging('Annoto: ' . $message, DEBUG_MINIMAL);
+    }
+}

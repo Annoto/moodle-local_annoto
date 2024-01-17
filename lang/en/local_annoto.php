@@ -87,6 +87,36 @@ $string['defaultwidthdesc'] = 'Media player width if a width is not specified an
 $string['defaultheight'] = 'Media height';
 $string['defaultheightdesc'] = 'Media player height if a height is not specified and the actual media file height cannot be determined by the player';
 
+// Activities completion
+
+$string['activitycompletion_settings'] = 'Activity completion (Beta)';
+$string['activitycompletion_enable'] = 'Enable Annoto activity completion';
+$string['activitycompletion_enabledesc'] = 'If enabled, Annoto activity completion will be available in page, label, h5p, hvp and Kaltura activity settings';
+
+$string['annotocompletion'] = 'Annoto completion conditions';
+$string['completiontask'] = 'Annoto Completion Task';
+$string['numericrule'] = 'This field should be numeric';
+
+$string['completionenabled'] = 'Completion tracking';
+$string['completionenableddesc'] = 'Select whether annoto completion should be enabled by default for new activities';
+
+$string['annotocompletionview'] = 'Require video completion';
+$string['annotocompletionviewhelp'] = 'How much of a video duration should be viewed by student to consider this activity completed (coverage)';
+$string['annotocompletionviewprefix'] = 'Minimal percent of video (coverage) that must be watched by the learner:';
+$string['annotocompletionviewsuffix'] = '%';
+
+$string['annotocompletioncomments'] = 'Require comments';
+$string['annotocompletioncommentshelp'] = 'Minimal amount of comments (including replies) that should be posted by the learner to consider this activity completed';
+$string['annotocompletioncommentsprefix'] = 'Minimal number of comments the leaner must post: ';
+
+$string['annotocompletionreplies'] = 'Require replies';
+$string['annotocompletionreplieshelp'] = 'Minimal amount of replies to comments that should be posted by the learner to consider this activity completed';
+$string['annotocompletionrepliesprefix'] = 'Minimal number of replies the learner must post: ';
+
+$string['annotocompletionexpected'] = 'Set reminder in Timeline';
+$string['annotocompletionexpectedhelp'] = 'Set reminder for student to work on this activity';
+
+
 // Privacy API.
 $string['privacy:metadata:annoto'] = 'In order to integrate with a remote service, user data needs to be exchanged with that service.';
 $string['privacy:metadata:annoto:userid'] = 'The userid is sent from Moodle to allow you to access your data on the remote system.';

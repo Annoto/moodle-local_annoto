@@ -169,4 +169,14 @@ if ($hassiteconfig) {
     $settings->add($setting);
     $settings->hide_if('local_annoto/defaultheight', 'local_annoto/mediasettingsoverride', 'neq', 1);
 
+
+    
+    // Activity completion
+    $settings->add(new admin_setting_heading('local_annoto/activitycompletionheading', get_string('activitycompletion_settings', 'local_annoto'),
+        ''));
+    $settings->add(new admin_setting_configselect('local_annoto/activitycompletion', get_string('activitycompletion_enable', 'local_annoto'),
+        get_string('activitycompletion_enabledesc', 'local_annoto'), 0, array(
+            0 => get_string('no'),
+            1 => get_string('yes'))
+        ));
 }

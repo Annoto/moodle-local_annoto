@@ -23,8 +23,15 @@
  */
 defined('MOODLE_INTERNAL') || die;
 
-require_once($CFG->libdir . "/externallib.php");
-require_once($CFG->dirroot . "/local/annoto/lib.php");
+require_once($CFG->libdir . '/externallib.php');
+require_once(__DIR__ . '/lib.php');
+require_once(__DIR__ . '/classes/completion.php');
+require_once(__DIR__ . '/classes/completiondata.php');
+require_once(__DIR__ . '/classes/log.php');
+
+use \local_annoto\annoto_completion;
+use \local_annoto\annoto_completiondata;
+use \local_annoto\log;
 
 /**
  * Class local_annoto_external
@@ -82,4 +89,100 @@ class local_annoto_external extends external_api {
         return ['result' => $result, 'params' => json_encode($response, JSON_HEX_TAG)];
     }
 
+
+    /**
+     * Returns description of method parameters
+     * @return external_function_parameters
+     */
+    public static function set_completion_parameters() {
+        return new external_function_parameters(
+            array(
+                'data' => new external_value(PARAM_RAW, 'JSON encoded data'),
+            )
+        );
+    }
+
+    /**
+     * @param $jsondata
+     * @return array result of set_completion
+     */
+    public static function set_completion($jsondata) {
+        global $USER;
+        $settings = get_config('local_annoto');
+        
+        self::validate_parameters(self::set_completion_parameters(),
+            array(
+                'data' => $jsondata,
+            )
+        );
+
+        $data = json_decode($jsondata);
+        $status = false;
+        $message = 'user completion not saved';
+        $userid = $USER->id;
+
+        if (!$settings->activitycompletion) {
+            $message = 'activity completion is disabled';
+            log::info('set_completion - ' . $message);
+            
+            return ['status' => $status, 'message' => $message];
+        }
+
+        if (isset($data->cmid) && !empty($data->cmid)) {
+            $cmid = $data->cmid;
+            $cleandata = new stdClass();
+            $cleandata->completion = isset($data->completion) ? $data->completion : 0;
+            $cleandata->comments = isset($data->comments) ? $data->comments : 0;
+            $cleandata->replies = isset($data->replies) ? $data->replies : 0;
+            $cleandata->heatmap = isset($data->heatmap) ? $data->heatmap : null;
+            $cleandata->watch_time = isset($data->watch_time) ? $data->watch_time : null;
+            $cleandata->media_src = isset($data->media_src) ? $data->media_src : null;
+            $cleandata->session_id = isset($data->session_id) ? $data->session_id : null;
+            $cleandata->group_id = isset($data->group_id) ? $data->group_id : null;
+            $cleandata->sso_id = isset($data->sso_id) ? $data->sso_id : null;
+            $cleandata->widget_index = isset($data->widget_index) ? $data->widget_index : null;
+
+            list($course, $cm) = get_course_and_cm_from_cmid($cmid);
+            $context = \context_course::instance($course->id);
+
+            if (is_enrolled($context, $USER, '', true)) {
+                $completionrecord = annoto_completion::get_record(['cmid' => $cmid]);
+                // moodle v3 do not have clean_param and returns type string
+                if ($completionrecord && (int)$completionrecord->get('enabled') == annoto_completion::COMPLETION_TRACKING_AUTOMATIC) {
+                    $completionid = $completionrecord->get('id');
+                    
+                    if ($completiondata = annoto_completiondata::get_record(['completionid' => $completionid, 'userid' => $userid])) {
+                        $completiondata->set('data', json_encode($cleandata));
+                        $completiondata->update();
+                        $message = 'Updated completion for user '. $userid . ' cmid ' . $cmid;
+                    } else {
+                        $record = (object) [
+                            'userid' => $userid,
+                            'completionid' => $completionid,
+                            'data' => json_encode($cleandata),
+                        ];
+                        $completiondata = new annoto_completiondata(0, $record);
+                        $completiondata->create();
+                        $message = 'Set completion for user ' . $userid . ' cmid ' . $cmid;
+                    }
+                    $status = true;
+                }
+            }
+        }
+
+        log::debug('set_completion - ' . $message . ($status ? ' data ' . print_r($cleandata, true) : ''));
+        
+        return ['status' => $status, 'message' => $message];
+    }
+
+    /**
+     * Returns description of method result value
+     * @return external_description
+     */
+    public static function set_completion_returns() {
+        return new external_single_structure([
+            'status' => new external_value(PARAM_BOOL, 'The processing result'),
+            'message' => new external_value(PARAM_TEXT, 'Message'),
+        ]);
+    }
 }
