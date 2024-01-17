@@ -26,15 +26,17 @@ define([
   'core/log',
   'core/notification',
   'core/ajax',
+  'core/str',
   'https://player.vimeo.com/api/player.js',
   'media_videojs/video-lazy',
-], function($, log, notification, Ajax, VimeoPlayer, videojs) {
+], function($, log, notification, Ajax, tr, VimeoPlayer, videojs) {
 
     const moodleAnnotoExports = {
         $,
         log,
         notification,
         Ajax,
+        tr,
         VimeoPlayer,
         videojs,
         require,
@@ -71,7 +73,7 @@ define([
                         window.AnnotoMoodle = window.AnnotoMoodle || AnnotoMoodle;
                         AnnotoMoodle.setup();
                     });
-                }.bind(this),
+                },
                 fail: notification.exception,
             }]);
         },

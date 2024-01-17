@@ -42,10 +42,12 @@ if (!defined('DEFAULTHEIGHT')) define('DEFAULTHEIGHT', 480);
 
 require_once($CFG->libdir . '/completionlib.php');
 require_once(__DIR__ . '/classes/completion.php');
+require_once(__DIR__ . '/classes/completiondata.php');
 require_once(__DIR__ . '/classes/log.php');
 
 use \local_annoto\log;
 use \local_annoto\annoto_completion;
+use \local_annoto\annoto_completiondata;
 
 /**
  * Function allows plugins to injecting JS across the site, like analytics.
@@ -120,7 +122,6 @@ function local_annoto_get_user_token($settings, $courseid) {
     if (!$userloggined) {
         return '';
     }
-    $guestuser = isguestuser();
 
     // Provide page and js with data.
     // Get user's avatar.
@@ -131,10 +132,6 @@ function local_annoto_get_user_token($settings, $courseid) {
     $issuedat = time();                        // Get current time.
     $expire = $issuedat + 60 * 20;             // Adding 20 minutes.
 
-    // Check if user is a moderator.
-    $capability = 'local/annoto:moderatediscussion';
-    $moderator = local_annoto_has_capability($settings->moderatorroles, $courseid, $capability);
-
     $payload = array(
         "jti" => $USER->id,                     // User's id in Moodle.
         "name" => fullname($USER),              // User's fullname in Moodle.
@@ -142,11 +139,27 @@ function local_annoto_get_user_token($settings, $courseid) {
         "photoUrl" => is_object($userpictureurl) ? $userpictureurl->out() : '',  // User's avatar in Moodle.
         "iss" => $settings->clientid,           // ClientID from global settings.
         "exp" => $expire,                       // JWT token expiration time.
-        "scope" => ($moderator ? 'super-mod' : 'user'),
+        "scope" => local_annoto_get_user_scope($settings, $courseid),
     );
     $enctoken = \Firebase\JWT\JWT::encode($payload, $settings->ssosecret, 'HS256');
 
     return $enctoken;
+}
+
+/**
+ * Function gets user scope for Annoto permissions.
+ * @param stdClass $settings the plugin global settings.
+ * @param int $courseid the id of the course.
+ * @return 'super-mod'|'user'
+ */
+function local_annoto_get_user_scope($settings, $courseid) {
+    $userloggedin = isloggedin();
+    if (!$userloggedin) {
+        return 'user';
+    }
+    $capability = 'local/annoto:moderatediscussion';
+    $ismoderator = local_annoto_has_capability($settings->moderatorroles, $courseid, $capability);
+    return $ismoderator ? 'super-mod' : 'user';
 }
 
 /**
@@ -201,29 +214,41 @@ function local_annoto_has_capability($allowedroles, $courseid, $capability) {
  */
 function local_annoto_get_jsparam($courseid, $modid) {
     global $CFG;
+    global $USER;
     $course = get_course($courseid);
+    $userloggedin = isloggedin();
 
     // Get plugin global settings.
     $settings = get_config('local_annoto');
 
     // Get login, logout urls.
-    $loginurl = $CFG->wwwroot . "/login/index.php";
-    $logouturl = $CFG->wwwroot . "/login/logout.php?sesskey=" . sesskey();
+    $loginurl = $CFG->wwwroot . '/login/index.php';
+    $logouturl = $CFG->wwwroot . '/login/logout.php?sesskey=' . sesskey();
 
     $activityCompletionEnabled = false;
+    $activityCompletionReq = null;
+    $userscope = local_annoto_get_user_scope($settings, $courseid);
     // Get activity data for mediaDetails.
     if ($modid) {
         $modinfo = get_fast_modinfo($course);
         $cm = $modinfo->get_cm($modid);
         $cmtitle = $cm->name;
         $cmintro = $cm->content;
-        if ($settings->activitycompletion) {
+        if ($settings->activitycompletion && $userloggedin) {
             $completionrecord = annoto_completion::get_record(['cmid' => $modid]);
+            if ($completionrecord) {
+                $activityCompletionReq = $completionrecord->to_record();
                 // moodle v3 do not have clean_param and returns type string
-                if ($completionrecord && (int)$completionrecord->get('enabled') == annoto_completion::COMPLETION_TRACKING_AUTOMATIC) {
+                if ((int)$completionrecord->get('enabled') == annoto_completion::COMPLETION_TRACKING_AUTOMATIC) {
                     $activityCompletionEnabled = true;
+                    if ($userscope === 'user') {
+                        if ($completiondata = annoto_completiondata::get_record(['completionid' => $completionrecord->get('id'), 'userid' => $USER->id])) {
+                            $activityCompletionReq->user_data = $completiondata->to_record();
+                        }
+                    }
                 }
             }
+        }
     }
 
     $jsparams = array(
@@ -243,6 +268,8 @@ function local_annoto_get_jsparam($courseid, $modid) {
         'moodleVersion' => $CFG->version,
         'moodleRelease' => $CFG->release,
         'activityCompletionEnabled' => $activityCompletionEnabled,
+        'activityCompletionReq' => $activityCompletionReq,
+        'userScope' => $userscope,
     );
 
     return $jsparams;
