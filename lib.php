@@ -53,7 +53,8 @@ use \local_annoto\annoto_completiondata;
  * Function allows plugins to injecting JS across the site, like analytics.
  *
  */
-function local_annoto_before_footer() {
+function local_annoto_before_footer()
+{
     local_annoto_init();
     return '';
 }
@@ -62,7 +63,8 @@ function local_annoto_before_footer() {
  * Function Insert a chunk of html at the start of the html document.
  * @return string HTML fragment.
  */
-function local_annoto_before_standard_top_of_body_html() {
+function local_annoto_before_standard_top_of_body_html()
+{
     global $PAGE;
     // Prevent callback loading for all themes except those:
     $themes = ['lambda', 'adaptable', 'academi']; // added academi theme
@@ -76,7 +78,8 @@ function local_annoto_before_standard_top_of_body_html() {
  * Function init plugin according to the proper environment conditions.
  * @return boolean
  */
-function local_annoto_init() {
+function local_annoto_init()
+{
     global $PAGE, $COURSE;
 
     $istargetpage = false;
@@ -114,7 +117,8 @@ function local_annoto_init() {
  * @param int $courseid the id of the course.
  * @return string
  */
-function local_annoto_get_user_token($settings, $courseid) {
+function local_annoto_get_user_token($settings, $courseid)
+{
     global $USER, $PAGE;
 
     // Is user logged in or is guest.
@@ -152,7 +156,8 @@ function local_annoto_get_user_token($settings, $courseid) {
  * @param int $courseid the id of the course.
  * @return 'super-mod'|'user'
  */
-function local_annoto_get_user_scope($settings, $courseid) {
+function local_annoto_get_user_scope($settings, $courseid)
+{
     $userloggedin = isloggedin();
     if (!$userloggedin) {
         return 'user';
@@ -167,7 +172,8 @@ function local_annoto_get_user_scope($settings, $courseid) {
  * @param stdClass $course Course object
  * @return string
  */
-function local_annoto_get_lang($course) {
+function local_annoto_get_lang($course)
+{
     global $SESSION, $USER;
 
     if (isset($course->lang) and !empty($course->lang)) {
@@ -189,7 +195,8 @@ function local_annoto_get_lang($course) {
  * @param string $capability the name of the capability to check
  * @return bolean
  */
-function local_annoto_has_capability($allowedroles, $courseid, $capability) {
+function local_annoto_has_capability($allowedroles, $courseid, $capability)
+{
     global  $USER;
     $hascapability = false;
     $coursecontext = context_course::instance($courseid);
@@ -212,7 +219,8 @@ function local_annoto_has_capability($allowedroles, $courseid, $capability) {
  * @param int $modid mod id.
  * @return array
  */
-function local_annoto_get_jsparam($courseid, $modid) {
+function local_annoto_get_jsparam($courseid, $modid)
+{
     global $CFG;
     global $USER;
     $course = get_course($courseid);
@@ -228,6 +236,8 @@ function local_annoto_get_jsparam($courseid, $modid) {
     $activityCompletionEnabled = false;
     $activityCompletionReq = null;
     $userscope = local_annoto_get_user_scope($settings, $courseid);
+    $context = \context_course::instance($courseid);
+    $userisenrolled = is_enrolled($context, $USER, '', true);
     // Get activity data for mediaDetails.
     if ($modid) {
         $modinfo = get_fast_modinfo($course);
@@ -270,6 +280,7 @@ function local_annoto_get_jsparam($courseid, $modid) {
         'activityCompletionEnabled' => $activityCompletionEnabled,
         'activityCompletionReq' => $activityCompletionReq,
         'userScope' => $userscope,
+        'userIsEnrolled' => $userisenrolled,
     );
 
     return $jsparams;
@@ -282,7 +293,8 @@ function local_annoto_get_jsparam($courseid, $modid) {
  * @param settings_navigation $settings The settings navigation object
  * @param context_course $context The node to add module settings to
  */
-function local_annoto_extend_settings_navigation(settings_navigation $settingsnav, context  $context) {
+function local_annoto_extend_settings_navigation(settings_navigation $settingsnav, context  $context)
+{
     global $CFG, $PAGE, $COURSE;
 
     if ((strpos($PAGE->pagetype, 'mod-') === false) &&
@@ -346,7 +358,8 @@ function local_annoto_extend_settings_navigation(settings_navigation $settingsna
  *
  * @return cm_info|null $cm
  */
-function local_annoto_get_lti_course_module() {
+function local_annoto_get_lti_course_module()
+{
 
     global $PAGE;
 
@@ -368,7 +381,8 @@ function local_annoto_get_lti_course_module() {
  * @param stdClass $lti LTI extrnall tool for specific mode
  * @return cm_info|null $cm
  */
-function local_annoto_create_lti_course_module($lti) {
+function local_annoto_create_lti_course_module($lti)
+{
     global $CFG, $PAGE;
 
     $context = context_course::instance($PAGE->course->id);
@@ -417,7 +431,8 @@ function local_annoto_create_lti_course_module($lti) {
  * @return integer|null LTI type id or null
 
  */
-function local_annoto_lti_add_type($ltitype) {
+function local_annoto_lti_add_type($ltitype)
+{
 
     // Get plugin global settings.
     $settings = get_config('local_annoto');
@@ -492,7 +507,8 @@ function local_annoto_lti_add_type($ltitype) {
  * @param string $settingname
  *
  */
-function local_annoto_update_settings($settingname) {
+function local_annoto_update_settings($settingname)
+{
     global $DB;
 
     $settings = get_config('local_annoto');
@@ -580,7 +596,8 @@ function local_annoto_update_settings($settingname) {
  *
  * @return array
  */
-function local_annoto_get_all_dashboard_roles() {
+function local_annoto_get_all_dashboard_roles()
+{
     $capabilitiy = 'local/annoto:managementdashboard';
     $choices = $defaultchoices = [];
 
@@ -600,7 +617,8 @@ function local_annoto_get_all_dashboard_roles() {
  * @param string $log the id of the course.
  * @return void
  */
-function local_annoto_set_jslog($log = '') {
+function local_annoto_set_jslog($log = '')
+{
     global $PAGE;
     global $CFG;
     $themename = $PAGE->theme->get_theme_name();
@@ -610,10 +628,10 @@ function local_annoto_set_jslog($log = '') {
     $release = $plugininfo->release;
 
     $jscode = "(function () {
-        console.dir('AnnotoBackend: Moodle version ". $CFG->release ."');
-        console.dir('AnnotoBackend: Plugin version ". $release . ' - ' . $version ."');
-        console.dir('AnnotoBackend: theme ". $themename ."');
-        console.dir('AnnotoBackend: ". $log ."');
+        console.dir('AnnotoBackend: Moodle version " . $CFG->release . "');
+        console.dir('AnnotoBackend: Plugin version " . $release . ' - ' . $version . "');
+        console.dir('AnnotoBackend: theme " . $themename . "');
+        console.dir('AnnotoBackend: " . $log . "');
     }());";
     $PAGE->requires->js_amd_inline($jscode);
 }
@@ -627,7 +645,8 @@ function local_annoto_set_jslog($log = '') {
  * 
  * Note: original completion form is located in moodle/completion/classes/form/form_trait.php
  */
-function local_annoto_coursemodule_standard_elements($formwrapper, $mform) {
+function local_annoto_coursemodule_standard_elements($formwrapper, $mform)
+{
 
     $settings = get_config('local_annoto');
 
@@ -694,18 +713,18 @@ function local_annoto_coursemodule_standard_elements($formwrapper, $mform) {
         $get_value_in_group = function ($groupname) use ($valueel) {
             return $groupname . '[' . $valueel . ']';
         };
-    
+
         $get_enabled_in_group = function ($groupname) use ($enabledel) {
             return $groupname . '[' . $enabledel . ']';
         };
 
         $group = array($mform->createElement('advcheckbox', $enabledel));
         if (isset($info) && $info->prefix) {
-            $group[] =& $mform->createElement('static', 'prefix', null, get_string($groupname . 'prefix', 'local_annoto'));
+            $group[] = &$mform->createElement('static', 'prefix', null, get_string($groupname . 'prefix', 'local_annoto'));
         }
-        $group[] =& $mform->createElement('text', $valueel);
+        $group[] = &$mform->createElement('text', $valueel);
         if (isset($info) && $info->suffix) {
-            $group[] =& $mform->createElement('static', 'suffix', null, get_string($groupname . 'suffix', 'local_annoto'));
+            $group[] = &$mform->createElement('static', 'suffix', null, get_string($groupname . 'suffix', 'local_annoto'));
         }
 
         $mform->addGroup($group, $groupname, get_string($groupname, 'local_annoto'));
@@ -769,7 +788,8 @@ function local_annoto_coursemodule_standard_elements($formwrapper, $mform) {
  * https://github.com/moodle/moodle/blob/master/course/modlib.php
  * 
  */
-function local_annoto_coursemodule_edit_post_actions($data, $course) {
+function local_annoto_coursemodule_edit_post_actions($data, $course)
+{
     global $DB;
     $settings = get_config('local_annoto');
     $cmid = $data->coursemodule;
