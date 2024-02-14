@@ -176,7 +176,8 @@ class local_annoto_external extends external_api {
             }
         }
 
-        log::debug('set_completion - ' . $message . ($status ? ' data ' . json_encode($cleandata) : ''));
+        // phpcs:ignore
+        log::debug('set_completion - ' . $message . ($status ? ' data ' . print_r($cleandata, true) : ''));
 
         return ['status' => $status, 'message' => $message];
     }
