@@ -669,7 +669,7 @@ function local_annoto_coursemodule_standard_elements($formwrapper, $mform) {
         'kalvidres',
     ];
 
-    // phpcs:ignore
+    // phpcs:ignore Squiz.PHP.CommentedOutCode.Found
     /* $completionel = 'completion';
     $conditionsgroupel = 'conditionsgroup';
 
@@ -710,8 +710,8 @@ function local_annoto_coursemodule_standard_elements($formwrapper, $mform) {
     $completionview = 'annotocompletionview';
     $completioncomments = 'annotocompletioncomments';
     $completionreplies = 'annotocompletionreplies';
-    // phpcs:ignore
-    // $completionexpected = 'annotocompletionexpected';
+    // phpcs:ignore Squiz.PHP.CommentedOutCode.Found
+    // TODO: $completionexpected = 'annotocompletionexpected';.
 
     $completionmenu = annoto_completion::get_enabled_menu();
     $mform->addElement('select', $completionenabledel, get_string('completionenabled', 'local_annoto'), $completionmenu);
@@ -785,8 +785,9 @@ function local_annoto_coursemodule_standard_elements($formwrapper, $mform) {
             'suffix' => false,
         ]
     );
-    // phpcs:ignore
-    // $mform->addElement('date_time_selector', $completionexpected, get_string($completionexpected, 'local_annoto'), ['optional' => true]);
+    // phpcs:ignore Squiz.PHP.CommentedOutCode.Found 
+    // TODO: $mform->addElement('date_time_selector', $completionexpected,
+    // get_string($completionexpected, 'local_annoto'), ['optional' => true]);.
 }
 
 /**
@@ -812,8 +813,8 @@ function local_annoto_coursemodule_edit_post_actions($data, $course) {
         $completionview = $data->annotocompletionview;
         $completioncomments = $data->annotocompletioncomments;
         $completionreplies = $data->annotocompletionreplies;
-        // phpcs:ignore
-        // $completionexpected = $data->annotocompletionexpected;
+        // phpcs:ignore Squiz.PHP.CommentedOutCode.Found 
+        // TODO: $completionexpected = $data->annotocompletionexpected;.
         $completionrecord = new stdClass();
         $completionrecord->courseid = $course->id;
         $completionrecord->cmid = $cmid;
@@ -821,8 +822,8 @@ function local_annoto_coursemodule_edit_post_actions($data, $course) {
         $completionrecord->totalview  = $completionview['enabled'] ? $completionview['value'] : 0;
         $completionrecord->comments  = $completioncomments['enabled'] ? $completioncomments['value'] : 0;
         $completionrecord->replies  = $completionreplies['enabled'] ? $completionreplies['value'] : 0;
-        // phpcs:ignore
-        // $completiondata->completionexpected  = $completionexpected;
+        // phpcs:ignore Squiz.PHP.CommentedOutCode.Found 
+        // TODO: $completiondata->completionexpected  = $completionexpected;.
 
         log::debug('coursemodule_edit_post_actions - completiondata: ' . json_encode($completionrecord));
 
