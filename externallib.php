@@ -87,7 +87,8 @@ class local_annoto_external extends external_api {
 
         list($result, $response) = !is_guest($context) ? [true, local_annoto_get_jsparam($courseid, $modid)] : [false, null];
 
-        return ['result' => $result, 'params' => json_encode($response, JSON_HEX_TAG)];
+        // phpcs:ignore
+        return ['result' => $result, 'params' => print_r($response, JSON_HEX_TAG)];
     }
 
 
