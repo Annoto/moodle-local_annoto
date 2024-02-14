@@ -1,5 +1,4 @@
 <?php
-
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -24,19 +23,17 @@
 
  namespace local_annoto;
 
- defined('MOODLE_INTERNAL') || die();
-
 use core\persistent;
 use \local_annoto\annoto_completiondata;
 
-class annoto_completion extends persistent
-{
+class annoto_completion extends persistent {
+
     const TABLE = 'local_annoto_completion';
     const COMPLETION_TRACKING_NONE = COMPLETION_TRACKING_NONE;
-    // see moodle/lib/completionlib.php definitions of COMPLETION_TRACKING_AUTOMATIC we need it to be higher than any other value
+    // See moodle/lib/completionlib.php definitions of COMPLETION_TRACKING_AUTOMATIC we need it to be higher than any other value.
     const COMPLETION_TRACKING_AUTOMATIC = 9;
 
-    static function get_enabled_menu() {
+    public static function get_enabled_menu() {
         return [
             static::COMPLETION_TRACKING_NONE => get_string('completion_none', 'completion'),
             static::COMPLETION_TRACKING_AUTOMATIC => get_string('completion_automatic', 'completion'),
@@ -48,8 +45,7 @@ class annoto_completion extends persistent
      *
      * @return array
      */
-    protected static function define_properties()
-    {
+    protected static function define_properties() {
         return[
             'courseid' => array(
                 'type' => PARAM_INT,
@@ -78,9 +74,8 @@ class annoto_completion extends persistent
         ];
     }
 
-    public function after_delete($result)
-    {
-        // TODO: oprimize this
+    public function after_delete($result) {
+        // TODO: oprimize this.
         if ($records = annoto_completiondata::get_records(['completionid' => $this->raw_get('id')])) {
             foreach ($records as $record) {
                 $record->delete();

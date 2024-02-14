@@ -1,5 +1,4 @@
 <?php
-
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -26,10 +25,8 @@ namespace local_annoto;
 
 use core\persistent;
 
-defined('MOODLE_INTERNAL') || die();
 
-class annoto_completiondata extends persistent
-{
+class annoto_completiondata extends persistent {
     const TABLE = 'local_annoto_completiondata';
 
     /**
@@ -37,8 +34,7 @@ class annoto_completiondata extends persistent
      *
      * @return array
      */
-    protected static function define_properties()
-    {
+    protected static function define_properties() {
         return [
             'completionid' => array(
                 'type' => PARAM_INT,

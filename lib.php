@@ -23,21 +23,45 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-if (!defined('USREGION')) define('USREGION', 'us.annoto.net');
-if (!defined('EUREGION')) define('EUREGION', 'eu.annoto.net');
-if (!defined('CUSTOM')) define('CUSTOM', 'custom');
+if (!defined('USREGION')) {
+    define('USREGION', 'us.annoto.net');
+}
+if (!defined('EUREGION')) {
+    define('EUREGION', 'eu.annoto.net');
+}
+if (!defined('CUSTOM')) {
+    define('CUSTOM', 'custom');
+}
 
-if (!defined('TOOLNAME')) define('TOOLNAME', 'Annoto Dashboard');
-if (!defined('TOOLURL')) define('TOOLURL', 'https://auth.eu.annoto.net/lti/course-insights');
-if (!defined('TOOLICONURL')) define('TOOLICONURL', 'https://assets.annoto.net/images/logo_icon.png');
+if (!defined('TOOLNAME')) {
+    define('TOOLNAME', 'Annoto Dashboard');
+}
+if (!defined('TOOLURL')) {
+    define('TOOLURL', 'https://auth.eu.annoto.net/lti/course-insights');
+}
+if (!defined('TOOLICONURL')) {
+    define('TOOLICONURL', 'https://assets.annoto.net/images/logo_icon.png');
+}
 
-if (!defined('LTIGRADEGNAME')) define('LTIGRADEGNAME', 'Annoto Assignment');
-if (!defined('LTIGRADEURL')) define('LTIGRADEURL', 'https://auth.eu.annoto.net');
-if (!defined('LTIGRADEICONURL')) define('LTIGRADEICONURL', 'https://cdn.annoto.net/assets/latest/images/icon.svg');
-if (!defined('LTIGRADECONTENTITEM')) define('LTIGRADECONTENTITEM', '/lti/item-embed');
+if (!defined('LTIGRADEGNAME')) {
+    define('LTIGRADEGNAME', 'Annoto Assignment');
+}
+if (!defined('LTIGRADEURL')) {
+    define('LTIGRADEURL', 'https://auth.eu.annoto.net');
+}
+if (!defined('LTIGRADEICONURL')) {
+    define('LTIGRADEICONURL', 'https://cdn.annoto.net/assets/latest/images/icon.svg');
+}
+if (!defined('LTIGRADECONTENTITEM')) {
+    define('LTIGRADECONTENTITEM', '/lti/item-embed');
+}
 
-if (!defined('DEFAULTWIDTH')) define('DEFAULTWIDTH', 854);
-if (!defined('DEFAULTHEIGHT')) define('DEFAULTHEIGHT', 480);
+if (!defined('DEFAULTWIDTH')) {
+    define('DEFAULTWIDTH', 854);
+}
+if (!defined('DEFAULTHEIGHT')) {
+    define('DEFAULTHEIGHT', 480);
+}
 
 
 require_once($CFG->libdir . '/completionlib.php');
@@ -53,8 +77,7 @@ use \local_annoto\annoto_completiondata;
  * Function allows plugins to injecting JS across the site, like analytics.
  *
  */
-function local_annoto_before_footer()
-{
+function local_annoto_before_footer() {
     local_annoto_init();
     return '';
 }
@@ -63,11 +86,10 @@ function local_annoto_before_footer()
  * Function Insert a chunk of html at the start of the html document.
  * @return string HTML fragment.
  */
-function local_annoto_before_standard_top_of_body_html()
-{
+function local_annoto_before_standard_top_of_body_html() {
     global $PAGE;
-    // Prevent callback loading for all themes except those:
-    $themes = ['lambda', 'adaptable', 'academi']; // added academi theme
+    // Prevent callback loading for all themes except those:.
+    $themes = ['lambda', 'adaptable', 'academi']; // Added academi theme.
     if (in_array($PAGE->theme->name, $themes)) {
         local_annoto_init();
     }
@@ -78,8 +100,7 @@ function local_annoto_before_standard_top_of_body_html()
  * Function init plugin according to the proper environment conditions.
  * @return boolean
  */
-function local_annoto_init()
-{
+function local_annoto_init() {
     global $PAGE, $COURSE;
 
     $istargetpage = false;
@@ -117,8 +138,7 @@ function local_annoto_init()
  * @param int $courseid the id of the course.
  * @return string
  */
-function local_annoto_get_user_token($settings, $courseid)
-{
+function local_annoto_get_user_token($settings, $courseid) {
     global $USER, $PAGE;
 
     // Is user logged in or is guest.
@@ -156,8 +176,7 @@ function local_annoto_get_user_token($settings, $courseid)
  * @param int $courseid the id of the course.
  * @return 'super-mod'|'user'
  */
-function local_annoto_get_user_scope($settings, $courseid)
-{
+function local_annoto_get_user_scope($settings, $courseid) {
     $userloggedin = isloggedin();
     if (!$userloggedin) {
         return 'user';
@@ -172,17 +191,16 @@ function local_annoto_get_user_scope($settings, $courseid)
  * @param stdClass $course Course object
  * @return string
  */
-function local_annoto_get_lang($course)
-{
+function local_annoto_get_lang($course) {
     global $SESSION, $USER;
 
-    if (isset($course->lang) and !empty($course->lang)) {
+    if (isset($course->lang) && !empty($course->lang)) {
         return $course->lang;
     }
-    if (isset($SESSION->lang) and !empty($SESSION->lang)) {
+    if (isset($SESSION->lang) && !empty($SESSION->lang)) {
         return $SESSION->lang;
     }
-    if (isset($USER->lang) and !empty($USER->lang)) {
+    if (isset($USER->lang) && !empty($USER->lang)) {
         return $USER->lang;
     }
     return current_language();
@@ -195,8 +213,7 @@ function local_annoto_get_lang($course)
  * @param string $capability the name of the capability to check
  * @return bolean
  */
-function local_annoto_has_capability($allowedroles, $courseid, $capability)
-{
+function local_annoto_has_capability($allowedroles, $courseid, $capability) {
     global  $USER;
     $hascapability = false;
     $coursecontext = context_course::instance($courseid);
@@ -219,8 +236,7 @@ function local_annoto_has_capability($allowedroles, $courseid, $capability)
  * @param int $modid mod id.
  * @return array
  */
-function local_annoto_get_jsparam($courseid, $modid)
-{
+function local_annoto_get_jsparam($courseid, $modid) {
     global $CFG;
     global $USER;
     $course = get_course($courseid);
@@ -233,8 +249,8 @@ function local_annoto_get_jsparam($courseid, $modid)
     $loginurl = $CFG->wwwroot . '/login/index.php';
     $logouturl = $CFG->wwwroot . '/login/logout.php?sesskey=' . sesskey();
 
-    $activityCompletionEnabled = false;
-    $activityCompletionReq = null;
+    $activitycompletionenabled = false;
+    $activitycompletionreq = null;
     $userscope = local_annoto_get_user_scope($settings, $courseid);
     $context = \context_course::instance($courseid);
     $userisenrolled = is_enrolled($context, $USER, '', true);
@@ -247,13 +263,15 @@ function local_annoto_get_jsparam($courseid, $modid)
         if ($settings->activitycompletion && $userloggedin) {
             $completionrecord = annoto_completion::get_record(['cmid' => $modid]);
             if ($completionrecord) {
-                $activityCompletionReq = $completionrecord->to_record();
-                // moodle v3 do not have clean_param and returns type string
+                $activitycompletionreq = $completionrecord->to_record();
+                // Moodle v3 do not have clean_param and returns type string.
                 if ((int)$completionrecord->get('enabled') == annoto_completion::COMPLETION_TRACKING_AUTOMATIC) {
-                    $activityCompletionEnabled = true;
+                    $activitycompletionenabled = true;
                     if ($userscope === 'user') {
-                        if ($completiondata = annoto_completiondata::get_record(['completionid' => $completionrecord->get('id'), 'userid' => $USER->id])) {
-                            $activityCompletionReq->user_data = $completiondata->to_record();
+                        if ($completiondata = annoto_completiondata::get_record(
+                            ['completionid' => $completionrecord->get('id'), 'userid' => $USER->id])
+                        ) {
+                            $activitycompletionreq->user_data = $completiondata->to_record();
                         }
                     }
                 }
@@ -277,8 +295,8 @@ function local_annoto_get_jsparam($courseid, $modid)
         'cmid' => $modid ?? null,
         'moodleVersion' => $CFG->version,
         'moodleRelease' => $CFG->release,
-        'activityCompletionEnabled' => $activityCompletionEnabled,
-        'activityCompletionReq' => $activityCompletionReq,
+        'activityCompletionEnabled' => $activitycompletionenabled,
+        'activityCompletionReq' => $activitycompletionreq,
         'userScope' => $userscope,
         'userIsEnrolled' => $userisenrolled,
     );
@@ -293,8 +311,7 @@ function local_annoto_get_jsparam($courseid, $modid)
  * @param settings_navigation $settings The settings navigation object
  * @param context_course $context The node to add module settings to
  */
-function local_annoto_extend_settings_navigation(settings_navigation $settingsnav, context  $context)
-{
+function local_annoto_extend_settings_navigation(settings_navigation $settingsnav, context  $context) {
     global $CFG, $PAGE, $COURSE;
 
     if ((strpos($PAGE->pagetype, 'mod-') === false) &&
@@ -316,7 +333,7 @@ function local_annoto_extend_settings_navigation(settings_navigation $settingsna
         return;
     }
 
-    // Check and create LTI external tool
+    // Check and create LTI external tool.
     require_once($CFG->dirroot . '/mod/lti/locallib.php');
     $lti = lti_get_tool_by_url_match($settings->toolurl);
     if (!$lti) {
@@ -324,7 +341,7 @@ function local_annoto_extend_settings_navigation(settings_navigation $settingsna
         $lti->id = local_annoto_lti_add_type('dashboard');
     }
 
-    // Create a dashboard instance if not available
+    // Create a dashboard instance if not available.
     if (!$cm = local_annoto_get_lti_course_module()) {
         if (!$settings->addingdashboard) {
             return;
@@ -339,7 +356,7 @@ function local_annoto_extend_settings_navigation(settings_navigation $settingsna
     $icon = new pix_icon('icon', '', 'local_annoto');
     $url = new moodle_url($cm->url->out());
 
-    // Add nav button to Annoto dashboard
+    // Add nav button to Annoto dashboard.
     $annotodashboard = navigation_node::create($text, $url, $type, null, 'annotodashboard', $icon);
     if ($settingnode->find('coursereports', navigation_node::TYPE_CONTAINER)) {
         $settingnode->add_node($annotodashboard, 'coursereports');
@@ -354,12 +371,11 @@ function local_annoto_extend_settings_navigation(settings_navigation $settingsna
 }
 
 /**
- * returns annoto dashboard's lti course module of current course
+ * Returns annoto dashboard's lti course module of current course.
  *
  * @return cm_info|null $cm
  */
-function local_annoto_get_lti_course_module()
-{
+function local_annoto_get_lti_course_module() {
 
     global $PAGE;
 
@@ -381,8 +397,7 @@ function local_annoto_get_lti_course_module()
  * @param stdClass $lti LTI extrnall tool for specific mode
  * @return cm_info|null $cm
  */
-function local_annoto_create_lti_course_module($lti)
-{
+function local_annoto_create_lti_course_module($lti) {
     global $CFG, $PAGE;
 
     $context = context_course::instance($PAGE->course->id);
@@ -398,26 +413,26 @@ function local_annoto_create_lti_course_module($lti)
 
     $toolconfig = lti_get_type_config($lti->id);
 
-    $new_dashboard = new stdClass;
-    $new_dashboard->modulename = 'lti';
-    $new_dashboard->name = get_string('lti_activity_name', 'local_annoto');
-    $new_dashboard->course = $PAGE->course->id;
-    $new_dashboard->introeditor = [
+    $newdashboard = new stdClass;
+    $newdashboard->modulename = 'lti';
+    $newdashboard->name = get_string('lti_activity_name', 'local_annoto');
+    $newdashboard->course = $PAGE->course->id;
+    $newdashboard->introeditor = [
         'itemid' => 0,
         'format' => FORMAT_PLAIN,
         'text'   => get_string('pluginname', 'local_annoto')
     ];
-    $new_dashboard->section = 0;
-    $new_dashboard->visible = 0;
-    $new_dashboard->typeid = $lti->id;
-    $new_dashboard->servicesalt = $toolconfig['servicesalt'];
-    $new_dashboard->instructorchoicesendname = 1;
-    $new_dashboard->instructorchoicesendemailaddr = 1;
-    $new_dashboard->showtitlelaunch = 1;
-    $new_dashboard->timecreated = time();
-    $new_dashboard->timemodified = time();
+    $newdashboard->section = 0;
+    $newdashboard->visible = 0;
+    $newdashboard->typeid = $lti->id;
+    $newdashboard->servicesalt = $toolconfig['servicesalt'];
+    $newdashboard->instructorchoicesendname = 1;
+    $newdashboard->instructorchoicesendemailaddr = 1;
+    $newdashboard->showtitlelaunch = 1;
+    $newdashboard->timecreated = time();
+    $newdashboard->timemodified = time();
 
-    if (!create_module($new_dashboard)) {
+    if (!create_module($newdashboard)) {
         return null;
     }
 
@@ -431,8 +446,7 @@ function local_annoto_create_lti_course_module($lti)
  * @return integer|null LTI type id or null
 
  */
-function local_annoto_lti_add_type($ltitype)
-{
+function local_annoto_lti_add_type($ltitype) {
 
     // Get plugin global settings.
     $settings = get_config('local_annoto');
@@ -445,9 +459,9 @@ function local_annoto_lti_add_type($ltitype)
             $description = get_string('annoto_dashboard_description', 'local_annoto');
             $contentitem = 0;
             $gradecontentitem = '';
-            $service_gradesynchronization = 0;
-            $service_memberships = 0;
-            $service_toolsettings = 0;
+            $servicegradesynchronization = 0;
+            $servicememberships = 0;
+            $servicetoolsettings = 0;
             $coursevisible = LTI_COURSEVISIBLE_NO;
             break;
         case 'grade':
@@ -457,9 +471,9 @@ function local_annoto_lti_add_type($ltitype)
             $description = get_string('annoto_grade_description', 'local_annoto');
             $contentitem = 1;
             $gradecontentitem = $toolurl . LTIGRADECONTENTITEM;
-            $service_gradesynchronization = 2; // Use this service for grade sync and column management
-            $service_memberships = 1; // Use this service to retrieve members' information as per privacy settings
-            $service_toolsettings = 1; // Use this service
+            $servicegradesynchronization = 2; // Use this service for grade sync and column management.
+            $servicememberships = 1; // Use this service to retrieve members' information as per privacy settings.
+            $servicetoolsettings = 1; // Use this service.
             $coursevisible = LTI_COURSEVISIBLE_ACTIVITYCHOOSER;
             break;
         default:
@@ -487,14 +501,14 @@ function local_annoto_lti_add_type($ltitype)
     $config->lti_coursevisible = $coursevisible;
     $config->lti_launchcontainer = LTI_LAUNCH_CONTAINER_EMBED_NO_BLOCKS;
 
-    // Services settings
+    // Services settings.
     $config->lti_contentitem = $contentitem;
     $config->lti_toolurl_ContentItemSelectionRequest = $gradecontentitem;
-    $config->ltiservice_gradesynchronization = $service_gradesynchronization;
-    $config->ltiservice_memberships = $service_memberships;
-    $config->ltiservice_toolsettings = $service_toolsettings;
+    $config->ltiservice_gradesynchronization = $servicegradesynchronization;
+    $config->ltiservice_memberships = $servicememberships;
+    $config->ltiservice_toolsettings = $servicetoolsettings;
 
-    // Privacy setting
+    // Privacy setting.
     $config->lti_forcessl = LTI_SETTING_ALWAYS;
     $config->lti_sendname = LTI_SETTING_ALWAYS;
     $config->lti_sendemailaddr = LTI_SETTING_ALWAYS;
@@ -507,8 +521,7 @@ function local_annoto_lti_add_type($ltitype)
  * @param string $settingname
  *
  */
-function local_annoto_update_settings($settingname)
-{
+function local_annoto_update_settings($settingname) {
     global $DB;
 
     $settings = get_config('local_annoto');
@@ -524,7 +537,7 @@ function local_annoto_update_settings($settingname)
         's_local_annoto_ssosecret',
     ];
 
-    // Update dashboard LTI core settings
+    // Update dashboard LTI core settings.
     if (in_array($settingname, $updateltitype)) {
         if (!isset($settings->toolname) || !isset($settings->toolurl)) {
             return;
@@ -547,7 +560,7 @@ function local_annoto_update_settings($settingname)
         lti_update_type($lti, $config);
     }
 
-    // Update grade LTI core settings
+    // Update grade LTI core settings.
     if (in_array($settingname, $updategradeltitype)) {
         if (!isset($settings->gradetoolname) || !isset($settings->gradetoolname)) {
             return;
@@ -575,7 +588,7 @@ function local_annoto_update_settings($settingname)
         lti_update_type($lti, $config);
     }
 
-    // Update media details
+    // Update media details.
     if (!isset($settings->mediasettingsoverride) || !$settings->mediasettingsoverride) {
         return;
     }
@@ -596,8 +609,7 @@ function local_annoto_update_settings($settingname)
  *
  * @return array
  */
-function local_annoto_get_all_dashboard_roles()
-{
+function local_annoto_get_all_dashboard_roles() {
     $capabilitiy = 'local/annoto:managementdashboard';
     $choices = $defaultchoices = [];
 
@@ -617,8 +629,7 @@ function local_annoto_get_all_dashboard_roles()
  * @param string $log the id of the course.
  * @return void
  */
-function local_annoto_set_jslog($log = '')
-{
+function local_annoto_set_jslog($log = '') {
     global $PAGE;
     global $CFG;
     $themename = $PAGE->theme->get_theme_name();
@@ -642,11 +653,10 @@ function local_annoto_set_jslog($log = '')
  *
  * @param moodleform_mod $formwrapper The moodle quickforms wrapper object.
  * @param MoodleQuickForm $mform The actual form object (required to modify the form).
- * 
+ *
  * Note: original completion form is located in moodle/completion/classes/form/form_trait.php
  */
-function local_annoto_coursemodule_standard_elements($formwrapper, $mform)
-{
+function local_annoto_coursemodule_standard_elements($formwrapper, $mform) {
 
     $settings = get_config('local_annoto');
 
@@ -659,6 +669,7 @@ function local_annoto_coursemodule_standard_elements($formwrapper, $mform)
         'kalvidres',
     ];
 
+    // phpcs:ignore
     /* $completionel = 'completion';
     $conditionsgroupel = 'conditionsgroup';
 
@@ -682,7 +693,7 @@ function local_annoto_coursemodule_standard_elements($formwrapper, $mform)
 
     $cmid = null;
     $cm = $formwrapper->get_coursemodule();
-    $completionOptions = (object) [
+    $completionoptions = (object) [
         'enabled' => annoto_completion::COMPLETION_TRACKING_NONE,
         'totalview' => 0,
         'comments' => 0,
@@ -691,7 +702,7 @@ function local_annoto_coursemodule_standard_elements($formwrapper, $mform)
     if (!empty($cm) && isset($cm)) {
         $cmid = $cm->id;
         if ($completionsettings = annoto_completion::get_record(['cmid' => $cmid])) {
-            $completionOptions = $completionsettings->to_record();
+            $completionoptions = $completionsettings->to_record();
         }
     }
 
@@ -699,22 +710,23 @@ function local_annoto_coursemodule_standard_elements($formwrapper, $mform)
     $completionview = 'annotocompletionview';
     $completioncomments = 'annotocompletioncomments';
     $completionreplies = 'annotocompletionreplies';
+    // phpcs:ignore
     // $completionexpected = 'annotocompletionexpected';
 
     $completionmenu = annoto_completion::get_enabled_menu();
     $mform->addElement('select', $completionenabledel, get_string('completionenabled', 'local_annoto'), $completionmenu);
-    $mform->setDefault($completionenabledel, $completionOptions->enabled);
+    $mform->setDefault($completionenabledel, $completionoptions->enabled);
     $mform->disabledIf($completionenabledel, 'completion', 'noteq', 0);
     $mform->disabledIf('completion', $completionenabledel, 'noteq', annoto_completion::COMPLETION_TRACKING_NONE);
 
-    $add_group = function ($groupname, $value, $valuerules, $info) use ($mform, $completionenabledel) {
+    $addgroup = function ($groupname, $value, $valuerules, $info) use ($mform, $completionenabledel) {
         $enabledel = 'enabled';
         $valueel = 'value';
-        $get_value_in_group = function ($groupname) use ($valueel) {
+        $getvalueingroup = function ($groupname) use ($valueel) {
             return $groupname . '[' . $valueel . ']';
         };
 
-        $get_enabled_in_group = function ($groupname) use ($enabledel) {
+        $getenabledingroup = function ($groupname) use ($enabledel) {
             return $groupname . '[' . $enabledel . ']';
         };
 
@@ -728,10 +740,10 @@ function local_annoto_coursemodule_standard_elements($formwrapper, $mform)
         }
 
         $mform->addGroup($group, $groupname, get_string($groupname, 'local_annoto'));
-        $mform->disabledIf($get_value_in_group($groupname), $get_enabled_in_group($groupname), 'notchecked');
-        $mform->setType($get_value_in_group($groupname), PARAM_INT);
-        $mform->setDefault($get_value_in_group($groupname), $value);
-        $mform->setDefault($get_enabled_in_group($groupname), $value > 0);
+        $mform->disabledIf($getvalueingroup($groupname), $getenabledingroup($groupname), 'notchecked');
+        $mform->setType($getvalueingroup($groupname), PARAM_INT);
+        $mform->setDefault($getvalueingroup($groupname), $value);
+        $mform->setDefault($getenabledingroup($groupname), $value > 0);
         if (isset($valurules)) {
             $grouprule = [];
             $grouprule[$valueel] = $valuerules;
@@ -740,9 +752,9 @@ function local_annoto_coursemodule_standard_elements($formwrapper, $mform)
         $mform->hideIf($groupname, $completionenabledel, 'ne', annoto_completion::COMPLETION_TRACKING_AUTOMATIC);
     };
 
-    $add_group(
+    $addgroup(
         $completionview,
-        $completionOptions->totalview,
+        $completionoptions->totalview,
         [
             [get_string('numericrule', 'local_annoto'), 'numeric']
         ],
@@ -751,9 +763,9 @@ function local_annoto_coursemodule_standard_elements($formwrapper, $mform)
             'suffix' => true,
         ]
     );
-    $add_group(
+    $addgroup(
         $completioncomments,
-        $completionOptions->comments,
+        $completionoptions->comments,
         [
             [get_string('numericrule', 'local_annoto'), 'numeric']
         ],
@@ -762,9 +774,9 @@ function local_annoto_coursemodule_standard_elements($formwrapper, $mform)
             'suffix' => false,
         ]
     );
-    $add_group(
+    $addgroup(
         $completionreplies,
-        $completionOptions->replies,
+        $completionoptions->replies,
         [
             [get_string('numericrule', 'local_annoto'), 'numeric']
         ],
@@ -773,7 +785,7 @@ function local_annoto_coursemodule_standard_elements($formwrapper, $mform)
             'suffix' => false,
         ]
     );
-
+    // phpcs:ignore
     // $mform->addElement('date_time_selector', $completionexpected, get_string($completionexpected, 'local_annoto'), ['optional' => true]);
 }
 
@@ -783,13 +795,12 @@ function local_annoto_coursemodule_standard_elements($formwrapper, $mform)
  * @param stdClass $data moduleinfo data from the form submission.
  * @param stdClass $course The course.
  * @return stdClass updated moduleinfo
- * 
+ *
  * See plugin_extend_coursemodule_edit_post_actions in
  * https://github.com/moodle/moodle/blob/master/course/modlib.php
- * 
+ *
  */
-function local_annoto_coursemodule_edit_post_actions($data, $course)
-{
+function local_annoto_coursemodule_edit_post_actions($data, $course) {
     global $DB;
     $settings = get_config('local_annoto');
     $cmid = $data->coursemodule;
@@ -801,6 +812,7 @@ function local_annoto_coursemodule_edit_post_actions($data, $course)
         $completionview = $data->annotocompletionview;
         $completioncomments = $data->annotocompletioncomments;
         $completionreplies = $data->annotocompletionreplies;
+        // phpcs:ignore
         // $completionexpected = $data->annotocompletionexpected;
         $completionrecord = new stdClass();
         $completionrecord->courseid = $course->id;
@@ -809,9 +821,10 @@ function local_annoto_coursemodule_edit_post_actions($data, $course)
         $completionrecord->totalview  = $completionview['enabled'] ? $completionview['value'] : 0;
         $completionrecord->comments  = $completioncomments['enabled'] ? $completioncomments['value'] : 0;
         $completionrecord->replies  = $completionreplies['enabled'] ? $completionreplies['value'] : 0;
+        // phpcs:ignore
         // $completiondata->completionexpected  = $completionexpected;
 
-        log::debug('coursemodule_edit_post_actions - completiondata: ' . print_r($completionrecord, true));
+        log::debug('coursemodule_edit_post_actions - completiondata: ' . json_encode($completionrecord));
 
         if (!$record = annoto_completion::get_record(['cmid' => $cmid])) {
             $record = new annoto_completion(0, $completionrecord);
@@ -827,18 +840,20 @@ function local_annoto_coursemodule_edit_post_actions($data, $course)
         }
 
         if ($cm = $DB->get_record('course_modules', ['id' => $cmid])) {
-            $cm->completion = $completiontracking; // TODO: need to cleanup this override if $settings->activitycompletion changes to false for all the courses
+            // TODO: need to cleanup this override if $settings->activitycompletion changes to false for all the courses.
+            $cm->completion = $completiontracking;
             $DB->update_record('course_modules', $cm);
 
-            // See edit_module_post_actions() in moodle/course/modlib.php coursemodule_edit_post_actions is called after edit_module_post_actions() clears the cache
-            // because we change the cm we need to clear it again
+            // See edit_module_post_actions() in moodle/course/modlib.php
+            // coursemodule_edit_post_actions is called after edit_module_post_actions() clears the cache
+            // because we change the cm we need to clear it again.
             if (method_exists(\course_modinfo::class, 'purge_course_module_cache')) {
                 log::debug('coursemodule_edit_post_actions - purge_course_module_cache and partial rebuild_course_cache v4');
-                // moodle v4 and up
+                // Moodle v4 and up.
                 \course_modinfo::purge_course_module_cache($cm->course, $cmid);
                 rebuild_course_cache($cm->course, true, true);
             } else {
-                // moodle v3
+                // Moodle v3.
                 log::debug('coursemodule_edit_post_actions - rebuild_course_cache v3');
                 rebuild_course_cache($cm->course, true);
             }

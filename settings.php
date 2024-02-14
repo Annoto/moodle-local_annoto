@@ -35,7 +35,7 @@ if ($hassiteconfig) {
     $release = $plugininfo->release;
     $name = get_string('pluginname', 'local_annoto').' (rel. '.$release.' ver. '.$version.')';
 
-    $settings = new admin_settingpage('local_annoto',$name);
+    $settings = new admin_settingpage('local_annoto', $name);
     $ADMIN->add('localplugins', $settings);
 
     /* Annoto setup. */
@@ -74,14 +74,15 @@ if ($hassiteconfig) {
 
 
     /* Annoto dashboard (LTI) */
-    $settings->add(new admin_setting_heading('local_annoto/externaltoolsettings', get_string('externaltoolsettings', 'local_annoto'), ''));
+    $settings->add(new admin_setting_heading('local_annoto/externaltoolsettings',
+        get_string('externaltoolsettings', 'local_annoto'), ''));
 
     // Auto launching.
     $setting = new admin_setting_configcheckbox('local_annoto/addingdashboard',
         get_string('addingdashboard', 'local_annoto'), get_string('addingdashboard_desc', 'local_annoto'), 0);
     $setting->set_updatedcallback('local_annoto_update_settings');
     $settings->add($setting);
-    
+
     // LTI name.
     $settings->add(new admin_setting_configtext('local_annoto/toolname', get_string('toolname', 'local_annoto'),
         get_string('toolnamedesc', 'local_annoto'), TOOLNAME));
@@ -94,7 +95,7 @@ if ($hassiteconfig) {
     $settings->add(new admin_setting_configtext('local_annoto/tooliconurl', get_string('tooliconurl', 'local_annoto'),
         get_string('tooliconurldesc', 'local_annoto'), TOOLICONURL));
 
-    // Management dashboard
+    // Management dashboard.
     list($roles, $defaultroles) = local_annoto_get_all_dashboard_roles();
     $settings->add(new admin_setting_configmulticheckbox('local_annoto/managementdashboard',
         get_string('managementdashboard', 'local_annoto'),
@@ -104,7 +105,8 @@ if ($hassiteconfig) {
     ));
 
     /* Annoto assignment (LTI) */
-    $settings->add(new admin_setting_heading('local_annoto/externalgradetoolsettings', get_string('externalgradetoolsettings', 'local_annoto'), ''));
+    $settings->add(new admin_setting_heading('local_annoto/externalgradetoolsettings',
+        get_string('externalgradetoolsettings', 'local_annoto'), ''));
 
     // Enable / disable lti grading.
     $setting = new admin_setting_configcheckbox('local_annoto/gradetoggle',
@@ -145,10 +147,11 @@ if ($hassiteconfig) {
         )));
 
     /* Annoto settings */
-    $settings->add(new admin_setting_heading('local_annoto/mediaplayersettingheading', get_string('media_player_setting', 'local_annoto'),
-        ''));
+    $settings->add(new admin_setting_heading('local_annoto/mediaplayersettingheading',
+        get_string('media_player_setting', 'local_annoto'), ''));
 
-    $setting = new admin_setting_configselect('local_annoto/mediasettingsoverride', get_string('mediasettingsoverride', 'local_annoto'),
+    $setting = new admin_setting_configselect('local_annoto/mediasettingsoverride',
+        get_string('mediasettingsoverride', 'local_annoto'),
         get_string('mediasettingsoverridedesc', 'local_annoto'), 1, array(
             0 => get_string('no'),
             1 => get_string('yes')));
@@ -170,11 +173,12 @@ if ($hassiteconfig) {
     $settings->hide_if('local_annoto/defaultheight', 'local_annoto/mediasettingsoverride', 'neq', 1);
 
 
-    
-    // Activity completion
-    $settings->add(new admin_setting_heading('local_annoto/activitycompletionheading', get_string('activitycompletion_settings', 'local_annoto'),
-        ''));
-    $settings->add(new admin_setting_configselect('local_annoto/activitycompletion', get_string('activitycompletion_enable', 'local_annoto'),
+
+    // Activity completion.
+    $settings->add(new admin_setting_heading('local_annoto/activitycompletionheading',
+        get_string('activitycompletion_settings', 'local_annoto'), ''));
+    $settings->add(new admin_setting_configselect('local_annoto/activitycompletion',
+        get_string('activitycompletion_enable', 'local_annoto'),
         get_string('activitycompletion_enabledesc', 'local_annoto'), 0, array(
             0 => get_string('no'),
             1 => get_string('yes'))

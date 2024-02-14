@@ -23,8 +23,6 @@
  */
 namespace local_annoto\privacy;
 
-defined('MOODLE_INTERNAL') || die();
-
 use core_privacy\local\metadata\collection;
 
 /**

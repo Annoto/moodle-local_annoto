@@ -1,5 +1,4 @@
 <?php
-
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -24,23 +23,20 @@
 
 namespace local_annoto;
 
-defined('MOODLE_INTERNAL') || die();
-
-class log
-{
-    static function debug($message = '') {
+class log {
+    public static function debug($message = '') {
         debugging('Annoto: ' . $message, DEBUG_DEVELOPER);
     }
 
-    static function info($message = '') {
+    public static function info($message = '') {
         debugging('Annoto: ' . $message, DEBUG_ALL);
     }
 
-    static function warning($message = '') {
+    public static function warning($message = '') {
         debugging('Annoto: ' . $message, DEBUG_NORMAL);
     }
 
-    static function error($message = '') {
+    public static function error($message = '') {
         debugging('Annoto: ' . $message, DEBUG_MINIMAL);
     }
 }

@@ -59,7 +59,8 @@ class local_annoto_external extends external_api {
      * @return external_value
      */
     public static function get_jsparams_returns() {
-        //return new external_value(PARAM_TEXT, 'json jsparams');
+        // phpcs:ignore
+        // TODO: return new external_value(PARAM_TEXT, 'json jsparams');.
         return new external_single_structure([
             'result' => new external_value(PARAM_BOOL, 'True if the params was successfully sended'),
             'params'    => new external_value(PARAM_TEXT, 'json jsparams'),
@@ -109,7 +110,7 @@ class local_annoto_external extends external_api {
     public static function set_completion($jsondata) {
         global $USER;
         $settings = get_config('local_annoto');
-        
+
         self::validate_parameters(self::set_completion_parameters(),
             array(
                 'data' => $jsondata,
@@ -124,7 +125,7 @@ class local_annoto_external extends external_api {
         if (!$settings->activitycompletion) {
             $message = 'activity completion is disabled';
             log::info('set_completion - ' . $message);
-            
+
             return ['status' => $status, 'message' => $message];
         }
 
@@ -147,11 +148,15 @@ class local_annoto_external extends external_api {
 
             if (is_enrolled($context, $USER, '', true)) {
                 $completionrecord = annoto_completion::get_record(['cmid' => $cmid]);
-                // moodle v3 do not have clean_param and returns type string
-                if ($completionrecord && (int)$completionrecord->get('enabled') == annoto_completion::COMPLETION_TRACKING_AUTOMATIC) {
+                // Moodle v3 do not have clean_param and returns type string.
+                if ($completionrecord && (int)$completionrecord->get('enabled') ==
+                    annoto_completion::COMPLETION_TRACKING_AUTOMATIC
+                ) {
                     $completionid = $completionrecord->get('id');
-                    
-                    if ($completiondata = annoto_completiondata::get_record(['completionid' => $completionid, 'userid' => $userid])) {
+
+                    if ($completiondata = annoto_completiondata::get_record(
+                            ['completionid' => $completionid, 'userid' => $userid]
+                    )) {
                         $completiondata->set('data', json_encode($cleandata));
                         $completiondata->update();
                         $message = 'Updated completion for user '. $userid . ' cmid ' . $cmid;
@@ -170,8 +175,8 @@ class local_annoto_external extends external_api {
             }
         }
 
-        log::debug('set_completion - ' . $message . ($status ? ' data ' . print_r($cleandata, true) : ''));
-        
+        log::debug('set_completion - ' . $message . ($status ? ' data ' . json_encode($cleandata) : ''));
+
         return ['status' => $status, 'message' => $message];
     }
 

@@ -24,7 +24,7 @@
 
 $string['pluginname'] = 'Annoto';
 
-// Capabilities
+// Capabilities.
 $string['annoto:moderatediscussion'] = 'Moderate discussions in Annoto';
 $string['annoto:managementdashboard'] = 'Access Annoto dashboard';
 
@@ -44,7 +44,7 @@ $string['eurregion'] = 'EU region';
 $string['usregion'] = 'US region';
 $string['custom'] = 'Custom';
 
-// Annoto dashboard (LTI)
+// Annoto dashboard (LTI).
 $string['addingdashboard'] = 'Add to all the courses';
 $string['addingdashboard_desc'] = 'If enabled, Annoto dashboard will be automatically added to all the courses. If disabled the Annoto dashboard can be added manually from the “+ Add an activity or resource” on the desired course';
 $string['externaltoolsettings'] = 'Annoto dashboard (LTI)';
@@ -59,7 +59,7 @@ $string['lti_activity_name'] = 'Annoto Dashboard';
 $string['managementdashboard'] = 'Dashboard manager roles';
 $string['managementdashboard_desc'] = 'Specify who is allowed to access Annoto dashboard';
 
-// Annoto grading (LTI)
+// Annoto grading (LTI).
 $string['gradetoggle'] = 'Enable annoto assignment';
 $string['gradetoggle_desc'] = 'If disabled, Annoto assignment is not available from activity chooser.';
 $string['externalgradetoolsettings'] = 'Annoto assignment (LTI)';
@@ -78,7 +78,7 @@ $string['locale_desc'] = 'If enable will set per page and course based on Course
 $string['moderatorroles'] = 'Moderator roles';
 $string['moderatorrolesdesc'] = 'Specify who is allowed to moderate discussions (only roles that at least include the following capabilities are available: local/annoto:moderatediscussion).';
 
-// Media player settings
+// Media player settings.
 $string['media_player_setting'] = 'Media Player Setting';
 $string['mediasettingsoverride'] = 'Override Moodle media settings';
 $string['mediasettingsoverridedesc'] = 'Enable overriding the Moodle Media Player settings';
@@ -87,7 +87,7 @@ $string['defaultwidthdesc'] = 'Media player width if a width is not specified an
 $string['defaultheight'] = 'Media height';
 $string['defaultheightdesc'] = 'Media player height if a height is not specified and the actual media file height cannot be determined by the player';
 
-// Activities completion
+// Activities completion.
 
 $string['activitycompletion_settings'] = 'Activity completion (Beta)';
 $string['activitycompletion_enable'] = 'Enable Annoto activity completion';

@@ -58,9 +58,10 @@ class observer {
     public static function user_enrolment_deleted(\core\event\user_enrolment_deleted $event) {
         $comprecords = annoto_completion::get_records(['courseid' => $event->courseid]);
 
-        // TODO: optimize this
+        // TODO: optimize this.
         foreach ($comprecords as $record) {
-            foreach (annoto_completiondata::get_records(['completionid' => $record->get('id'), 'userid' => $event->relateduserid]) as $data) {
+            foreach (annoto_completiondata::get_records(
+                ['completionid' => $record->get('id'), 'userid' => $event->relateduserid]) as $data) {
                 $data->delete();
             }
         }
