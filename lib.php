@@ -824,8 +824,7 @@ function local_annoto_coursemodule_edit_post_actions($data, $course) {
         // phpcs:ignore
         // $completiondata->completionexpected  = $completionexpected;
 
-        // phpcs:ignore
-        log::debug('coursemodule_edit_post_actions - completiondata: ' . print_r($completionrecord, true));
+        log::debug('coursemodule_edit_post_actions - completiondata: ' . json_encode($completionrecord));
 
         if (!$record = annoto_completion::get_record(['cmid' => $cmid])) {
             $record = new annoto_completion(0, $completionrecord);
