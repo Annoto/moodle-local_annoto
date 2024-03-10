@@ -83,7 +83,7 @@ class local_annoto_admin_setting_custompickroles extends admin_setting_configmul
         if (during_initial_install()) {
             return null;
         }
-        $result = array();
+        $result = [];
         foreach ($this->types as $archetype) {
             if ($caproles = get_archetype_roles($archetype)) {
                 foreach ($caproles as $caprole) {

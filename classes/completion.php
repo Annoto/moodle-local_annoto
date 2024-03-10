@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * @package    local
+ * @package    local_annoto
  * @subpackage annoto
  * @copyright  Annoto Ltd.
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -24,7 +24,7 @@
  namespace local_annoto;
 
 use core\persistent;
-use \local_annoto\annoto_completiondata;
+use local_annoto\annoto_completiondata;
 
 class annoto_completion extends persistent {
 
@@ -47,35 +47,35 @@ class annoto_completion extends persistent {
      */
     protected static function define_properties() {
         return[
-            'courseid' => array(
+            'courseid' => [
                 'type' => PARAM_INT,
                 'default' => 0,
-            ),
-            'cmid' => array(
+            ],
+            'cmid' => [
                 'type' => PARAM_INT,
-            ),
-            'enabled' => array(
+            ],
+            'enabled' => [
                 'type' => PARAM_INT,
-            ),
-            'totalview' => array(
+            ],
+            'totalview' => [
                 'type' => PARAM_INT,
-            ),
-            'comments' => array(
+            ],
+            'comments' => [
                 'type' => PARAM_INT,
-            ),
-            'replies' => array(
+            ],
+            'replies' => [
                 'type' => PARAM_INT,
-            ),
-            'completionexpected' => array(
+            ],
+            'completionexpected' => [
                 'type' => PARAM_INT,
                 'default' => null,
                 'null' => NULL_ALLOWED,
-            ),
+            ],
         ];
     }
 
     public function after_delete($result) {
-        // TODO: oprimize this.
+        // FIXME: optimize this.
         if ($records = annoto_completiondata::get_records(['completionid' => $this->raw_get('id')])) {
             foreach ($records as $record) {
                 $record->delete();

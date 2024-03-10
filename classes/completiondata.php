@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * @package    local
+ * @package    local_annoto
  * @subpackage annoto
  * @copyright  Annoto Ltd.
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -24,7 +24,6 @@
 namespace local_annoto;
 
 use core\persistent;
-
 
 class annoto_completiondata extends persistent {
     const TABLE = 'local_annoto_completiondata';
@@ -36,15 +35,15 @@ class annoto_completiondata extends persistent {
      */
     protected static function define_properties() {
         return [
-            'completionid' => array(
+            'completionid' => [
                 'type' => PARAM_INT,
-            ),
-            'userid' => array(
+            ],
+            'userid' => [
                 'type' => PARAM_INT,
-            ),
-            'data' => array(
+            ],
+            'data' => [
                 'type' => PARAM_RAW,
-            )
+            ],
         ];
     }
 }

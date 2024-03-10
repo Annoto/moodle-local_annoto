@@ -69,9 +69,9 @@ require_once(__DIR__ . '/classes/completion.php');
 require_once(__DIR__ . '/classes/completiondata.php');
 require_once(__DIR__ . '/classes/log.php');
 
-use \local_annoto\log;
-use \local_annoto\annoto_completion;
-use \local_annoto\annoto_completiondata;
+use local_annoto\log;
+use local_annoto\annoto_completion;
+use local_annoto\annoto_completiondata;
 
 /**
  * Function allows plugins to injecting JS across the site, like analytics.
@@ -107,7 +107,7 @@ function local_annoto_init() {
     $possiblepages = [
         'mod-',
         'course-view-',
-        'blocks-'
+        'blocks-',
     ];
 
     foreach ($possiblepages as $possiblepage) {
@@ -127,7 +127,7 @@ function local_annoto_init() {
         }
 
         $PAGE->requires->js('/local/annoto/initkaltura.js');
-        $PAGE->requires->js_call_amd('local_annoto/annoto', 'init', array($courseid, $modid));
+        $PAGE->requires->js_call_amd('local_annoto/annoto', 'init', [$courseid, $modid]);
     }
 }
 
@@ -156,7 +156,7 @@ function local_annoto_get_user_token($settings, $courseid) {
     $issuedat = time();                        // Get current time.
     $expire = $issuedat + 60 * 20;             // Adding 20 minutes.
 
-    $payload = array(
+    $payload = [
         "jti" => $USER->id,                     // User's id in Moodle.
         "name" => fullname($USER),              // User's fullname in Moodle.
         "email" => $USER->email,                // User's email.
@@ -164,7 +164,7 @@ function local_annoto_get_user_token($settings, $courseid) {
         "iss" => $settings->clientid,           // ClientID from global settings.
         "exp" => $expire,                       // JWT token expiration time.
         "scope" => local_annoto_get_user_scope($settings, $courseid),
-    );
+    ];
     $enctoken = \Firebase\JWT\JWT::encode($payload, $settings->ssosecret, 'HS256');
 
     return $enctoken;
@@ -279,7 +279,7 @@ function local_annoto_get_jsparam($courseid, $modid) {
         }
     }
 
-    $jsparams = array(
+    $jsparams = [
         'deploymentDomain' => $settings->deploymentdomain != 'custom' ? $settings->deploymentdomain : $settings->customdomain,
         'bootstrapUrl' => $settings->scripturl,
         'clientId' => $settings->clientid,
@@ -299,7 +299,7 @@ function local_annoto_get_jsparam($courseid, $modid) {
         'activityCompletionReq' => $activitycompletionreq,
         'userScope' => $userscope,
         'userIsEnrolled' => $userisenrolled,
-    );
+    ];
 
     return $jsparams;
 }
@@ -420,7 +420,7 @@ function local_annoto_create_lti_course_module($lti) {
     $newdashboard->introeditor = [
         'itemid' => 0,
         'format' => FORMAT_PLAIN,
-        'text'   => get_string('pluginname', 'local_annoto')
+        'text'   => get_string('pluginname', 'local_annoto'),
     ];
     $newdashboard->section = 0;
     $newdashboard->visible = 0;
@@ -711,7 +711,7 @@ function local_annoto_coursemodule_standard_elements($formwrapper, $mform) {
     $completioncomments = 'annotocompletioncomments';
     $completionreplies = 'annotocompletionreplies';
     // phpcs:ignore Squiz.PHP.CommentedOutCode.Found
-    // TODO: $completionexpected = 'annotocompletionexpected';.
+    // FIXME: $completionexpected = 'annotocompletionexpected';.
 
     $completionmenu = annoto_completion::get_enabled_menu();
     $mform->addElement('select', $completionenabledel, get_string('completionenabled', 'local_annoto'), $completionmenu);
@@ -730,7 +730,7 @@ function local_annoto_coursemodule_standard_elements($formwrapper, $mform) {
             return $groupname . '[' . $enabledel . ']';
         };
 
-        $group = array($mform->createElement('advcheckbox', $enabledel));
+        $group = [$mform->createElement('advcheckbox', $enabledel)];
         if (isset($info) && $info->prefix) {
             $group[] = &$mform->createElement('static', 'prefix', null, get_string($groupname . 'prefix', 'local_annoto'));
         }
@@ -756,7 +756,7 @@ function local_annoto_coursemodule_standard_elements($formwrapper, $mform) {
         $completionview,
         $completionoptions->totalview,
         [
-            [get_string('numericrule', 'local_annoto'), 'numeric']
+            [get_string('numericrule', 'local_annoto'), 'numeric'],
         ],
         (object) [
             'prefix' => true,
@@ -767,7 +767,7 @@ function local_annoto_coursemodule_standard_elements($formwrapper, $mform) {
         $completioncomments,
         $completionoptions->comments,
         [
-            [get_string('numericrule', 'local_annoto'), 'numeric']
+            [get_string('numericrule', 'local_annoto'), 'numeric'],
         ],
         (object) [
             'prefix' => true,
@@ -778,7 +778,7 @@ function local_annoto_coursemodule_standard_elements($formwrapper, $mform) {
         $completionreplies,
         $completionoptions->replies,
         [
-            [get_string('numericrule', 'local_annoto'), 'numeric']
+            [get_string('numericrule', 'local_annoto'), 'numeric'],
         ],
         (object) [
             'prefix' => true,
@@ -786,7 +786,7 @@ function local_annoto_coursemodule_standard_elements($formwrapper, $mform) {
         ]
     );
     // phpcs:ignore Squiz.PHP.CommentedOutCode.Found 
-    // TODO: $mform->addElement('date_time_selector', $completionexpected,
+    // FIXME: $mform->addElement('date_time_selector', $completionexpected,
     // get_string($completionexpected, 'local_annoto'), ['optional' => true]);.
 }
 
@@ -814,7 +814,7 @@ function local_annoto_coursemodule_edit_post_actions($data, $course) {
         $completioncomments = $data->annotocompletioncomments;
         $completionreplies = $data->annotocompletionreplies;
         // phpcs:ignore Squiz.PHP.CommentedOutCode.Found 
-        // TODO: $completionexpected = $data->annotocompletionexpected;.
+        // FIXME: $completionexpected = $data->annotocompletionexpected;.
         $completionrecord = new stdClass();
         $completionrecord->courseid = $course->id;
         $completionrecord->cmid = $cmid;
@@ -823,7 +823,7 @@ function local_annoto_coursemodule_edit_post_actions($data, $course) {
         $completionrecord->comments  = $completioncomments['enabled'] ? $completioncomments['value'] : 0;
         $completionrecord->replies  = $completionreplies['enabled'] ? $completionreplies['value'] : 0;
         // phpcs:ignore Squiz.PHP.CommentedOutCode.Found 
-        // TODO: $completiondata->completionexpected  = $completionexpected;.
+        // FIXME: $completiondata->completionexpected  = $completionexpected;.
 
         log::debug('coursemodule_edit_post_actions - completiondata: ' . json_encode($completionrecord));
 
@@ -841,7 +841,7 @@ function local_annoto_coursemodule_edit_post_actions($data, $course) {
         }
 
         if ($cm = $DB->get_record('course_modules', ['id' => $cmid])) {
-            // TODO: need to cleanup this override if $settings->activitycompletion changes to false for all the courses.
+            // FIXME: need to cleanup this override if $settings->activitycompletion changes to false for all the courses.
             $cm->completion = $completiontracking;
             $DB->update_record('course_modules', $cm);
 

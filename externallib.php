@@ -29,9 +29,9 @@ require_once(__DIR__ . '/classes/completion.php');
 require_once(__DIR__ . '/classes/completiondata.php');
 require_once(__DIR__ . '/classes/log.php');
 
-use \local_annoto\annoto_completion;
-use \local_annoto\annoto_completiondata;
-use \local_annoto\log;
+use local_annoto\annoto_completion;
+use local_annoto\annoto_completiondata;
+use local_annoto\log;
 
 /**
  * Class local_annoto_external
@@ -47,10 +47,10 @@ class local_annoto_external extends external_api {
      */
     public static function get_jsparams_parameters() {
         return new external_function_parameters(
-                array(
+                [
                   'courseid' => new external_value(PARAM_INT, 'Course id', VALUE_DEFAULT, null),
-                  'modid' => new external_value(PARAM_INT, 'Mod id', VALUE_DEFAULT, 0)
-                )
+                  'modid' => new external_value(PARAM_INT, 'Mod id', VALUE_DEFAULT, 0),
+                ]
         );
     }
 
@@ -60,7 +60,7 @@ class local_annoto_external extends external_api {
      */
     public static function get_jsparams_returns() {
         // phpcs:ignore Squiz.PHP.CommentedOutCode.Found
-        // TODO: return new external_value(PARAM_TEXT, 'json jsparams');.
+        // FIXME: return new external_value(PARAM_TEXT, 'json jsparams');.
         return new external_single_structure([
             'result' => new external_value(PARAM_BOOL, 'True if the params was successfully sended'),
             'params'    => new external_value(PARAM_TEXT, 'json jsparams'),
@@ -77,10 +77,10 @@ class local_annoto_external extends external_api {
         global $USER;
         $params = self::validate_parameters(
             self::get_jsparams_parameters(),
-            array(
+            [
                 'courseid' => $courseid,
-                'modid' => $modid
-            )
+                'modid' => $modid,
+            ]
         );
         $context = context_course::instance($courseid);
         self::validate_context(context_course::instance($courseid));
@@ -97,9 +97,9 @@ class local_annoto_external extends external_api {
      */
     public static function set_completion_parameters() {
         return new external_function_parameters(
-            array(
+            [
                 'data' => new external_value(PARAM_RAW, 'JSON encoded data'),
-            )
+            ]
         );
     }
 
@@ -112,9 +112,9 @@ class local_annoto_external extends external_api {
         $settings = get_config('local_annoto');
 
         self::validate_parameters(self::set_completion_parameters(),
-            array(
+            [
                 'data' => $jsondata,
-            )
+            ]
         );
 
         $data = json_decode($jsondata);
@@ -149,8 +149,8 @@ class local_annoto_external extends external_api {
             if (is_enrolled($context, $USER, '', true)) {
                 $completionrecord = annoto_completion::get_record(['cmid' => $cmid]);
                 // Moodle v3 do not have clean_param and returns type string.
-                if ($completionrecord && (int)$completionrecord->get('enabled') ==
-                    annoto_completion::COMPLETION_TRACKING_AUTOMATIC
+                if ($completionrecord &&
+                    (int)$completionrecord->get('enabled') == annoto_completion::COMPLETION_TRACKING_AUTOMATIC
                 ) {
                     $completionid = $completionrecord->get('id');
 

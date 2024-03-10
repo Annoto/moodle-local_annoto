@@ -60,11 +60,11 @@ if ($hassiteconfig) {
     // Deployment domain.
     $settings->add(new admin_setting_configselect('local_annoto/deploymentdomain', get_string('deploymentdomain', 'local_annoto'),
         get_string('deploymentdomaindesc', 'local_annoto'), EUREGION,
-            array(
+            [
                 EUREGION => get_string('eurregion', 'local_annoto'),
                 USREGION => get_string('usregion', 'local_annoto'),
                 CUSTOM => get_string('custom', 'local_annoto'),
-            )
+            ]
         )
     );
 
@@ -141,10 +141,10 @@ if ($hassiteconfig) {
     $settings->add(new local_annoto_admin_setting_custompickroles('local_annoto/moderatorroles',
         get_string('moderatorroles', 'local_annoto'),
         get_string('moderatorrolesdesc', 'local_annoto'),
-        array(
+        [
             'manager',
             'editingteacher',
-        )));
+        ]));
 
     /* Annoto settings */
     $settings->add(new admin_setting_heading('local_annoto/mediaplayersettingheading',
@@ -152,9 +152,9 @@ if ($hassiteconfig) {
 
     $setting = new admin_setting_configselect('local_annoto/mediasettingsoverride',
         get_string('mediasettingsoverride', 'local_annoto'),
-        get_string('mediasettingsoverridedesc', 'local_annoto'), 1, array(
+        get_string('mediasettingsoverridedesc', 'local_annoto'), 1, [
             0 => get_string('no'),
-            1 => get_string('yes')));
+            1 => get_string('yes')]);
     $setting->set_updatedcallback('local_annoto_update_settings');
     $settings->add($setting);
 
@@ -179,8 +179,8 @@ if ($hassiteconfig) {
         get_string('activitycompletion_settings', 'local_annoto'), ''));
     $settings->add(new admin_setting_configselect('local_annoto/activitycompletion',
         get_string('activitycompletion_enable', 'local_annoto'),
-        get_string('activitycompletion_enabledesc', 'local_annoto'), 0, array(
+        get_string('activitycompletion_enabledesc', 'local_annoto'), 0, [
             0 => get_string('no'),
-            1 => get_string('yes'))
+            1 => get_string('yes')]
         ));
 }

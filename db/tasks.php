@@ -15,15 +15,15 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * @package    local
+ * @package    local_annoto
  * @subpackage annoto
  * @copyright  Annoto Ltd.
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 defined('MOODLE_INTERNAL') || die();
 
-$tasks = array(
-    array(
+$tasks = [
+    [
          'classname' => 'local_annoto\task\completion',
          'blocking'  => 0,
          'minute'    => '*',
@@ -31,5 +31,5 @@ $tasks = array(
          'day'       => '*',
          'dayofweek' => '*',
          'month'     => '*',
-     ),
-);
+     ],
+];

@@ -42,7 +42,7 @@ class provider implements
      * @param   collection $collection The initialised collection to add items to.
      * @return  collection A listing of user data stored through this plugin.
      */
-    public static function get_metadata(collection $collection) :collection {
+    public static function get_metadata(collection $collection): collection {
 
         $collection->add_external_location_link('annoto', [
             'userid' => 'privacy:metadata:annoto:userid',
