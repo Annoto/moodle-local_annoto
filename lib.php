@@ -657,6 +657,7 @@ function local_annoto_coursemodule_standard_elements($formwrapper, $mform)
         'hvp',
         'h5pactivity',
         'kalvidres',
+        'lti',
     ];
 
     /* $completionel = 'completion';
@@ -676,6 +677,15 @@ function local_annoto_coursemodule_standard_elements($formwrapper, $mform)
 
     if (!$settings->activitycompletion || !in_array($formwrapper->get_current()->modulename, $supportedmodtypes)) {
         return;
+    }
+
+    if ($formwrapper->get_current()->modulename === 'lti') {
+        $typeid = $mform->getElementValue('typeid');
+        $lti_config = lti_get_type_config($typeid);
+        $tooldomain = $lti_config['tooldomain'];
+        if (strpos($tooldomain, 'annoto') === false) {
+            return;
+        }
     }
 
     $mform->addElement('header', 'annotocompletion', get_string('annotocompletion', 'local_annoto'));
