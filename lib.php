@@ -682,7 +682,8 @@ function local_annoto_coursemodule_standard_elements($formwrapper, $mform)
 
     /*
      *  tooldomain - parsed from lti_toolurl of the plugin that launched page
-     *  deploymentdomain, customdomain - domain recieved from the local annoto plagin integration
+     *  deploymentdomain, customdomain - domain recieved from the local 
+     *  annoto plagin integration
      *  domain
      */
     if ($modulename === 'lti') {
@@ -690,7 +691,7 @@ function local_annoto_coursemodule_standard_elements($formwrapper, $mform)
         $lti_config = lti_get_type_config($typeid);
         $tooldomain = $lti_config['tooldomain'];
         $deploymentdomain = $settings->deploymentdomain;
-        if($deploymentdomain === 'custom') {
+        if ($deploymentdomain === 'custom') {
             $deploymentdomain = $settings->customdomain;
         }
 
