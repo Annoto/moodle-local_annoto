@@ -25,10 +25,10 @@ defined('MOODLE_INTERNAL') || die;
 $observers = [
     [
         'eventname' => '\core\event\course_module_deleted',
-        'callback' => '\local_annoto\observer::course_module_deleted'
+        'callback' => '\local_annoto\observer::course_module_deleted',
     ],
     [
         'eventname' => '\core\event\user_enrolment_deleted',
-        'callback' => '\local_annoto\observer::user_enrolment_deleted'
+        'callback' => '\local_annoto\observer::user_enrolment_deleted',
     ],
 ];

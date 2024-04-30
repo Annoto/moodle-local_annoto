@@ -33,22 +33,22 @@
  */
 defined('MOODLE_INTERNAL') || die();
 
-$functions = array(
-    'get_jsparams' => array(
+$functions = [
+    'get_jsparams' => [
         'classname' => 'local_annoto_external',
         'methodname' => 'get_jsparams',
         'classpath' => 'local/annoto/externallib.php',
         'description' => 'Get parameters for Annoto JS script',
         'type' => 'read',
         'ajax' => true,
-        'services' => array(MOODLE_OFFICIAL_MOBILE_SERVICE)
-    ),
-    'local_annoto_set_completion' => array(
+        'services' => [MOODLE_OFFICIAL_MOBILE_SERVICE],
+    ],
+    'local_annoto_set_completion' => [
         'classname' => 'local_annoto_external',
         'methodname' => 'set_completion',
         'classpath' => 'local/annoto/externallib.php',
         'description' => 'Update mod completion status',
         'ajax' => true,
-        'services' => array(MOODLE_OFFICIAL_MOBILE_SERVICE)
-    ),
-);
+        'services' => [MOODLE_OFFICIAL_MOBILE_SERVICE],
+    ],
+];

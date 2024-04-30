@@ -1,5 +1,4 @@
 <?php
-
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -16,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * @package    local
+ * @package    local_annoto
  * @subpackage annoto
  * @copyright  Annoto Ltd.
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -24,19 +23,17 @@
 
  namespace local_annoto;
 
- defined('MOODLE_INTERNAL') || die();
-
 use core\persistent;
-use \local_annoto\annoto_completiondata;
+use local_annoto\annoto_completiondata;
 
-class annoto_completion extends persistent
-{
+class annoto_completion extends persistent {
+
     const TABLE = 'local_annoto_completion';
     const COMPLETION_TRACKING_NONE = COMPLETION_TRACKING_NONE;
-    // see moodle/lib/completionlib.php definitions of COMPLETION_TRACKING_AUTOMATIC we need it to be higher than any other value
+    // See moodle/lib/completionlib.php definitions of COMPLETION_TRACKING_AUTOMATIC we need it to be higher than any other value.
     const COMPLETION_TRACKING_AUTOMATIC = 9;
 
-    static function get_enabled_menu() {
+    public static function get_enabled_menu() {
         return [
             static::COMPLETION_TRACKING_NONE => get_string('completion_none', 'completion'),
             static::COMPLETION_TRACKING_AUTOMATIC => get_string('completion_automatic', 'completion'),
@@ -48,39 +45,37 @@ class annoto_completion extends persistent
      *
      * @return array
      */
-    protected static function define_properties()
-    {
+    protected static function define_properties() {
         return[
-            'courseid' => array(
+            'courseid' => [
                 'type' => PARAM_INT,
                 'default' => 0,
-            ),
-            'cmid' => array(
+            ],
+            'cmid' => [
                 'type' => PARAM_INT,
-            ),
-            'enabled' => array(
+            ],
+            'enabled' => [
                 'type' => PARAM_INT,
-            ),
-            'totalview' => array(
+            ],
+            'totalview' => [
                 'type' => PARAM_INT,
-            ),
-            'comments' => array(
+            ],
+            'comments' => [
                 'type' => PARAM_INT,
-            ),
-            'replies' => array(
+            ],
+            'replies' => [
                 'type' => PARAM_INT,
-            ),
-            'completionexpected' => array(
+            ],
+            'completionexpected' => [
                 'type' => PARAM_INT,
                 'default' => null,
                 'null' => NULL_ALLOWED,
-            ),
+            ],
         ];
     }
 
-    public function after_delete($result)
-    {
-        // TODO: oprimize this
+    public function after_delete($result) {
+        // FIXME: optimize this.
         if ($records = annoto_completiondata::get_records(['completionid' => $this->raw_get('id')])) {
             foreach ($records as $record) {
                 $record->delete();

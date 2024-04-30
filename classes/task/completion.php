@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * @package    local
+ * @package    local_annoto
  * @subpackage annoto
  * @copyright  Annoto Ltd.
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -29,8 +29,8 @@ require_once($CFG->libdir . '/completionlib.php');
 require_once(__DIR__ . '/../completion.php');
 require_once(__DIR__ . '/../completiondata.php');
 
-use \local_annoto\annoto_completion;
-use \local_annoto\annoto_completiondata;
+use local_annoto\annoto_completion;
+use local_annoto\annoto_completiondata;
 
 /**
  * The local_annoto cache task class.
@@ -58,13 +58,17 @@ class completion extends \core\task\scheduled_task {
     public function execute() {
         global $CFG;
         $settings = get_config('local_annoto');
-        mtrace('AnnotoCompletionTask: Running annoto completion task, activitycompletion enabled: : ' . $settings->activitycompletion);
+        mtrace(
+            'AnnotoCompletionTask: Running annoto completion task, activitycompletion enabled: : ' . $settings->activitycompletion
+        );
         if (!$settings->activitycompletion) {
             return;
         }
 
-        // TODO: add logic for cleaning up in case $settings->activitycompletion is set to false or true. what should we do in this case?
-        //TODO: implementing update completed state on extenal call of set_completion. and make this task to run less frequently.
+        // FIXME: add logic for cleaning up in case
+        // $settings->activitycompletion is set to false or true. what should we do in this case?
+        // FIXME: implementing update completed state on
+        // extenal call of set_completion. and make this task to run less frequently.
 
         $activecompletionrecords = annoto_completion::get_records(['enabled' => annoto_completion::COMPLETION_TRACKING_AUTOMATIC]);
         mtrace('AnnotoCompletionTask: Found ' . count($activecompletionrecords) . ' active completion records');
@@ -78,12 +82,13 @@ class completion extends \core\task\scheduled_task {
             list($course, $cm) = get_course_and_cm_from_cmid($cmid);
             $completion = new \completion_info($course);
             $completiondatarecords = annoto_completiondata::get_records(['completionid' => $record->get('id')]);
-            // moodle v3 do not have clean_param and returns type string
+            // Moodle v3 do not have clean_param and returns type string.
             $totalview = (int)$record->get('totalview');
             $comments = (int)$record->get('comments');
             $replies = (int)$record->get('replies');
 
-            // mtrace('AnnotoCompletionTask: Found ' . count($completiondatarecords) . ' completion data records for cmid: ' . $cmid);
+            // TRACE: mtrace('AnnotoCompletionTask: Found ' . count($completiondatarecords) .
+            // ' completion data records for cmid: ' . $cmid);.
 
             foreach ($completiondatarecords as $completiondata) {
                 $userid = $completiondata->get('userid');
@@ -91,24 +96,33 @@ class completion extends \core\task\scheduled_task {
                 $completionstate = $currentdata->completionstate;
                 $useractivity = json_decode($completiondata->get('data'));
 
-                // determine if user has completed the activity
-                // activity completion is enalbed, but no completion requirements set. mark as completed to prevent blocking of other activities.
+                // Determine if user has completed the activity
+                // Activity completion is enalbed, but no completion requirements set.
+                // Mark as completed to prevent blocking of other activities.
                 $emptycompletionrequirement = $totalview <= 0 && $comments <= 0 && $replies <= 0;
 
-                $totalviewcompleted = $totalview == 0 || (isset($useractivity->completion) && $totalview <= $useractivity->completion);
-                $commentscompleted = $comments == 0 || (isset($useractivity->comments) && $comments <= $useractivity->comments);
-                $repliescompleted = $replies == 0 || (isset($useractivity->replies) && $replies <= $useractivity->replies);
+                $totalviewcompleted = $totalview == 0 ||
+                    (isset($useractivity->completion) && $totalview <= $useractivity->completion);
+                $commentscompleted = $comments == 0 ||
+                    (isset($useractivity->comments) && $comments <= $useractivity->comments);
+                $repliescompleted = $replies == 0 ||
+                    (isset($useractivity->replies) && $replies <= $useractivity->replies);
 
                 $completed = $emptycompletionrequirement || ($totalviewcompleted && $commentscompleted && $repliescompleted);
 
-                // mtrace('AnnotoCompletionTask: User ' . $userid . ' completionstate: '  . $completionstate . ' completed: ' . var_export($completed, true) . ' totalview: ' . var_export($totalviewcompleted, true) . ' comments: ' . var_export($commentscompleted, true) . ' replies: ' . var_export($repliescompleted, true));
+                // TRACE: mtrace('AnnotoCompletionTask: User ' . $userid . ' completionstate: '  .
+                // $completionstate . ' completed: ' . var_export($completed, true) . ' totalview: ' .
+                // var_export($totalviewcompleted, true) . ' comments: ' . var_export($commentscompleted, true) .
+                // ' replies: ' . var_export($repliescompleted, true));.
 
                 if ($completed && $completionstate <= COMPLETION_INCOMPLETE) {
-                    // mtrace('AnnotoCompletionTask: Updating completion state for user ' . $userid . ' to COMPLETION_COMPLETE');
+                    // TRACE: mtrace('AnnotoCompletionTask: Updating completion state for user '
+                    // . $userid . ' to COMPLETION_COMPLETE');.
                     $completion->update_state($cm, COMPLETION_COMPLETE, $userid);
                 } else if (!$completed && $completionstate > COMPLETION_INCOMPLETE) {
-                    // mtrace('AnnotoCompletionTask: Updating completion state for user ' . $userid . ' to COMPLETION_INCOMPLETE');
-                    // need to set override param to true, otherwise completion will not be updated
+                    // TRACE: mtrace('AnnotoCompletionTask: Updating completion
+                    // state for user ' . $userid . ' to COMPLETION_INCOMPLETE');.
+                    // Need to set override param to true, otherwise completion will not be updated.
                     $completion->update_state($cm, COMPLETION_INCOMPLETE, $userid, true);
                 }
             }

@@ -22,8 +22,6 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die;
-
 /**
  * Admin setting that allows a user to pick appropriate roles for something.
  *
@@ -85,7 +83,7 @@ class local_annoto_admin_setting_custompickroles extends admin_setting_configmul
         if (during_initial_install()) {
             return null;
         }
-        $result = array();
+        $result = [];
         foreach ($this->types as $archetype) {
             if ($caproles = get_archetype_roles($archetype)) {
                 foreach ($caproles as $caprole) {
