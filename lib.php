@@ -693,21 +693,21 @@ function local_annoto_coursemodule_standard_elements($formwrapper, $mform) {
 
     /*
      *  tooldomain - parsed from lti_toolurl of the plugin that launched page
-     *  deploymentdomain, customdomain - domain recieved from the local 
+     *  deploymentdomain, customdomain - domain recieved from the local
      *  annoto plagin integration
      *  domain
      */
     if ($modulename === 'lti') {
         $typeid = $mform->getElementValue('typeid');
-        $lti_config = lti_get_type_config($typeid);
-        $tooldomain = $lti_config['tooldomain'];
+        $lticonfig = lti_get_type_config($typeid);
+        $tooldomain = $lticonfig['tooldomain'];
         $deploymentdomain = $settings->deploymentdomain;
         if ($deploymentdomain === 'custom') {
             $deploymentdomain = $settings->customdomain;
         }
 
         if (empty($deploymentdomain) || !isset($deploymentdomain)) {
-            $deploymentdomain = 'annoto';
+            $deploymentdomain = 'annoto.net';
         }
         if (strpos($tooldomain, $deploymentdomain) === false) {
             return;
