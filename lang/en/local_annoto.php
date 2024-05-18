@@ -122,4 +122,5 @@ $string['privacy:metadata:annoto'] = 'In order to integrate with a remote servic
 $string['privacy:metadata:annoto:userid'] = 'The userid is sent from Moodle to allow you to access your data on the remote system.';
 $string['privacy:metadata:annoto:fullname'] = 'Your full name is sent to the remote system to allow a better user experience.';
 $string['privacy:metadata:annoto:email'] = 'Your e-mail name is sent to the remote system to allow a better user experience.';
-
+$string['privacy:metadata:local_annoto_completiondata'] = 'Completion data stored locally in the moodle database.';
+$string['privacy:metadata:local_annoto_completiondata:userid'] = 'The user ID.';

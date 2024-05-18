@@ -15,24 +15,47 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Annoto completion class.
+ *
  * @package    local_annoto
  * @subpackage annoto
  * @copyright  Annoto Ltd.
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
- namespace local_annoto;
+namespace local_annoto;
 
 use core\persistent;
 use local_annoto\annoto_completiondata;
 
+/**
+ * Class representing the Annoto completion.
+ *
+ * @package    local_annoto
+ * @subpackage annoto
+ */
 class annoto_completion extends persistent {
-
+    /**
+     * Table name for this persistent class.
+     */
     const TABLE = 'local_annoto_completion';
+
+    /**
+     * Completion tracking none constant.
+     */
     const COMPLETION_TRACKING_NONE = COMPLETION_TRACKING_NONE;
-    // See moodle/lib/completionlib.php definitions of COMPLETION_TRACKING_AUTOMATIC we need it to be higher than any other value.
+
+    /**
+     * Completion tracking automatic constant.
+     * See moodle/lib/completionlib.php definitions of COMPLETION_TRACKING_AUTOMATIC we need it to be higher than any other value.
+     */
     const COMPLETION_TRACKING_AUTOMATIC = 9;
 
+    /**
+     * Get enabled menu for completion tracking.
+     *
+     * @return array
+     */
     public static function get_enabled_menu() {
         return [
             static::COMPLETION_TRACKING_NONE => get_string('completion_none', 'completion'),
@@ -74,6 +97,12 @@ class annoto_completion extends persistent {
         ];
     }
 
+    /**
+     * Action to perform after delete.
+     *
+     * @param bool $result Result of the delete action.
+     * @return void
+     */
     public function after_delete($result) {
         // FIXME: optimize this.
         if ($records = annoto_completiondata::get_records(['completionid' => $this->raw_get('id')])) {
@@ -83,5 +112,3 @@ class annoto_completion extends persistent {
         }
     }
 }
-
-

@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Event observers for the Annoto plugin.
+ *
  * @package local_annoto
  * @copyright  Annoto Ltd.
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
