@@ -701,6 +701,11 @@ function local_annoto_coursemodule_standard_elements($formwrapper, $mform) {
         $typeid = $mform->getElementValue('typeid');
         $lticonfig = lti_get_type_config($typeid);
         $tooldomain = $lticonfig['tooldomain'];
+
+        // tooldomain not provided for lti1.3, using toolurl instead
+        if (empty($tooldomain) || !isset($tooldomain)) {
+            $tooldomain = $lticonfig['toolurl'];
+        }
         $deploymentdomain = $settings->deploymentdomain;
         if ($deploymentdomain === 'custom') {
             $deploymentdomain = $settings->customdomain;
