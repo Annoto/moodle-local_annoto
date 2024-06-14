@@ -390,7 +390,6 @@ function local_annoto_get_lti_course_module() {
     foreach ($modinfo->get_instances_of('lti') as $cm) {
 
         $domain = $cm->get_icon_url()->get_host();
-        error_log('local_annoto_get_lti_course_module' . $domain);
         if (strpos($domain, 'annoto') !== false) {
             return $cm;
         }
@@ -541,7 +540,6 @@ function local_annoto_coursemodule_standard_elements($formwrapper, $mform) {
      */
     if ($modulename === 'lti') {
         $typeid = $mform->getElementValue('typeid');
-        // TODO: check that works
         $lticonfig = lti_get_type_config($typeid);
         $tooldomain = $lticonfig['tooldomain'];
         $deploymentdomain = $settings->deploymentdomain;
