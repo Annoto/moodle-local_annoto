@@ -46,29 +46,14 @@ $string['custom'] = 'Custom';
 
 // Annoto dashboard (LTI).
 $string['addingdashboard'] = 'Add to all the courses';
-$string['addingdashboard_desc'] = 'If enabled, Annoto dashboard will be automatically added to all the courses. If disabled the Annoto dashboard can be added manually from the “+ Add an activity or resource” on the desired course';
+$string['addingdashboard_desc'] = 'Require configured external tool of dashboard. If enabled, Annoto dashboard will be automatically added to all the courses. If disabled the Annoto dashboard can be added manually from the “+ Add an activity or resource” on the desired course';
 $string['externaltoolsettings'] = 'Annoto dashboard (LTI)';
-$string['toolurl'] = 'URL';
-$string['toolurldesc'] = 'External tool URL';
-$string['tooliconurl'] = 'Icon';
-$string['tooliconurldesc'] = 'External tool icon';
-$string['toolname'] = 'Name';
-$string['toolnamedesc'] = 'External tool name';
 $string['annoto_dashboard_description'] = "The Annoto Dashboard was designed in order to shed light upon learners' video consumption and behavior within Annoto in-video collaboration widget, providing you with analytics and insights regarding their activity in the course.";
 $string['lti_activity_name'] = 'Annoto Dashboard';
 $string['managementdashboard'] = 'Dashboard manager roles';
 $string['managementdashboard_desc'] = 'Specify who is allowed to access Annoto dashboard';
 
 // Annoto grading (LTI).
-$string['gradetoggle'] = 'Enable annoto assignment';
-$string['gradetoggle_desc'] = 'If disabled, Annoto assignment is not available from activity chooser.';
-$string['externalgradetoolsettings'] = 'Annoto assignment (LTI)';
-$string['gradetoolname'] = 'Name';
-$string['gradetoolnamedesc'] = 'External grade tool name';
-$string['gradetoolurl'] = 'URL';
-$string['gradetoolurldesc'] = 'External grade tool URL';
-$string['gradetooliconurl'] = 'Icon';
-$string['gradetooliconurldesc'] = 'External grade tool icon';
 $string['annoto_grade_description'] = 'Annoto grading LTI';
 
 // Annoto settings.
