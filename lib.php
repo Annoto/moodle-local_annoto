@@ -336,8 +336,17 @@ function local_annoto_extend_settings_navigation(settings_navigation $settingsna
     // Check and create LTI external tool.
     require_once($CFG->dirroot . '/mod/lti/locallib.php');
 
+    $deploymentdomain = $settings->deploymentdomain;
+    if ($deploymentdomain === 'custom') {
+        $deploymentdomain = $settings->customdomain;
+    }
+
+    if (empty($deploymentdomain) || !isset($deploymentdomain)) {
+        return;
+    }
+
     // Will return all available tools by domain from toolurl.
-    $possibletools = lti_get_tools_by_domain($settings->customdomain, LTI_TOOL_STATE_CONFIGURED, null);
+    $possibletools = lti_get_tools_by_domain($deploymentdomain, LTI_TOOL_STATE_CONFIGURED, null);
     // Will find all lti1.3 dashboard tools and return first one.
     foreach ($possibletools as $tool) {
         if ($tool->ltiversion === '1.3.0' && strpos($tool->baseurl, 'dashboard') !== false) {
