@@ -27,12 +27,14 @@ class backup_local_annoto_plugin extends backup_local_plugin {
      * Returns the backup configration of annoto data for particular module.
      */
     public function define_module_plugin_structure() {
+        // Flag that determines that user data is included in the backup.
+        $userinfo = $this->get_setting_value('userinfo');
         $plugin = $this->get_plugin_element(null, null, null);
-        $pluginwrapper = new backup_nested_element(
-            $this->get_recommended_name(),
+
+        $completion = new backup_nested_element(
+            'local_annoto_completion',
             ['id'],
             [
-                'courseid',
                 'cmid',
                 'enabled',
                 'totalview',
@@ -40,15 +42,36 @@ class backup_local_annoto_plugin extends backup_local_plugin {
                 'replies',
                 'completionexpected',
                 'usermodified',
-                'timecreated',
-                'timemodified',
             ]
         );
-        $plugin->add_child($pluginwrapper);
-        $pluginwrapper->set_source_sql(
+        $completiondataset = new backup_nested_element('completiondataset');
+        $completiondata = new backup_nested_element(
+            'local_annoto_completiondata',
+            ['id'],
+            [
+                'completionid',
+                'userid',
+                'data',
+            ]
+        );
+        $completion->add_child($completiondataset);
+        $completiondataset->add_child($completiondata);
+
+        $completiondata->annotate_ids('user', 'userid');
+        $completion->annotate_ids('user', 'usermodified');
+
+        $completion->set_source_sql(
             'SELECT * FROM {local_annoto_completion} WHERE cmid = ?',
             ['cmid' => backup::VAR_MODID]
         );
+
+        if ($userinfo) {
+            $completiondata->set_source_sql(
+                'SELECT * FROM {local_annoto_completiondata} WHERE completionid = ?',
+                ['completionid' => backup::VAR_PARENTID]
+            );
+        }
+        $plugin->add_child($completion);
         return $plugin;
     }
 }
