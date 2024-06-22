@@ -122,5 +122,22 @@ $string['privacy:metadata:annoto'] = 'In order to integrate with a remote servic
 $string['privacy:metadata:annoto:userid'] = 'The userid is sent from Moodle to allow you to access your data on the remote system.';
 $string['privacy:metadata:annoto:fullname'] = 'Your full name is sent to the remote system to allow a better user experience.';
 $string['privacy:metadata:annoto:email'] = 'Your e-mail name is sent to the remote system to allow a better user experience.';
-$string['privacy:metadata:local_annoto_completiondata'] = 'Completion data stored locally in the moodle database.';
+
+$string['privacy:metadata:local_annoto_completiondata'] = 'Completion data of the user stored locally in the moodle database.';
 $string['privacy:metadata:local_annoto_completiondata:userid'] = 'The user ID.';
+$string['privacy:metadata:local_annoto_completiondata:completionid'] = 'The ID of the completion configuration in the moodle database.';
+$string['privacy:metadata:local_annoto_completiondata:data'] = 'The completion data of the particular user based on the completion configuration.';
+$string['privacy:metadata:local_annoto_completiondata:timecreated'] = 'The time the completion data was created.';
+$string['privacy:metadata:local_annoto_completiondata:timemodified'] = 'The time the completion data was last modified.';
+
+$string['privacy:metadata:local_annoto_completion'] = 'Completion confugarion stored locally in the moodle database.';
+$string['privacy:metadata:local_annoto_completion:courseid'] = 'The course ID.';
+$string['privacy:metadata:local_annoto_completion:cmid'] = 'The course module ID.';
+$string['privacy:metadata:local_annoto_completion:enabled'] = 'Enabled annoto completion.';
+$string['privacy:metadata:local_annoto_completion:totalview'] = 'Total Viewed completion percentage.';
+$string['privacy:metadata:local_annoto_completion:comments'] = 'Required comments amount.';
+$string['privacy:metadata:local_annoto_completion:replies'] = 'Required replies amount.';
+$string['privacy:metadata:local_annoto_completion:completionexpected'] = 'Set reminder in Timeline.';
+$string['privacy:metadata:local_annoto_completion:usermodified'] = 'The user id that last modified this record.';
+$string['privacy:metadata:local_annoto_completion:timecreated'] = 'The time the completion configuration was created.';
+$string['privacy:metadata:local_annoto_completion:timemodified'] = 'The time the completion configuration was last modified.';
