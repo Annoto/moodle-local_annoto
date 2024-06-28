@@ -863,6 +863,9 @@ function local_annoto_coursemodule_edit_post_actions($data, $course) {
         $completiontracking = $data->completion;
         if ($completionenabled == annoto_completion::COMPLETION_TRACKING_AUTOMATIC) {
             $completiontracking = annoto_completion::COMPLETION_TRACKING_AUTOMATIC;
+            // Hack to prevent automatical recalculation of completion status.
+            // Will be overriden by moodle completion system if annoto completion not selected.
+            unset($data->completionunlocked);
         }
 
         if ($cm = $DB->get_record('course_modules', ['id' => $cmid])) {
