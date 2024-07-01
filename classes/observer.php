@@ -33,7 +33,6 @@ require_once(__DIR__ . '/completiondata.php');
 use local_annoto\annoto_completion;
 use local_annoto\annoto_completiondata;
 
-// To see changes on the events need to purge caches.
 class observer {
 
     /**
