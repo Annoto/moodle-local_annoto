@@ -900,8 +900,6 @@ function local_annoto_coursemodule_edit_post_actions($data, $course) {
         $completiontracking = $data->completion;
         if ($completionenabled == annoto_completion::COMPLETION_TRACKING_AUTOMATIC) {
             $completiontracking = annoto_completion::COMPLETION_TRACKING_AUTOMATIC;
-            // Fix to prevent reset_all_state() from being called in moodle/course/modlib.php @see local_annoto_coursemodule_definition_after_data
-            unset($data->completionunlocked);
         }
         $cm = $DB->get_record('course_modules', ['id' => $cmid]);
 
@@ -910,6 +908,8 @@ function local_annoto_coursemodule_edit_post_actions($data, $course) {
         }
 
         if ($completionenabled == annoto_completion::COMPLETION_TRACKING_AUTOMATIC) {
+            // Fix to prevent reset_all_state() from being called in moodle/course/modlib.php @see local_annoto_coursemodule_definition_after_data
+            unset($data->completionunlocked);
             $completion = new completion_info($course);
             $completion->delete_all_state($cm);
         }
