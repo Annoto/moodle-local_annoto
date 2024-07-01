@@ -83,13 +83,6 @@ class completion extends \core\task\scheduled_task {
                 list($course, $cm) = get_course_and_cm_from_cmid($cmid);
             } catch (\Exception $e) {
                 mtrace('AnnotoCompletionTask: Error fetching course and cm for cmid: ' . $cmid . ' - ' . $e->getMessage());
-                // Delete the records related to the cmid.
-                $DB->delete_records_select(
-                    annoto_completiondata::TABLE,
-                    'completionid IN (SELECT id FROM mdl_' . annoto_completion::TABLE . ' WHERE cmid = ?)',
-                    [$cmid],
-                );
-                $DB->delete_records(annoto_completion::TABLE, ['cmid' => $cmid]);
                 continue;
             }
             $completion = new \completion_info($course);
