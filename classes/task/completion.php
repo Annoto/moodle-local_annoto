@@ -79,7 +79,12 @@ class completion extends \core\task\scheduled_task {
                 continue;
             }
 
-            list($course, $cm) = get_course_and_cm_from_cmid($cmid);
+            try {
+                list($course, $cm) = get_course_and_cm_from_cmid($cmid);
+            } catch (\Exception $e) {
+                mtrace('AnnotoCompletionTask: Error fetching course and cm for cmid: ' . $cmid . ' - ' . $e->getMessage());
+                continue;
+            }
             $completion = new \completion_info($course);
             $completiondatarecords = annoto_completiondata::get_records(['completionid' => $record->get('id')]);
             // Moodle v3 do not have clean_param and returns type string.
