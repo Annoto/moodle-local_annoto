@@ -41,7 +41,6 @@ class backup_local_annoto_plugin extends backup_local_plugin {
                 'comments',
                 'replies',
                 'completionexpected',
-                'usermodified',
             ]
         );
         $completiondataset = new backup_nested_element('completiondataset');
@@ -58,7 +57,6 @@ class backup_local_annoto_plugin extends backup_local_plugin {
         $completiondataset->add_child($completiondata);
 
         $completiondata->annotate_ids('user', 'userid');
-        $completion->annotate_ids('user', 'usermodified');
 
         $completion->set_source_sql(
             'SELECT * FROM {local_annoto_completion} WHERE cmid = ?',
