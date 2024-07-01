@@ -56,7 +56,7 @@ class completion extends \core\task\scheduled_task {
      * @return void
      */
     public function execute() {
-        global $CFG, $DB;
+        global $CFG;
         $settings = get_config('local_annoto');
         mtrace(
             'AnnotoCompletionTask: Running annoto completion task, activitycompletion enabled: : ' . $settings->activitycompletion
