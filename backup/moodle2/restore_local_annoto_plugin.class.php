@@ -53,8 +53,7 @@ class restore_local_annoto_plugin extends restore_plugin {
 
         // Cast to object.
         $data = (object)$data;
-        // Used /moodle/mod/quiz/accessrule/seb/backup/moodle2/backup_quizaccess_seb_subplugin.class.php.
-        // As a reference for case when userdata is false to use user who perform action as a modifier.
+        // Used restore_quizaccess_seb_subplugin as reference to set user who perform action as a modifier
         $data->usermodified = $USER->id;
         // Get new course module id from the mapping and update data in the object.
         $data->cmid = $this->get_mappingid('course_module', $data->cmid);
