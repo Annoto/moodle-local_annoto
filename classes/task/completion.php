@@ -86,20 +86,7 @@ class completion extends \core\task\scheduled_task {
             $totalview = (int)$record->get('totalview');
             $comments = (int)$record->get('comments');
             $replies = (int)$record->get('replies');
-            // Get an array of user IDs from completiondatarecords
-            $completiondata_userids = array_map(function($completiondata) {
-                return $completiondata->get('userid');
-            }, $completiondatarecords);
 
-            // Filter tracked_users to exclude those found in completiondatarecords
-            $tracked_users = array_filter($completion->get_tracked_users(), function($tracked_user) use ($completiondata_userids) {
-                return !in_array($tracked_user->id, $completiondata_userids);
-            });
-
-            // Mark all users who have not performed any actions as incomplete
-            foreach ($tracked_users as $tracked_user) {
-                $completion->update_state($cm, COMPLETION_INCOMPLETE, $tracked_user->id, true);
-            }
             // TRACE: mtrace('AnnotoCompletionTask: Found ' . count($completiondatarecords) .
             // ' completion data records for cmid: ' . $cmid);.
 
