@@ -648,15 +648,16 @@ function local_annoto_set_jslog($log = '') {
 }
 
 /**
- * Inject the competencies elements into all moodle module settings forms.
- * https://github.com/marcusgreen/moodle-local_callbacks/blob/main/lib.php#L55
+ * Inject the annoto completion elements into moodle module settings forms.
  *
  * @param moodleform_mod $formwrapper The moodle quickforms wrapper object.
  * @param MoodleQuickForm $mform The actual form object (required to modify the form).
  *
  * Note: original completion form is located in moodle/completion/classes/form/form_trait.php
+ * The extension is triggered by standard_coursemodule_elements() function in moodle/course/moodleform_mod.php
  */
 function local_annoto_coursemodule_standard_elements($formwrapper, $mform) {
+    log::debug('local_annoto_coursemodule_standard_elements');
 
     $settings = get_config('local_annoto');
 
@@ -816,6 +817,42 @@ function local_annoto_coursemodule_standard_elements($formwrapper, $mform) {
 }
 
 /**
+ * Lock completion form if annotocompletion is used.
+ * 
+ * The update_moduleinfo() at moodle/course/modlib.php calls reset_all_state() if completion is unlocked.
+ * The reset can cause all users completion state to be set to invalid "completed" state for following sequence of events:
+ * 1. New mod created with completion not setup.
+ * 2. Edit mod settings and setup Annoto completion.
+ * 3. Save mod settings. (if completion is unlocked, reset_all_state() will be called and set all users to completed)
+ *
+ * @param moodleform_mod $formwrapper The moodle quickforms wrapper object.
+ * @param MoodleQuickForm $mform The actual form object (required to modify the form).
+ */
+function local_annoto_coursemodule_definition_after_data($formwrapper, $mform) {
+    log::debug('local_annoto_coursemodule_definition_after_data');
+    $settings = get_config('local_annoto');
+    $completionenabledel = 'annotocompletionenabled';
+
+    if (
+        $settings->activitycompletion &&
+        $mform->elementExists($completionenabledel) &&
+        $mform->elementExists('completionunlocked')
+    ) {
+        $enval = $mform->getElementValue($completionenabledel);
+        $isEnabled = is_array($enval) ?
+            in_array(annoto_completion::COMPLETION_TRACKING_AUTOMATIC, $enval) :
+            $enval == annoto_completion::COMPLETION_TRACKING_AUTOMATIC;
+
+        if (!$isEnabled) {
+            return;
+        }
+        
+        // Lock completion form, so that reset_all_state() is not called. (this is currently not working)
+        $mform->getElement('completionunlocked')->setValue(0);
+    }
+}
+
+/**
  * Hook to process data from submitted form of coursemodule
  *
  * @param stdClass $data moduleinfo data from the form submission.
@@ -831,7 +868,7 @@ function local_annoto_coursemodule_edit_post_actions($data, $course) {
     $settings = get_config('local_annoto');
     $cmid = $data->coursemodule;
 
-    log::debug('coursemodule_edit_post_actions');
+    log::debug('local_annoto_coursemodule_edit_post_actions');
 
     if (isset($data->annotocompletionenabled) && $settings->activitycompletion) {
         $completionenabled = $data->annotocompletionenabled;
@@ -863,8 +900,7 @@ function local_annoto_coursemodule_edit_post_actions($data, $course) {
         $completiontracking = $data->completion;
         if ($completionenabled == annoto_completion::COMPLETION_TRACKING_AUTOMATIC) {
             $completiontracking = annoto_completion::COMPLETION_TRACKING_AUTOMATIC;
-            // Hack to prevent automatical recalculation of completion status.
-            // Will be overriden by moodle completion system if annoto completion not selected.
+            // Fix to prevent reset_all_state() from being called in moodle/course/modlib.php @see local_annoto_coursemodule_definition_after_data
             unset($data->completionunlocked);
         }
 
