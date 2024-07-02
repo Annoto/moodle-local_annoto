@@ -675,15 +675,16 @@ function local_annoto_set_jslog($log = '') {
 }
 
 /**
- * Inject the competencies elements into all moodle module settings forms.
- * https://github.com/marcusgreen/moodle-local_callbacks/blob/main/lib.php#L55
+ * Inject the annoto completion elements into moodle module settings forms.
  *
  * @param moodleform_mod $formwrapper The moodle quickforms wrapper object.
  * @param MoodleQuickForm $mform The actual form object (required to modify the form).
  *
  * Note: original completion form is located in moodle/completion/classes/form/form_trait.php
+ * The extension is triggered by standard_coursemodule_elements() function in moodle/course/moodleform_mod.php
  */
 function local_annoto_coursemodule_standard_elements($formwrapper, $mform) {
+    log::debug('local_annoto_coursemodule_standard_elements');
 
     $settings = get_config('local_annoto');
 
@@ -863,7 +864,7 @@ function local_annoto_coursemodule_edit_post_actions($data, $course) {
     $settings = get_config('local_annoto');
     $cmid = $data->coursemodule;
 
-    log::debug('coursemodule_edit_post_actions');
+    log::debug('local_annoto_coursemodule_edit_post_actions');
 
     if (isset($data->annotocompletionenabled) && $settings->activitycompletion) {
         $completionenabled = $data->annotocompletionenabled;
@@ -892,29 +893,43 @@ function local_annoto_coursemodule_edit_post_actions($data, $course) {
             $record->update();
         }
 
+        $cm = $DB->get_record('course_modules', ['id' => $cmid]);
+        if (!$cm) {
+            return $data;
+        }
+
         $completiontracking = $data->completion;
         if ($completionenabled == annoto_completion::COMPLETION_TRACKING_AUTOMATIC) {
             $completiontracking = annoto_completion::COMPLETION_TRACKING_AUTOMATIC;
+            // Lock completion form if annotocompletion is used.
+            // The update_moduleinfo() at moodle/course/modlib.php calls reset_all_state() if completion is unlocked.
+            // The reset can cause all users completion state to be set to invalid "completed" state for following sequence of events:
+            // 1. New mod created with completion not setup.
+            // 2. Edit mod settings and setup Annoto completion.
+            // 3. Save mod settings. (if completion is unlocked, reset_all_state() will be called and set all users to completed)
+            unset($data->completionunlocked);
+            // Delete all completion state for this cm to clear native moodle completion or other configuration changes.
+            // The completion state will be re-calculated by Annoto completion scheduled task.
+            $completion = new completion_info($course);
+            $completion->delete_all_state($cm);
         }
 
-        if ($cm = $DB->get_record('course_modules', ['id' => $cmid])) {
-            // FIXME: need to cleanup this override if $settings->activitycompletion changes to false for all the courses.
-            $cm->completion = $completiontracking;
-            $DB->update_record('course_modules', $cm);
+        // FIXME: need to cleanup this override if $settings->activitycompletion changes to false for all the courses.
+        $cm->completion = $completiontracking;
+        $DB->update_record('course_modules', $cm);
 
-            // See edit_module_post_actions() in moodle/course/modlib.php
-            // coursemodule_edit_post_actions is called after edit_module_post_actions() clears the cache
-            // because we change the cm we need to clear it again.
-            if (method_exists(\course_modinfo::class, 'purge_course_module_cache')) {
-                log::debug('coursemodule_edit_post_actions - purge_course_module_cache and partial rebuild_course_cache v4');
-                // Moodle v4 and up.
-                \course_modinfo::purge_course_module_cache($cm->course, $cmid);
-                rebuild_course_cache($cm->course, true, true);
-            } else {
-                // Moodle v3.
-                log::debug('coursemodule_edit_post_actions - rebuild_course_cache v3');
-                rebuild_course_cache($cm->course, true);
-            }
+        // See edit_module_post_actions() in moodle/course/modlib.php
+        // coursemodule_edit_post_actions is called after edit_module_post_actions() clears the cache
+        // because we change the cm we need to clear it again.
+        if (method_exists(\course_modinfo::class, 'purge_course_module_cache')) {
+            log::debug('coursemodule_edit_post_actions - purge_course_module_cache and partial rebuild_course_cache v4');
+            // Moodle v4 and up.
+            \course_modinfo::purge_course_module_cache($cm->course, $cmid);
+            rebuild_course_cache($cm->course, true, true);
+        } else {
+            // Moodle v3.
+            log::debug('coursemodule_edit_post_actions - rebuild_course_cache v3');
+            rebuild_course_cache($cm->course, true);
         }
     }
 
