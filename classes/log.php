@@ -35,11 +35,7 @@ class log {
      * @param string $message The message to log.
      */
     public static function debug($message = '') {
-        if (!defined('BEHAT_SITE_RUNNING')
-            && !(defined('PHPUNIT_TEST') && PHPUNIT_TEST)
-        ) {
-            debugging('Annoto: ' . $message, DEBUG_DEVELOPER);
-        }
+        self::debugging($message, DEBUG_DEVELOPER);
     }
 
     /**
@@ -48,11 +44,7 @@ class log {
      * @param string $message The message to log.
      */
     public static function info($message = '') {
-        if (!defined('BEHAT_SITE_RUNNING')
-            && !(defined('PHPUNIT_TEST') && PHPUNIT_TEST)
-        ) {
-            debugging('Annoto: ' . $message, DEBUG_NORMAL);
-        }
+        self::debugging($message, DEBUG_ALL);
     }
 
     /**
@@ -61,11 +53,7 @@ class log {
      * @param string $message The message to log.
      */
     public static function warning($message = '') {
-        if (!defined('BEHAT_SITE_RUNNING')
-            && !(defined('PHPUNIT_TEST') && PHPUNIT_TEST)
-        ) {
-            debugging('Annoto: ' . $message, DEBUG_NORMAL);
-        }
+        self::debugging($message, DEBUG_NORMAL);
     }
 
     /**
@@ -74,10 +62,18 @@ class log {
      * @param string $message The message to log.
      */
     public static function error($message = '') {
-        if (!defined('BEHAT_SITE_RUNNING')
-            && !(defined('PHPUNIT_TEST') && PHPUNIT_TEST)
-        ) {
-            debugging('Annoto: ' . $message, DEBUG_NORMAL);
+        self::debugging($message, DEBUG_MINIMAL);
+    }
+
+    /**
+     * Logs a message at the specified level.
+     *
+     * @param string $message The message to log.
+     * @param int $level The level at which to log the message.
+     */
+    private static function debugging($message, $level) {
+        if (!defined('BEHAT_SITE_RUNNING') && !(defined('PHPUNIT_TEST') && PHPUNIT_TEST)) {
+            debugging($message, $level);
         }
     }
 }
