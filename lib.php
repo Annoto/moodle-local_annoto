@@ -33,29 +33,6 @@ if (!defined('CUSTOM')) {
     define('CUSTOM', 'custom');
 }
 
-if (!defined('TOOLNAME')) {
-    define('TOOLNAME', 'Annoto Dashboard');
-}
-if (!defined('TOOLURL')) {
-    define('TOOLURL', 'https://auth.eu.annoto.net/lti/course-insights');
-}
-if (!defined('TOOLICONURL')) {
-    define('TOOLICONURL', 'https://assets.annoto.net/images/logo_icon.png');
-}
-
-if (!defined('LTIGRADEGNAME')) {
-    define('LTIGRADEGNAME', 'Annoto Assignment');
-}
-if (!defined('LTIGRADEURL')) {
-    define('LTIGRADEURL', 'https://auth.eu.annoto.net');
-}
-if (!defined('LTIGRADEICONURL')) {
-    define('LTIGRADEICONURL', 'https://cdn.annoto.net/assets/latest/images/icon.svg');
-}
-if (!defined('LTIGRADECONTENTITEM')) {
-    define('LTIGRADECONTENTITEM', '/lti/item-embed');
-}
-
 if (!defined('DEFAULTWIDTH')) {
     define('DEFAULTWIDTH', 854);
 }
@@ -211,7 +188,7 @@ function local_annoto_get_lang($course) {
  * @param string $allowedroles comma separated string of roles.
  * @param int $courseid the id of the course.
  * @param string $capability the name of the capability to check
- * @return bolean
+ * @return bool
  */
 function local_annoto_has_capability($allowedroles, $courseid, $capability) {
     global  $USER;
@@ -337,11 +314,10 @@ function local_annoto_extend_settings_navigation(settings_navigation $settingsna
     require_once($CFG->dirroot . '/mod/lti/locallib.php');
     $lti = lti_get_tool_by_url_match($settings->toolurl);
     if (!$lti) {
-        $lti = new stdClass();
-        $lti->id = local_annoto_lti_add_type('dashboard');
+        return;
     }
-
     // Create a dashboard instance if not available.
+    // If the dashboard is available, add a navigation button to the settings block, even if addingdashboard is false.
     if (!$cm = local_annoto_get_lti_course_module()) {
         if (!$settings->addingdashboard) {
             return;
@@ -437,171 +413,6 @@ function local_annoto_create_lti_course_module($lti) {
     }
 
     return local_annoto_get_lti_course_module();
-}
-
-/**
- * creates Annoto LTI type
- *
- * @param string $ltitype LTI type for adding
- * @return integer|null LTI type id or null
-
- */
-function local_annoto_lti_add_type($ltitype) {
-
-    // Get plugin global settings.
-    $settings = get_config('local_annoto');
-
-    switch ($ltitype) {
-        case 'dashboard':
-            $toolname = $settings->toolname ?: TOOLNAME;
-            $toolurl = $settings->toolurl ?: TOOLURL;
-            $tooliconurl = $settings->tooliconurl ?: TOOLICONURL;
-            $description = get_string('annoto_dashboard_description', 'local_annoto');
-            $contentitem = 0;
-            $gradecontentitem = '';
-            $servicegradesynchronization = 0;
-            $servicememberships = 0;
-            $servicetoolsettings = 0;
-            $coursevisible = LTI_COURSEVISIBLE_NO;
-            break;
-        case 'grade':
-            $toolname = $settings->gradetoolname ?: LTIGRADEGNAME;
-            $toolurl = $settings->gradetoolurl ?: LTIGRADEGNAME;
-            $tooliconurl = $settings->gradetooliconurl ?: LTIGRADEICONURL;
-            $description = get_string('annoto_grade_description', 'local_annoto');
-            $contentitem = 1;
-            $gradecontentitem = $toolurl . LTIGRADECONTENTITEM;
-            $servicegradesynchronization = 2; // Use this service for grade sync and column management.
-            $servicememberships = 1; // Use this service to retrieve members' information as per privacy settings.
-            $servicetoolsettings = 1; // Use this service.
-            $coursevisible = LTI_COURSEVISIBLE_ACTIVITYCHOOSER;
-            break;
-        default:
-            return null;
-    }
-
-    $settings->toolname = $toolname;
-    $settings->toolurl = $toolurl;
-    $settings->tooliconurl = $tooliconurl;
-
-    $type = new stdClass;
-    $type->name = $toolname;
-    $type->baseurl = $toolurl;
-    $type->tooldomain = parse_url($toolurl, PHP_URL_HOST);
-    $type->state = 1;
-    $type->coursevisible = $coursevisible;
-
-    $type->icon = $tooliconurl;
-    $type->secureicon = $tooliconurl;
-    $type->description = $description;
-
-    $config = new stdClass;
-    $config->lti_resourcekey = $settings->clientid;
-    $config->lti_password = $settings->ssosecret;
-    $config->lti_coursevisible = $coursevisible;
-    $config->lti_launchcontainer = LTI_LAUNCH_CONTAINER_EMBED_NO_BLOCKS;
-
-    // Services settings.
-    $config->lti_contentitem = $contentitem;
-    $config->lti_toolurl_ContentItemSelectionRequest = $gradecontentitem;
-    $config->ltiservice_gradesynchronization = $servicegradesynchronization;
-    $config->ltiservice_memberships = $servicememberships;
-    $config->ltiservice_toolsettings = $servicetoolsettings;
-
-    // Privacy setting.
-    $config->lti_forcessl = LTI_SETTING_ALWAYS;
-    $config->lti_sendname = LTI_SETTING_ALWAYS;
-    $config->lti_sendemailaddr = LTI_SETTING_ALWAYS;
-    $config->lti_acceptgrades = LTI_SETTING_ALWAYS;
-
-    return lti_add_type($type, $config);
-}
-/**
- * update moodle settings by hook
- * @param string $settingname
- *
- */
-function local_annoto_update_settings($settingname) {
-    global $DB;
-
-    $settings = get_config('local_annoto');
-    $updateltitype = [
-        's_local_annoto_addingdashboard',
-        's_local_annoto_clientid',
-        's_local_annoto_ssosecret',
-    ];
-    $updategradeltitype = [
-        's_local_annoto_gradetoggle',
-        's_local_annoto_gradetoolurl',
-        's_local_annoto_clientid',
-        's_local_annoto_ssosecret',
-    ];
-
-    // Update dashboard LTI core settings.
-    if (in_array($settingname, $updateltitype)) {
-        if (!isset($settings->toolname) || !isset($settings->toolurl)) {
-            return;
-        }
-        $lti = lti_get_tool_by_url_match($settings->toolurl);
-
-        if (!$lti) {
-            $lti = new stdClass;
-            $lti->id = local_annoto_lti_add_type('dashboard');
-        }
-
-        $coursevisible = $settings->addingdashboard ? LTI_COURSEVISIBLE_NO : LTI_COURSEVISIBLE_ACTIVITYCHOOSER;
-        $lti->coursevisible = $coursevisible;
-
-        $config = new stdClass;
-        $config->lti_resourcekey = $settings->clientid ?: '';
-        $config->lti_password = $settings->ssosecret ?: '';
-        $config->lti_coursevisible = $coursevisible;
-
-        lti_update_type($lti, $config);
-    }
-
-    // Update grade LTI core settings.
-    if (in_array($settingname, $updategradeltitype)) {
-        if (!isset($settings->gradetoolname) || !isset($settings->gradetoolname)) {
-            return;
-        }
-        $lti = lti_get_tool_by_url_match($settings->gradetoolurl);
-
-        if (!$lti) {
-            $lti = new stdClass;
-            $lti->id = local_annoto_lti_add_type('grade');
-        }
-
-        $coursevisible = $settings->gradetoggle ? LTI_COURSEVISIBLE_ACTIVITYCHOOSER : LTI_COURSEVISIBLE_NO;
-        $toolurl = $settings->gradetoolurl ?: LTIGRADEGNAME;
-        $gradecontentitem = $toolurl . LTIGRADECONTENTITEM;
-
-        $lti->coursevisible = $coursevisible;
-
-        $config = new stdClass;
-        $config->lti_forcessl = LTI_SETTING_ALWAYS;
-        $config->lti_resourcekey = $settings->clientid ?: '';
-        $config->lti_password = $settings->ssosecret ?: '';
-        $config->lti_coursevisible = $coursevisible;
-        $config->lti_toolurl_ContentItemSelectionRequest = $gradecontentitem;
-
-        lti_update_type($lti, $config);
-    }
-
-    // Update media details.
-    if (!isset($settings->mediasettingsoverride) || !$settings->mediasettingsoverride) {
-        return;
-    }
-
-    $defaultwidth = $DB->get_record('config', ['name' => 'media_default_width']);
-    $defaultwidth->value = $settings->defaultwidth ?? DEFAULTWIDTH;
-    $DB->update_record('config', $defaultwidth);
-
-    $defaultheight = $DB->get_record('config', ['name' => 'media_default_height']);
-    $defaultheight->value = $settings->defaultheight ?? DEFAULTHEIGHT;
-    $DB->update_record('config', $defaultheight);
-
-    purge_caches();
 }
 
 /**
@@ -876,10 +687,10 @@ function local_annoto_coursemodule_edit_post_actions($data, $course) {
             $completiontracking = annoto_completion::COMPLETION_TRACKING_AUTOMATIC;
             // Lock completion form if annotocompletion is used.
             // The update_moduleinfo() at moodle/course/modlib.php calls reset_all_state() if completion is unlocked.
-            // The reset can cause all users completion state to be set to invalid "completed" state for following sequence of events:
+            // Reset can cause all users completion state to be set to invalid completed state for following sequence of events:
             // 1. New mod created with completion not setup.
             // 2. Edit mod settings and setup Annoto completion.
-            // 3. Save mod settings. (if completion is unlocked, reset_all_state() will be called and set all users to completed)
+            // 3. Save mod settings. (if completion is unlocked, reset_all_state() will be called and set all users to completed).
             unset($data->completionunlocked);
             // Delete all completion state for this cm to clear native moodle completion or other configuration changes.
             // The completion state will be re-calculated by Annoto completion scheduled task.
