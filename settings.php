@@ -39,50 +39,77 @@ if ($hassiteconfig) {
     $ADMIN->add('localplugins', $settings);
 
     /* Annoto setup. */
-    $settings->add(new admin_setting_heading('local_annoto/setupheading', get_string('setupheading', 'local_annoto'), ''));
+    $settings->add(new admin_setting_heading(
+        'local_annoto/setupheading',
+        get_string('setupheading', 'local_annoto'),
+        ''
+    ));
 
     // API key / clientID.
-    $setting = new admin_setting_configtext('local_annoto/clientid', get_string('clientid', 'local_annoto'),
-        get_string('clientiddesc', 'local_annoto'), null);
-    $settings->add($setting);
+    $settings->add(new admin_setting_configtext(
+        'local_annoto/clientid',
+        get_string('clientid', 'local_annoto'),
+        get_string('clientiddesc', 'local_annoto'),
+        null
+    ));
 
     // SSO Secret.
-    $setting = new admin_setting_configtext('local_annoto/ssosecret', get_string('ssosecret', 'local_annoto'),
-        get_string('ssosecretdesc', 'local_annoto'), null);
-    $settings->add($setting);
+    $settings->add(new admin_setting_configtext(
+        'local_annoto/ssosecret',
+        get_string('ssosecret', 'local_annoto'),
+        get_string('ssosecretdesc', 'local_annoto'),
+        null
+    ));
 
     // Annoto script url.
-    $settings->add(new admin_setting_configtext('local_annoto/scripturl', get_string('scripturl', 'local_annoto'),
-        get_string('scripturldesc', 'local_annoto'), 'https://cdn.annoto.net/widget/latest/bootstrap.js'));
+    $settings->add(new admin_setting_configtext(
+        'local_annoto/scripturl',
+        get_string('scripturl', 'local_annoto'),
+        get_string('scripturldesc', 'local_annoto'),
+        'https://cdn.annoto.net/widget/latest/bootstrap.js'
+    ));
 
     // Deployment domain.
-    $settings->add(new admin_setting_configselect('local_annoto/deploymentdomain', get_string('deploymentdomain', 'local_annoto'),
-        get_string('deploymentdomaindesc', 'local_annoto'), EUREGION,
-            [
-                EUREGION => get_string('eurregion', 'local_annoto'),
-                USREGION => get_string('usregion', 'local_annoto'),
-                CUSTOM => get_string('custom', 'local_annoto'),
-            ]
-        )
-    );
+    $settings->add(new admin_setting_configselect(
+        'local_annoto/deploymentdomain',
+        get_string('deploymentdomain', 'local_annoto'),
+        get_string('deploymentdomaindesc', 'local_annoto'),
+        EUREGION,
+        [
+            EUREGION => get_string('eurregion', 'local_annoto'),
+            USREGION => get_string('usregion', 'local_annoto'),
+            CUSTOM => get_string('custom', 'local_annoto'),
+        ]
+    ));
 
-    $settings->add(new admin_setting_configtext('local_annoto/customdomain', get_string('customdomain', 'local_annoto'),
-        get_string('customdomaindesc', 'local_annoto'), null));
+    $settings->add(new admin_setting_configtext(
+        'local_annoto/customdomain',
+        get_string('customdomain', 'local_annoto'),
+        get_string('customdomaindesc', 'local_annoto'),
+        null
+    ));
     $settings->hide_if('local_annoto/customdomain', 'local_annoto/deploymentdomain', 'neq', CUSTOM);
 
 
     /* Annoto dashboard (LTI) */
-    $settings->add(new admin_setting_heading('local_annoto/externaltoolsettings',
-        get_string('externaltoolsettings', 'local_annoto'), ''));
+    $settings->add(new admin_setting_heading(
+        'local_annoto/externaltoolsettings',
+        get_string('externaltoolsettings', 'local_annoto'),
+        ''
+    ));
 
-    // Auto launching.
-    $setting = new admin_setting_configcheckbox('local_annoto/addingdashboard',
-        get_string('addingdashboard', 'local_annoto'), get_string('addingdashboard_desc', 'local_annoto'), 0);
-    $settings->add($setting);
+    // Enable auto add dashboard to navigation.
+    $settings->add(new admin_setting_configcheckbox(
+        'local_annoto/addingdashboard',
+        get_string('addingdashboard', 'local_annoto'),
+        get_string('addingdashboard_desc', 'local_annoto'),
+        0
+    ));
 
-    // Management dashboard.
+    // Dashboard access roles.
     list($roles, $defaultroles) = local_annoto_get_all_dashboard_roles();
-    $settings->add(new admin_setting_configmulticheckbox('local_annoto/managementdashboard',
+    $settings->add(new admin_setting_configmulticheckbox(
+        'local_annoto/managementdashboard',
         get_string('managementdashboard', 'local_annoto'),
         get_string('managementdashboard_desc', 'local_annoto'),
         $defaultroles,
@@ -90,55 +117,84 @@ if ($hassiteconfig) {
     ));
 
     /* Annoto settings */
-    $settings->add(new admin_setting_heading('local_annoto/appsetingsheading', get_string('appsetingsheading', 'local_annoto'),
-        ''));
+    $settings->add(new admin_setting_heading(
+        'local_annoto/appsetingsheading',
+        get_string('appsetingsheading', 'local_annoto'),
+        ''
+    ));
 
     // Locale.
-    $settings->add(new admin_setting_configcheckbox('local_annoto/locale',
-        get_string('locale', 'local_annoto'), get_string('locale_desc', 'local_annoto'), 1));
-
+    $settings->add(new admin_setting_configcheckbox(
+        'local_annoto/locale',
+        get_string('locale', 'local_annoto'),
+        get_string('locale_desc', 'local_annoto'),
+        1
+    ));
 
     // Moderators Roles.
-    $settings->add(new local_annoto_admin_setting_custompickroles('local_annoto/moderatorroles',
+    $settings->add(new local_annoto_admin_setting_custompickroles(
+        'local_annoto/moderatorroles',
         get_string('moderatorroles', 'local_annoto'),
         get_string('moderatorrolesdesc', 'local_annoto'),
         [
             'manager',
             'editingteacher',
-        ]));
+        ]
+    ));
 
-    /* Annoto settings */
-    $settings->add(new admin_setting_heading('local_annoto/mediaplayersettingheading',
-        get_string('media_player_setting', 'local_annoto'), ''));
+    /* Media player settings */
+    $settings->add(new admin_setting_heading(
+        'local_annoto/mediaplayersettingheading',
+        get_string('media_player_setting',
+        'local_annoto'),
+        ''
+    ));
 
-    $setting = new admin_setting_configselect('local_annoto/mediasettingsoverride',
+    $settings->add(new admin_setting_configselect(
+        'local_annoto/mediasettingsoverride',
         get_string('mediasettingsoverride', 'local_annoto'),
-        get_string('mediasettingsoverridedesc', 'local_annoto'), 1, [
+        get_string('mediasettingsoverridedesc', 'local_annoto'),
+        1,
+        [
             0 => get_string('no'),
-            1 => get_string('yes')]);
-    $settings->add($setting);
+            1 => get_string('yes'),
+        ]
+    ));
 
-    // Annoto default width.
-    $setting = new admin_setting_configtext('local_annoto/defaultwidth', get_string('defaultwidth', 'local_annoto'),
-        get_string('defaultwidthdesc', 'local_annoto'), DEFAULTWIDTH);
-    $settings->add($setting);
+    // Default player width.
+    $settings->add(new admin_setting_configtext(
+        'local_annoto/defaultwidth',
+        get_string('defaultwidth', 'local_annoto'),
+        get_string('defaultwidthdesc', 'local_annoto'),
+        DEFAULTWIDTH
+    ));
     $settings->hide_if('local_annoto/defaultwidth', 'local_annoto/mediasettingsoverride', 'neq', 1);
 
-    // Annoto default height.
-    $setting = new admin_setting_configtext('local_annoto/defaultheight', get_string('defaultheight', 'local_annoto'),
-        get_string('defaultheightdesc', 'local_annoto'), DEFAULTHEIGHT);
-    $settings->add($setting);
+    // Default player height.
+    $settings->add(new admin_setting_configtext(
+        'local_annoto/defaultheight',
+        get_string('defaultheight', 'local_annoto'),
+        get_string('defaultheightdesc', 'local_annoto'),
+        DEFAULTHEIGHT
+    ));
     $settings->hide_if('local_annoto/defaultheight', 'local_annoto/mediasettingsoverride', 'neq', 1);
 
 
 
     // Activity completion.
-    $settings->add(new admin_setting_heading('local_annoto/activitycompletionheading',
-        get_string('activitycompletion_settings', 'local_annoto'), ''));
-    $settings->add(new admin_setting_configselect('local_annoto/activitycompletion',
+    $settings->add(new admin_setting_heading(
+        'local_annoto/activitycompletionheading',
+        get_string('activitycompletion_settings', 'local_annoto'),
+        ''
+    ));
+    $settings->add(new admin_setting_configselect(
+        'local_annoto/activitycompletion',
         get_string('activitycompletion_enable', 'local_annoto'),
-        get_string('activitycompletion_enabledesc', 'local_annoto'), 0, [
+        get_string('activitycompletion_enabledesc', 'local_annoto'),
+        0,
+        [
             0 => get_string('no'),
-            1 => get_string('yes')]
-        ));
+            1 => get_string('yes'),
+        ]
+    ));
 }
