@@ -33,19 +33,6 @@ if (!defined('CUSTOM')) {
     define('CUSTOM', 'custom');
 }
 
-if (!defined('LTIGRADEGNAME')) {
-    define('LTIGRADEGNAME', 'Annoto Assignment');
-}
-if (!defined('LTIGRADEURL')) {
-    define('LTIGRADEURL', 'https://auth.eu.annoto.net');
-}
-if (!defined('LTIGRADEICONURL')) {
-    define('LTIGRADEICONURL', 'https://cdn.annoto.net/assets/latest/images/icon.svg');
-}
-if (!defined('LTIGRADECONTENTITEM')) {
-    define('LTIGRADECONTENTITEM', '/lti/item-embed');
-}
-
 if (!defined('DEFAULTWIDTH')) {
     define('DEFAULTWIDTH', 854);
 }
@@ -201,7 +188,7 @@ function local_annoto_get_lang($course) {
  * @param string $allowedroles comma separated string of roles.
  * @param int $courseid the id of the course.
  * @param string $capability the name of the capability to check
- * @return bolean
+ * @return bool
  */
 function local_annoto_has_capability($allowedroles, $courseid, $capability) {
     global  $USER;
@@ -325,25 +312,7 @@ function local_annoto_extend_settings_navigation(settings_navigation $settingsna
 
     // Check and create LTI external tool.
     require_once($CFG->dirroot . '/mod/lti/locallib.php');
-
-    // Will return all available tools by domain from toolurl.
-    $possibletools = lti_get_tools_by_domain($settings->customdomain, LTI_TOOL_STATE_CONFIGURED, null);
-    // Will find all lti1.3 dashboard tools and return first one.
-    foreach ($possibletools as $tool) {
-        if ($tool->ltiversion === '1.3.0' && strpos($tool->baseurl, 'dashboard') !== false) {
-            $lti = $tool;
-            break;
-        }
-    }
-    // Will find all lti1.1 dashboard tools and return first one.
-    if (!$lti) {
-        foreach ($possibletools as $tool) {
-            if ($tool->ltiversion === 'LTI-1p0' && strpos($tool->baseurl, 'course-insights') !== false) {
-                $lti = $tool;
-                break;
-            }
-        }
-    }
+    $lti = lti_get_tool_by_url_match($settings->toolurl);
     if (!$lti) {
         return;
     }
@@ -717,10 +686,10 @@ function local_annoto_coursemodule_edit_post_actions($data, $course) {
             $completiontracking = annoto_completion::COMPLETION_TRACKING_AUTOMATIC;
             // Lock completion form if annotocompletion is used.
             // The update_moduleinfo() at moodle/course/modlib.php calls reset_all_state() if completion is unlocked.
-            // The reset can cause all users completion state to be set to invalid "completed" state for following sequence of events:
+            // Reset can cause all users completion state to be set to invalid completed state for following sequence of events:
             // 1. New mod created with completion not setup.
             // 2. Edit mod settings and setup Annoto completion.
-            // 3. Save mod settings. (if completion is unlocked, reset_all_state() will be called and set all users to completed)
+            // 3. Save mod settings. (if completion is unlocked, reset_all_state() will be called and set all users to completed).
             unset($data->completionunlocked);
             // Delete all completion state for this cm to clear native moodle completion or other configuration changes.
             // The completion state will be re-calculated by Annoto completion scheduled task.
