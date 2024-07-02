@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Log class for Annoto plugin.
+ *
  * @package    local_annoto
  * @subpackage annoto
  * @copyright  Annoto Ltd.
@@ -23,20 +25,55 @@
 
 namespace local_annoto;
 
+/**
+ * Provides logging functionality for the Annoto plugin.
+ */
 class log {
+    /**
+     * Logs a debug message.
+     *
+     * @param string $message The message to log.
+     */
     public static function debug($message = '') {
-        debugging('Annoto: ' . $message, DEBUG_DEVELOPER);
+        self::debugging($message, DEBUG_DEVELOPER);
     }
 
+    /**
+     * Logs an informational message.
+     *
+     * @param string $message The message to log.
+     */
     public static function info($message = '') {
-        debugging('Annoto: ' . $message, DEBUG_ALL);
+        self::debugging($message, DEBUG_ALL);
     }
 
+    /**
+     * Logs a warning message.
+     *
+     * @param string $message The message to log.
+     */
     public static function warning($message = '') {
-        debugging('Annoto: ' . $message, DEBUG_NORMAL);
+        self::debugging($message, DEBUG_NORMAL);
     }
 
+    /**
+     * Logs an error message.
+     *
+     * @param string $message The message to log.
+     */
     public static function error($message = '') {
-        debugging('Annoto: ' . $message, DEBUG_MINIMAL);
+        self::debugging($message, DEBUG_MINIMAL);
+    }
+
+    /**
+     * Logs a message at the specified level.
+     *
+     * @param string $message The message to log.
+     * @param int $level The level at which to log the message.
+     */
+    private static function debugging($message, $level) {
+        if (!defined('BEHAT_SITE_RUNNING') && !(defined('PHPUNIT_TEST') && PHPUNIT_TEST)) {
+            debugging($message, $level);
+        }
     }
 }

@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Scheduled task for managing Annoto completion data.
+ *
  * @package    local_annoto
  * @subpackage annoto
  * @copyright  Annoto Ltd.

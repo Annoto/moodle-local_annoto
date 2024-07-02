@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Annoto backup class.
+ * Annoto restore class.
  *
  * @package    local_annoto
  * @subpackage annoto
@@ -53,7 +53,7 @@ class restore_local_annoto_plugin extends restore_plugin {
 
         // Cast to object.
         $data = (object)$data;
-        // Used restore_quizaccess_seb_subplugin as reference to set user who perform action as a modifier
+        // Used restore_quizaccess_seb_subplugin as reference to set user who perform action as a modifier.
         $data->usermodified = $USER->id;
         // Get new course module id from the mapping and update data in the object.
         $data->cmid = $this->get_mappingid('course_module', $data->cmid);

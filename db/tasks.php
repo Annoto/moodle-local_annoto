@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Task definition for the Annoto plugin.
+ *
  * @package    local_annoto
  * @subpackage annoto
  * @copyright  Annoto Ltd.

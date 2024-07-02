@@ -15,17 +15,17 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Event observers supported by this module
+ * Event observers supported by this module.
  *
  * @package    local_annoto
  * @subpackage annoto
  * @copyright  Annoto Ltd.
- * @license  http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
- namespace local_annoto;
+namespace local_annoto;
 
- defined('MOODLE_INTERNAL') || die();
+defined('MOODLE_INTERNAL') || die();
 
 require_once(__DIR__ . '/completion.php');
 require_once(__DIR__ . '/completiondata.php');
@@ -33,6 +33,16 @@ require_once(__DIR__ . '/completiondata.php');
 use local_annoto\annoto_completion;
 use local_annoto\annoto_completiondata;
 
+/**
+ * Class observer.
+ *
+ * Contains event observer methods for the Annoto module.
+ *
+ * @package    local_annoto
+ * @subpackage annoto
+ * @copyright  Annoto Ltd.
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class observer {
 
     /**

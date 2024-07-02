@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Annoto completion data class.
+ *
  * @package    local_annoto
  * @subpackage annoto
  * @copyright  Annoto Ltd.
@@ -25,7 +27,16 @@ namespace local_annoto;
 
 use core\persistent;
 
+/**
+ * Class representing the completion data for Annoto.
+ *
+ * @package    local_annoto
+ * @subpackage annoto
+ */
 class annoto_completiondata extends persistent {
+    /**
+     * Table name for this persistent class.
+     */
     const TABLE = 'local_annoto_completiondata';
 
     /**
@@ -47,5 +58,3 @@ class annoto_completiondata extends persistent {
         ];
     }
 }
-
-
