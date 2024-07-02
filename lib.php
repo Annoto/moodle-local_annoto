@@ -317,6 +317,7 @@ function local_annoto_extend_settings_navigation(settings_navigation $settingsna
         return;
     }
     // Create a dashboard instance if not available.
+    // If the dashboard is available, add a navigation button to the settings block, even if addingdashboard is false.
     if (!$cm = local_annoto_get_lti_course_module()) {
         if (!$settings->addingdashboard) {
             return;
