@@ -546,17 +546,25 @@ function local_annoto_coursemodule_standard_elements($formwrapper, $mform) {
         $tooldomain = $lticonfig['tooldomain'];
 
         // Tooldomain not provided for lti1.3, using toolurl instead.
-        if (empty($tooldomain) || !isset($tooldomain)) {
+        if (empty($tooldomain)) {
             $tooldomain = $lticonfig['toolurl'];
         }
         $deploymentdomain = local_annoto_get_deployment_domain();
 
         if (empty($deploymentdomain)) {
-            $deploymentdomain = 'annoto.net';
+            return;
         }
         if (strpos($tooldomain, $deploymentdomain) === false) {
             return;
         }
+        
+        // If the tool is Annoto dashboard, do not add completion settings.
+        if (
+            strpos($lticonfig['toolurl'], 'dashboard') !== false ||
+            strpos($lticonfig['toolurl'], 'course-insights') !== false
+        ) {
+            return;
+        }   
     }
 
     $mform->addElement('header', 'annotocompletion', get_string('annotocompletion', 'local_annoto'));
