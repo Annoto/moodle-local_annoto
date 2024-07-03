@@ -78,17 +78,17 @@ class local_annoto_external extends external_api {
      * @return array
      */
     public static function get_jsparams($courseid, $modid) {
-        self::validate_parameters(
+        $params = self::validate_parameters(
             self::get_jsparams_parameters(),
             [
                 'courseid' => $courseid,
                 'modid' => $modid,
             ]
         );
-        $context = context_course::instance($courseid);
+        $context = context_course::instance($params['courseid']);
         self::validate_context($context);
 
-        list($result, $response) = !is_guest($context) ? [true, local_annoto_get_jsparam($courseid, $modid)] : [false, null];
+        list($result, $response) = !is_guest($context) ? [true, local_annoto_get_jsparam($params['courseid'], $params['modid'])] : [false, null];
 
         return ['result' => $result, 'params' => json_encode($response, JSON_HEX_TAG)];
     }
