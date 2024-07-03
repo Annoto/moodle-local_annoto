@@ -78,8 +78,7 @@ class local_annoto_external extends external_api {
      * @return array
      */
     public static function get_jsparams($courseid, $modid) {
-        global $USER;
-        $params = self::validate_parameters(
+        self::validate_parameters(
             self::get_jsparams_parameters(),
             [
                 'courseid' => $courseid,
