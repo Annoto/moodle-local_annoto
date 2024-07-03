@@ -27,7 +27,7 @@ namespace local_annoto;
 
 use core\persistent;
 use local_annoto\annoto_completiondata;
-use lang_string; 
+use lang_string;
 
 /**
  * Class representing the Annoto completion.

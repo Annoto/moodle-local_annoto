@@ -33,7 +33,7 @@ require_once(__DIR__ . '/../completiondata.php');
 
 use local_annoto\annoto_completion;
 use local_annoto\annoto_completiondata;
-use lang_string; 
+use lang_string;
 
 /**
  * The local_annoto cache task class.
