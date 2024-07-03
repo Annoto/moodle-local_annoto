@@ -548,7 +548,6 @@ function local_annoto_coursemodule_standard_elements($formwrapper, $mform) {
         if (empty($deploymentdomain)) {
             return;
         }
-        
         // If the tool is not Annoto LTI or is dashboard, do not add completion settings.
         if (
             strpos($toolurl, $deploymentdomain) === false ||
@@ -556,7 +555,7 @@ function local_annoto_coursemodule_standard_elements($formwrapper, $mform) {
             strpos($toolurl, 'course-insights') !== false
         ) {
             return;
-        }   
+        }
     }
 
     $mform->addElement('header', 'annotocompletion', get_string('annotocompletion', 'local_annoto'));
