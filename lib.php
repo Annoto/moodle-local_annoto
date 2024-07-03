@@ -23,21 +23,21 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-if (!defined('USREGION')) {
-    define('USREGION', 'us.annoto.net');
+if (!defined('LOCAL_ANNOTO_US_REGION')) {
+    define('LOCAL_ANNOTO_US_REGION', 'us.annoto.net');
 }
-if (!defined('EUREGION')) {
-    define('EUREGION', 'eu.annoto.net');
+if (!defined('LOCAL_ANNOTO_EU_REGION')) {
+    define('LOCAL_ANNOTO_EU_REGION', 'eu.annoto.net');
 }
-if (!defined('CUSTOM')) {
-    define('CUSTOM', 'custom');
+if (!defined('LOCAL_ANNOTO_CUSTOM')) {
+    define('LOCAL_ANNOTO_CUSTOM', 'custom');
 }
 
-if (!defined('DEFAULTWIDTH')) {
-    define('DEFAULTWIDTH', 854);
+if (!defined('LOCAL_ANNOTO_DEFAULT_WIDTH')) {
+    define('LOCAL_ANNOTO_DEFAULT_WIDTH', 854);
 }
-if (!defined('DEFAULTHEIGHT')) {
-    define('DEFAULTHEIGHT', 480);
+if (!defined('LOCAL_ANNOTO_DEFAULT_HEIGHT')) {
+    define('LOCAL_ANNOTO_DEFAULT_HEIGHT', 480);
 }
 
 

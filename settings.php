@@ -74,11 +74,11 @@ if ($hassiteconfig) {
         'local_annoto/deploymentdomain',
         new lang_string('deploymentdomain', 'local_annoto'),
         new lang_string('deploymentdomaindesc', 'local_annoto'),
-        EUREGION,
+        LOCAL_ANNOTO_EU_REGION,
         [
-            EUREGION => new lang_string('eurregion', 'local_annoto'),
-            USREGION => new lang_string('usregion', 'local_annoto'),
-            CUSTOM => new lang_string('custom', 'local_annoto'),
+            LOCAL_ANNOTO_EU_REGION => new lang_string('eurregion', 'local_annoto'),
+            LOCAL_ANNOTO_US_REGION => new lang_string('usregion', 'local_annoto'),
+            LOCAL_ANNOTO_CUSTOM => new lang_string('custom', 'local_annoto'),
         ]
     ));
 
@@ -88,7 +88,7 @@ if ($hassiteconfig) {
         new lang_string('customdomaindesc', 'local_annoto'),
         null
     ));
-    $settings->hide_if('local_annoto/customdomain', 'local_annoto/deploymentdomain', 'neq', CUSTOM);
+    $settings->hide_if('local_annoto/customdomain', 'local_annoto/deploymentdomain', 'neq', LOCAL_ANNOTO_CUSTOM);
 
 
     /* Annoto dashboard (LTI) */
@@ -166,7 +166,7 @@ if ($hassiteconfig) {
         'local_annoto/defaultwidth',
         new lang_string('defaultwidth', 'local_annoto'),
         new lang_string('defaultwidthdesc', 'local_annoto'),
-        DEFAULTWIDTH
+        LOCAL_ANNOTO_DEFAULT_WIDTH
     ));
     $settings->hide_if('local_annoto/defaultwidth', 'local_annoto/mediasettingsoverride', 'neq', 1);
 
@@ -175,7 +175,7 @@ if ($hassiteconfig) {
         'local_annoto/defaultheight',
         new lang_string('defaultheight', 'local_annoto'),
         new lang_string('defaultheightdesc', 'local_annoto'),
-        DEFAULTHEIGHT
+        LOCAL_ANNOTO_DEFAULT_HEIGHT
     ));
     $settings->hide_if('local_annoto/defaultheight', 'local_annoto/mediasettingsoverride', 'neq', 1);
 
