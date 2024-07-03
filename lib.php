@@ -257,7 +257,7 @@ function local_annoto_get_jsparam($courseid, $modid) {
     }
 
     $jsparams = [
-        'deploymentDomain' => local_annoto_get_deployment_domain(),
+        'deploymentDomain' => $settings->deploymentdomain != 'custom' ? $settings->deploymentdomain : $settings->customdomain,
         'bootstrapUrl' => $settings->scripturl,
         'clientId' => $settings->clientid,
         'userToken' => local_annoto_get_user_token($settings, $courseid),
@@ -313,43 +313,43 @@ function local_annoto_extend_settings_navigation(settings_navigation $settingsna
     // Check and create LTI external tool.
     require_once($CFG->dirroot . '/mod/lti/locallib.php');
 
-    $deploymentdomain = local_annoto_get_deployment_domain();
+    $deploymentdomain = $settings->deploymentdomain;
+    if ($deploymentdomain === 'custom') {
+        $deploymentdomain = $settings->customdomain;
+    }
 
-    if (empty($deploymentdomain)) {
+    if (empty($deploymentdomain) || !isset($deploymentdomain)) {
         return;
     }
 
     // Will return all available tools by domain from toolurl.
-    $possibletools = array_merge(
-        lti_get_tools_by_domain($deploymentdomain, LTI_TOOL_STATE_CONFIGURED, null),
-        lti_get_tools_by_domain('auth.' . $deploymentdomain, LTI_TOOL_STATE_CONFIGURED, null)
-    );
+    $possibletools = lti_get_tools_by_domain($deploymentdomain, LTI_TOOL_STATE_CONFIGURED, null);
     // Will find all lti1.3 dashboard tools and return first one.
     foreach ($possibletools as $tool) {
         if ($tool->ltiversion === '1.3.0' && strpos($tool->baseurl, 'dashboard') !== false) {
-            $ltitool = $tool;
+            $lti = $tool;
             break;
         }
     }
     // Will find all lti1.1 dashboard tools and return first one.
-    if (!$ltitool) {
+    if (!$lti) {
         foreach ($possibletools as $tool) {
             if ($tool->ltiversion === 'LTI-1p0' && strpos($tool->baseurl, 'course-insights') !== false) {
-                $ltitool = $tool;
+                $lti = $tool;
                 break;
             }
         }
     }
-    if (!$ltitool) {
+    if (!$lti) {
         return;
     }
     // Create a dashboard instance if not available.
     // If the dashboard is available, add a navigation button to the settings block, even if addingdashboard is false.
-    if (!$cm = local_annoto_get_lti_course_module($ltitool)) {
+    if (!$cm = local_annoto_get_lti_course_module()) {
         if (!$settings->addingdashboard) {
             return;
         }
-        if (!$cm = local_annoto_create_lti_course_module($ltitool)) {
+        if (!$cm = local_annoto_create_lti_course_module($lti)) {
             return;
         }
     }
@@ -375,23 +375,19 @@ function local_annoto_extend_settings_navigation(settings_navigation $settingsna
 
 /**
  * Returns annoto dashboard's lti course module of current course.
- * @param stdClass $ltitool required Tool configuration
+ *
  * @return cm_info|null $cm
  */
-function local_annoto_get_lti_course_module($ltitool) {
-    global $PAGE, $DB;
+function local_annoto_get_lti_course_module() {
+
+    global $PAGE;
 
     $modinfo = get_fast_modinfo($PAGE->course);
 
     foreach ($modinfo->get_instances_of('lti') as $cm) {
-        if (empty($cm->instance)) {
-            continue;
-        }
-        $lti = $DB->get_record('lti', ['id' => $cm->instance], 'typeid');
-        if (empty($lti)) {
-            continue;
-        }
-        if ($lti->typeid == $ltitool->id) {
+
+        $domain = $cm->get_icon_url()->get_host();
+        if (strpos($domain, 'annoto') !== false) {
             return $cm;
         }
     }
@@ -401,10 +397,10 @@ function local_annoto_get_lti_course_module($ltitool) {
 
 /**
  * creates annoto dashboard's lti course module for current course
- * @param stdClass $ltitool LTI extrnall tool configuration
+ * @param stdClass $lti LTI extrnall tool for specific mode
  * @return cm_info|null $cm
  */
-function local_annoto_create_lti_course_module($ltitool) {
+function local_annoto_create_lti_course_module($lti) {
     global $CFG, $PAGE;
 
     $context = context_course::instance($PAGE->course->id);
@@ -418,7 +414,7 @@ function local_annoto_create_lti_course_module($ltitool) {
 
     require_once($CFG->dirroot . '/mod/lti/locallib.php');
 
-    $toolconfig = lti_get_type_config($ltitool->id);
+    $toolconfig = lti_get_type_config($lti->id);
 
     $newdashboard = new stdClass;
     $newdashboard->modulename = 'lti';
@@ -431,7 +427,7 @@ function local_annoto_create_lti_course_module($ltitool) {
     ];
     $newdashboard->section = 0;
     $newdashboard->visible = 0;
-    $newdashboard->typeid = $ltitool->id;
+    $newdashboard->typeid = $lti->id;
     $newdashboard->servicesalt = $toolconfig['servicesalt'];
     $newdashboard->instructorchoicesendname = 1;
     $newdashboard->instructorchoicesendemailaddr = 1;
@@ -443,7 +439,7 @@ function local_annoto_create_lti_course_module($ltitool) {
         return null;
     }
 
-    return local_annoto_get_lti_course_module($ltitool);
+    return local_annoto_get_lti_course_module();
 }
 
 /**
@@ -549,9 +545,12 @@ function local_annoto_coursemodule_standard_elements($formwrapper, $mform) {
         if (empty($tooldomain) || !isset($tooldomain)) {
             $tooldomain = $lticonfig['toolurl'];
         }
-        $deploymentdomain = local_annoto_get_deployment_domain();
+        $deploymentdomain = $settings->deploymentdomain;
+        if ($deploymentdomain === 'custom') {
+            $deploymentdomain = $settings->customdomain;
+        }
 
-        if (empty($deploymentdomain)) {
+        if (empty($deploymentdomain) || !isset($deploymentdomain)) {
             $deploymentdomain = 'annoto.net';
         }
         if (strpos($tooldomain, $deploymentdomain) === false) {
@@ -746,13 +745,4 @@ function local_annoto_coursemodule_edit_post_actions($data, $course) {
     }
 
     return $data;
-}
-
-/**
- * Function to get the configured deployment domain
- * @return string|null
- */
-function local_annoto_get_deployment_domain() {
-    $settings = get_config('local_annoto');
-    return $settings->deploymentdomain != 'custom' ? $settings->deploymentdomain : $settings->customdomain;
 }
