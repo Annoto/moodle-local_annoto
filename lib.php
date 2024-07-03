@@ -332,7 +332,7 @@ function local_annoto_extend_settings_navigation(settings_navigation $settingsna
         }
     }
     // Will find all lti1.1 dashboard tools and return first one.
-    if (!$ltitool) {
+    if (empty($ltitool)) {
         foreach ($possibletools as $tool) {
             if ($tool->ltiversion === 'LTI-1p0' && strpos($tool->baseurl, 'course-insights') !== false) {
                 $ltitool = $tool;
@@ -340,7 +340,7 @@ function local_annoto_extend_settings_navigation(settings_navigation $settingsna
             }
         }
     }
-    if (!$ltitool) {
+    if (empty($ltitool)) {
         return;
     }
     // Create a dashboard instance if not available.
@@ -543,18 +543,18 @@ function local_annoto_coursemodule_standard_elements($formwrapper, $mform) {
     if ($modulename === 'lti') {
         $typeid = $mform->getElementValue('typeid');
         $lticonfig = lti_get_type_config($typeid);
-        $tooldomain = $lticonfig['tooldomain'];
-
-        // Tooldomain not provided for lti1.3, using toolurl instead.
-        if (empty($tooldomain) || !isset($tooldomain)) {
-            $tooldomain = $lticonfig['toolurl'];
-        }
+        $toolurl = $lticonfig['toolurl'];
+        $tooldomain = (new moodle_url($toolurl))->get_host();
         $deploymentdomain = local_annoto_get_deployment_domain();
-
         if (empty($deploymentdomain)) {
-            $deploymentdomain = 'annoto.net';
+            return;
         }
-        if (strpos($tooldomain, $deploymentdomain) === false) {
+        // If the tool is not Annoto LTI or is dashboard, do not add completion settings.
+        if (
+            strpos($tooldomain, $deploymentdomain) === false ||
+            strpos($toolurl, 'dashboard') !== false ||
+            strpos($toolurl, 'course-insights') !== false
+        ) {
             return;
         }
     }
