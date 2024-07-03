@@ -416,7 +416,7 @@ function local_annoto_create_lti_course_module($lti) {
 
     $toolconfig = lti_get_type_config($lti->id);
 
-    $newdashboard = new stdClass;
+    $newdashboard = new stdClass();
     $newdashboard->modulename = 'lti';
     $newdashboard->name = new lang_string('lti_activity_name', 'local_annoto');
     $newdashboard->course = $PAGE->course->id;
