@@ -544,13 +544,14 @@ function local_annoto_coursemodule_standard_elements($formwrapper, $mform) {
         $typeid = $mform->getElementValue('typeid');
         $lticonfig = lti_get_type_config($typeid);
         $toolurl = $lticonfig['toolurl'];
+        $tooldomain = (new moodle_url($toolurl))->get_host();
         $deploymentdomain = local_annoto_get_deployment_domain();
         if (empty($deploymentdomain)) {
             return;
         }
         // If the tool is not Annoto LTI or is dashboard, do not add completion settings.
         if (
-            strpos($toolurl, $deploymentdomain) === false ||
+            strpos($tooldomain, $deploymentdomain) === false ||
             strpos($toolurl, 'dashboard') !== false ||
             strpos($toolurl, 'course-insights') !== false
         ) {
