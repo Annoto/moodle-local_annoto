@@ -324,7 +324,6 @@ function local_annoto_extend_settings_navigation(settings_navigation $settingsna
         lti_get_tools_by_domain($deploymentdomain, LTI_TOOL_STATE_CONFIGURED, null),
         lti_get_tools_by_domain('auth.' . $deploymentdomain, LTI_TOOL_STATE_CONFIGURED, null)
     );
-    $ltitool = null;
     // Will find all lti1.3 dashboard tools and return first one.
     foreach ($possibletools as $tool) {
         if ($tool->ltiversion === '1.3.0' && strpos($tool->baseurl, 'dashboard') !== false) {
@@ -333,7 +332,7 @@ function local_annoto_extend_settings_navigation(settings_navigation $settingsna
         }
     }
     // Will find all lti1.1 dashboard tools and return first one.
-    if (!$ltitool) {
+    if (empty($ltitool)) {
         foreach ($possibletools as $tool) {
             if ($tool->ltiversion === 'LTI-1p0' && strpos($tool->baseurl, 'course-insights') !== false) {
                 $ltitool = $tool;
@@ -341,7 +340,7 @@ function local_annoto_extend_settings_navigation(settings_navigation $settingsna
             }
         }
     }
-    if (!$ltitool) {
+    if (empty($ltitool)) {
         return;
     }
     // Create a dashboard instance if not available.
