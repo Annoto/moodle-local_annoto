@@ -29,6 +29,8 @@ class backup_local_annoto_plugin extends backup_local_plugin {
     public function define_module_plugin_structure() {
         // Flag that determines that user data is included in the backup.
         $userinfo = $this->get_setting_value('userinfo');
+        $userscompletion = $this->get_setting_value('userscompletion');
+
         $plugin = $this->get_plugin_element(null, null, null);
 
         $completion = new backup_nested_element(
@@ -63,7 +65,7 @@ class backup_local_annoto_plugin extends backup_local_plugin {
             ['cmid' => backup::VAR_MODID]
         );
 
-        if ($userinfo) {
+        if ($userinfo && $userscompletion) {
             $completiondata->set_source_sql(
                 'SELECT * FROM {local_annoto_completiondata} WHERE completionid = ?',
                 ['completionid' => backup::VAR_PARENTID]

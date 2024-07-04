@@ -32,7 +32,8 @@ class restore_local_annoto_plugin extends restore_plugin {
         // Path to the annoto completion data in the backup xml.
         $paths[] = new restore_path_element('local_annoto_completion', '/module/local_annoto_completion');
         $userinfo = $this->get_setting_value('userinfo');
-        if ($userinfo) {
+        $userscompletion = $this->get_setting_value('userscompletion');
+        if ($userinfo && $userscompletion) {
             $paths[] = new restore_path_element(
                 'local_annoto_completiondata',
                 '/module/local_annoto_completion/completiondataset/local_annoto_completiondata'
