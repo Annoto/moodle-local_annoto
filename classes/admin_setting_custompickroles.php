@@ -54,7 +54,6 @@ class local_annoto_admin_setting_custompickroles extends admin_setting_configmul
      * @return bool true=>success, false=>error
      */
     public function load_choices() {
-        global $CFG, $DB;
         if (during_initial_install()) {
             return false;
         }
@@ -78,8 +77,6 @@ class local_annoto_admin_setting_custompickroles extends admin_setting_configmul
      * @return array Array of default settings
      */
     public function get_defaultsetting() {
-        global $CFG;
-
         if (during_initial_install()) {
             return null;
         }

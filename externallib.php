@@ -32,6 +32,10 @@ require_once(__DIR__ . '/classes/log.php');
 use local_annoto\annoto_completion;
 use local_annoto\annoto_completiondata;
 use local_annoto\log;
+use core_external\external_api;
+use core_external\external_function_parameters;
+use core_external\external_single_structure;
+use core_external\external_value;
 
 /**
  * Class local_annoto_external
@@ -74,7 +78,6 @@ class local_annoto_external extends external_api {
      * @return array
      */
     public static function get_jsparams($courseid, $modid) {
-        global $USER;
         $params = self::validate_parameters(
             self::get_jsparams_parameters(),
             [
@@ -82,10 +85,12 @@ class local_annoto_external extends external_api {
                 'modid' => $modid,
             ]
         );
-        $context = context_course::instance($courseid);
-        self::validate_context(context_course::instance($courseid));
+        $context = context_course::instance($params['courseid']);
+        self::validate_context($context);
 
-        list($result, $response) = !is_guest($context) ? [true, local_annoto_get_jsparam($courseid, $modid)] : [false, null];
+        list($result, $response) = !is_guest($context)
+            ? [true, local_annoto_get_jsparam($params['courseid'], $params['modid'])]
+            : [false, null];
 
         return ['result' => $result, 'params' => json_encode($response, JSON_HEX_TAG)];
     }
@@ -146,6 +151,7 @@ class local_annoto_external extends external_api {
 
             list($course, $cm) = get_course_and_cm_from_cmid($cmid);
             $context = \context_course::instance($course->id);
+            self::validate_context($context);
 
             if (is_enrolled($context, $USER, '', true)) {
                 $completionrecord = annoto_completion::get_record(['cmid' => $cmid]);
