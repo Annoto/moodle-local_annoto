@@ -542,6 +542,13 @@ function local_annoto_coursemodule_standard_elements($formwrapper, $mform) {
      */
     if ($modulename === 'lti') {
         $typeid = $mform->getElementValue('typeid');
+        if (empty($typeid)) {
+            $typeid = $formwrapper->get_current()->typeid;
+        }
+        // TODO: check for better approach 
+        if (empty($typeid) || is_array($typeid)) {
+            return;
+        }
         $lticonfig = lti_get_type_config($typeid);
         $toolurl = $lticonfig['toolurl'];
         $tooldomain = (new moodle_url($toolurl))->get_host();
