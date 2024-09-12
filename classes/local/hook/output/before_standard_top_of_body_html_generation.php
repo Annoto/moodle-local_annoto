@@ -14,18 +14,28 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+namespace local_annoto\local\hook\output;
+
 /**
- * Version details
+ * Hook to allow local_annoto to add elements to the top of the body.
  *
  * @package    local_annoto
- * @copyright  Annoto Ltd.
+ * @copyright  2024 Alexander Bias <bias@alexanderbias.de>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+class before_standard_top_of_body_html_generation {
+    /**
+     * Callback to add top of body html elements.
+     *
+     * @param \core\hook\output\before_standard_top_of_body_html_generation $hook
+     */
+    public static function callback(\core\hook\output\before_standard_top_of_body_html_generation $hook): void {
+        global $CFG;
 
-defined('MOODLE_INTERNAL') || die();
+        // Require local library.
+        require_once($CFG->dirroot.'/local/annoto/locallib.php');
 
-
-$plugin->version   = 2024070401;        // The current plugin version (Date: YYYYMMDDXX).
-$plugin->release  = '5.3.0';
-$plugin->requires  = 2024042200;        // Requires this Moodle version 4.4.
-$plugin->component = 'local_annoto';    // Full name of the plugin (used for diagnostics).
+        // Call callback implementation.
+        local_annoto_callbackimpl_before_standard_top_of_body_html($hook);
+    }
+}

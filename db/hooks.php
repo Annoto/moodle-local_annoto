@@ -15,17 +15,22 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Version details
+ * Hooks definitions for this module.
  *
  * @package    local_annoto
- * @copyright  Annoto Ltd.
+ * @copyright  2024 Luca Bösch <luca.boesch@bfh.ch>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
 
-
-$plugin->version   = 2024070401;        // The current plugin version (Date: YYYYMMDDXX).
-$plugin->release  = '5.3.0';
-$plugin->requires  = 2024042200;        // Requires this Moodle version 4.4.
-$plugin->component = 'local_annoto';    // Full name of the plugin (used for diagnostics).
+$callbacks = [
+    [
+        'hook' => \core\hook\output\before_standard_top_of_body_html_generation::class,
+        'callback' => 'local_annoto\local\hook\output\before_standard_top_of_body_html_generation::callback',
+    ],
+    [
+        'hook' => \core\hook\output\before_footer_html_generation::class,
+        'callback' => 'local_annoto\local\hook\output\before_footer_html_generation::callback',
+    ],
+];

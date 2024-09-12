@@ -15,17 +15,36 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Version details
+ * Local plugin "Annoto" - Local library
  *
  * @package    local_annoto
- * @copyright  Annoto Ltd.
+ * @copyright  2024 Luca Bösch <luca.boesch@bfh.ch>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die();
+use core\di;
+use core\hook\manager as hook_manager;
 
+/**
+ * Callback to add top of body elements.
+ *
+ * @return string
+ */
+function local_annoto_callbackimpl_before_standard_top_of_body_html() {
+    global $PAGE;
+    // Prevent callback loading for all themes except those:.
+    $themes = ['lambda', 'adaptable', 'academi']; // Added academi theme.
+    if (in_array($PAGE->theme->name, $themes)) {
+        local_annoto_init();
+    }
+    return '';
+}
 
-$plugin->version   = 2024070401;        // The current plugin version (Date: YYYYMMDDXX).
-$plugin->release  = '5.3.0';
-$plugin->requires  = 2024042200;        // Requires this Moodle version 4.4.
-$plugin->component = 'local_annoto';    // Full name of the plugin (used for diagnostics).
+/**
+ * Callback to add before footers elements.
+ *
+ * @return void
+ */
+function local_annoto_callbackimpl_before_footer_html_generation() {
+    local_annoto_init();
+}

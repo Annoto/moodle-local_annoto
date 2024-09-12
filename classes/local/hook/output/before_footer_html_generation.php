@@ -14,18 +14,29 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+namespace local_annoto\local\hook\output;
+
 /**
- * Version details
+ * Hook to allow plugins to add any elements before the footer.
  *
  * @package    local_annoto
- * @copyright  Annoto Ltd.
+ * @copyright  2024 Luca Bösch <luca.boesch@bfh.ch>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+class before_footer_html_generation {
+    /**
+     * Callback to add before footer html elements.
+     *
+     * @param \core\hook\output\before_footer_html_generation $hook
+     */
+    public static function callback(\core\hook\output\before_footer_html_generation $hook): void {
+        global $CFG;
 
-defined('MOODLE_INTERNAL') || die();
+        // Require local library.
+        require_once($CFG->dirroot.'/local/annoto/locallib.php');
 
+        // Call callback implementation.
+        local_annoto_callbackimpl_before_footer_html_generation($hook);
+    }
+}
 
-$plugin->version   = 2024070401;        // The current plugin version (Date: YYYYMMDDXX).
-$plugin->release  = '5.3.0';
-$plugin->requires  = 2024042200;        // Requires this Moodle version 4.4.
-$plugin->component = 'local_annoto';    // Full name of the plugin (used for diagnostics).
