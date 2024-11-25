@@ -18,7 +18,7 @@
  * Local plugin "Annoto" - Local library
  *
  * @package    local_annoto
- * @copyright  2024 Luca Bösch <luca.boesch@bfh.ch>
+ * @copyright  Annoto Ltd.
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -26,9 +26,9 @@ use core\di;
 use core\hook\manager as hook_manager;
 
 /**
- * Callback to add top of body elements.
- *
- * @return string
+ * Function Insert a chunk of html at the start of the html document.
+ * 
+ * @return string HTML fragment.
  */
 function local_annoto_callbackimpl_before_standard_top_of_body_html() {
     global $PAGE;
@@ -37,11 +37,11 @@ function local_annoto_callbackimpl_before_standard_top_of_body_html() {
     if (in_array($PAGE->theme->name, $themes)) {
         local_annoto_init();
     }
-    return '';
 }
 
 /**
  * Callback to add before footers elements.
+ * Allows plugins to injecting JS across the site, like analytics.
  *
  * @return void
  */

@@ -20,7 +20,7 @@ namespace local_annoto\local\hook\output;
  * Hook to allow local_annoto to add elements to the top of the body.
  *
  * @package    local_annoto
- * @copyright  2024 Alexander Bias <bias@alexanderbias.de>
+ * @copyright  Annoto Ltd.
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class before_standard_top_of_body_html_generation {

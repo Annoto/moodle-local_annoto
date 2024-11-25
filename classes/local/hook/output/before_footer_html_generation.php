@@ -20,7 +20,7 @@ namespace local_annoto\local\hook\output;
  * Hook to allow plugins to add any elements before the footer.
  *
  * @package    local_annoto
- * @copyright  2024 Luca Bösch <luca.boesch@bfh.ch>
+ * @copyright  Annoto Ltd.
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class before_footer_html_generation {
