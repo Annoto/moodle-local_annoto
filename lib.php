@@ -54,7 +54,7 @@ use local_annoto\annoto_completiondata;
  * Function allows plugins to injecting JS across the site, like analytics.
  *
  */
-function local_annoto_before_footer() {
+function local_annoto_before_footer_html_generation() {
     local_annoto_init();
     return '';
 }
@@ -63,7 +63,7 @@ function local_annoto_before_footer() {
  * Function Insert a chunk of html at the start of the html document.
  * @return string HTML fragment.
  */
-function local_annoto_before_standard_top_of_body_html() {
+function local_annoto_before_standard_top_of_body_html_generation() {
     global $PAGE;
     // Prevent callback loading for all themes except those:.
     $themes = ['lambda', 'adaptable', 'academi']; // Added academi theme.
