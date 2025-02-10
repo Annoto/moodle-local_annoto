@@ -15,9 +15,10 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Hooks definitions for this module.
+ * Register to Hooks callbacks for the Annoto plugin.
  *
  * @package    local_annoto
+ * @subpackage annoto
  * @copyright  Annoto Ltd.
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -27,10 +28,12 @@ defined('MOODLE_INTERNAL') || die();
 $callbacks = [
     [
         'hook' => \core\hook\output\before_standard_top_of_body_html_generation::class,
-        'callback' => 'local_annoto\local\hook\output\before_standard_top_of_body_html_generation::callback',
+        'callback' => 'local_annoto\hook_callbacks::before_standard_top_of_body_html_generation',
+        'priority' => 0,
     ],
     [
         'hook' => \core\hook\output\before_footer_html_generation::class,
-        'callback' => 'local_annoto\local\hook\output\before_footer_html_generation::callback',
+        'callback' => 'local_annoto\hook_callbacks::before_footer_html_generation',
+        'priority' => 0,
     ],
 ];
