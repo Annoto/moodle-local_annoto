@@ -209,8 +209,10 @@ function local_annoto_get_user_token($settings, $courseid) {
     // every page when Annoto has not been set up yet - e.g. during Behat runs of other
     // plugins. empty() is null- and undefined-property-safe, so it does not warn itself.
     if (empty($settings->clientid) || empty($settings->ssosecret)) {
-        debugging('local_annoto: clientid or ssosecret is not configured, skipping user token generation.',
-            DEBUG_DEVELOPER);
+        debugging(
+            'local_annoto: clientid or ssosecret is not configured, skipping user token generation.',
+            DEBUG_DEVELOPER,
+        );
         return '';
     }
 
@@ -398,8 +400,8 @@ function local_annoto_get_course_cm_completions($course, $userscope) {
 
 /**
  * Get parameters for Anooto's JS script
+ *
  * @param int $courseid the id of the course.
- * @param string $pageurl url of the current page.
  * @param int $modid mod id.
  * @return array
  */
