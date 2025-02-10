@@ -42,8 +42,6 @@
 
 namespace local_annoto;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Sends install/usage telemetry to Annoto's GA4 property.
  *
@@ -52,7 +50,6 @@ defined('MOODLE_INTERNAL') || die();
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class telemetry {
-
     // --------------------------------------------------------------------
     // GA4 credentials for Annoto's telemetry property (Measurement Protocol).
     // These ship with the plugin so telemetry can reach Annoto's GA4 stream; the
@@ -60,7 +57,6 @@ class telemetry {
     // nothing is transmitted until an administrator has saved the plugin settings
     // and not opted out (see is_enabled()). If these are blanked or left as the
     // PLACEHOLDER_* values below, telemetry no-ops entirely (see is_configured()).
-    // --------------------------------------------------------------------
 
     /** @var string GA4 Measurement ID for Annoto's telemetry property (stream "moodle.org", id 3099607047). */
     const GA_MEASUREMENT_ID = 'G-TXK6YE54L1';
@@ -256,8 +252,10 @@ class telemetry {
         if ($host === '') {
             return 'production';
         }
-        if ($host === 'localhost' || preg_match('/\.(local|localhost|test)$/', $host)
-                || preg_match('/^(127\.|10\.|192\.168\.)/', $host)) {
+        if (
+            $host === 'localhost' || preg_match('/\.(local|localhost|test)$/', $host)
+                || preg_match('/^(127\.|10\.|192\.168\.)/', $host)
+        ) {
             return 'dev';
         }
         $tokens = preg_split('/[.\-_]/', $host);
@@ -324,6 +322,20 @@ class telemetry {
         $usercount = (int)$DB->count_records_select('user', 'deleted = 0 AND id > 2');
         // Exclude the site front-page course (id 1).
         $coursecount = (int)$DB->count_records_select('course', 'id > 1');
+
+        // Activity-completion usage: how many activities actually have Annoto automatic
+        // completion configured (a real usage indication, not just the on/off setting).
+        $completionactive = 0;
+        if ($DB->get_manager()->table_exists('local_annoto_completion')) {
+            $completionactive = (int)$DB->count_records(
+                'local_annoto_completion',
+                ['enabled' => self::COMPLETION_TRACKING_AUTOMATIC],
+            );
+        }
+
+        // Whether the CDN URLs have been overridden from their shipped defaults.
+        $scripturl = $settings->scripturl ?? '';
+        $moodlejsurl = $settings->moodlejsurl ?? '';
 
         // NOTE: intentionally no administrator name/email or any other personal data.
         // Google Analytics' terms prohibit sending PII, and it keeps the telemetry
@@ -399,7 +411,8 @@ class telemetry {
                    FROM {course_modules_completion} cmc
                    JOIN {local_annoto_completion} ac ON ac.cmid = cmc.coursemoduleid
                   WHERE ac.enabled = :enabled AND cmc.completionstate > 0 AND cmc.timemodified >= :since",
-                ['enabled' => self::COMPLETION_TRACKING_AUTOMATIC, 'since' => time() - self::USAGE_WINDOW]);
+                ['enabled' => self::COMPLETION_TRACKING_AUTOMATIC, 'since' => time() - self::USAGE_WINDOW]
+            );
         }
         return [
             'n_activities_completion_cfg' => self::count_completion_configured(),
@@ -417,8 +430,10 @@ class telemetry {
         if (!$DB->get_manager()->table_exists('local_annoto_completion')) {
             return 0;
         }
-        return (int)$DB->count_records('local_annoto_completion',
-            ['enabled' => self::COMPLETION_TRACKING_AUTOMATIC]);
+        return (int)$DB->count_records(
+            'local_annoto_completion',
+            ['enabled' => self::COMPLETION_TRACKING_AUTOMATIC]
+        );
     }
 
     /**
@@ -701,8 +716,10 @@ class telemetry {
      */
     public static function record_error(string $area, string $code): void {
         try {
-            if (!in_array($area, self::ERROR_AREAS, true) || !preg_match('/^[a-z0-9_]{1,40}$/', $code)
-                    || !self::is_enabled()) {
+            if (
+                !in_array($area, self::ERROR_AREAS, true) || !preg_match('/^[a-z0-9_]{1,40}$/', $code)
+                    || !self::is_enabled()
+            ) {
                 return;
             }
             $key = $area . ':' . $code;

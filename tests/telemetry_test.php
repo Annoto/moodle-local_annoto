@@ -33,7 +33,6 @@ namespace local_annoto;
  * @covers     \local_annoto\telemetry
  */
 final class telemetry_test extends \advanced_testcase {
-
     /**
      * Turn telemetry on, the way an admin saving the settings does.
      */
@@ -210,6 +209,9 @@ final class telemetry_test extends \advanced_testcase {
      */
     public function test_site_env_setting(): void {
         global $CFG;
+        // Install applies the setting's default (a guess from the install-time wwwroot) to config,
+        // so clear it to exercise the "no setting -> guess from current wwwroot" fallback.
+        set_config('siteenv', null, 'local_annoto');
         $CFG->wwwroot = 'https://moodle-test.example.edu';
         $this->assertSame('test', telemetry::get_site_env());
         set_config('siteenv', 'production', 'local_annoto');
@@ -256,5 +258,4 @@ final class telemetry_test extends \advanced_testcase {
         $this->assertStringContainsString('h5p', $env['video_plugins']);
         $this->assertLessThanOrEqual(telemetry::MAX_PARAM_LEN, strlen($env['video_plugins']));
     }
-
 }
