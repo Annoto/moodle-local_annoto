@@ -31,8 +31,6 @@
 
 namespace local_annoto;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Sends install/usage telemetry to Annoto's GA4 property.
  *
@@ -41,7 +39,6 @@ defined('MOODLE_INTERNAL') || die();
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class telemetry {
-
     // --------------------------------------------------------------------
     // GA4 credentials for Annoto's telemetry property (Measurement Protocol).
     // These ship with the plugin so telemetry can reach Annoto's GA4 stream; the
@@ -49,7 +46,6 @@ class telemetry {
     // nothing is transmitted until an administrator has saved the plugin settings
     // and not opted out (see is_enabled()). If these are blanked or left as the
     // PLACEHOLDER_* values below, telemetry no-ops entirely (see is_configured()).
-    // --------------------------------------------------------------------
 
     /** @var string GA4 Measurement ID for Annoto's telemetry property (stream "moodle.org", id 3099607047). */
     const GA_MEASUREMENT_ID = 'G-TXK6YE54L1';
@@ -197,8 +193,10 @@ class telemetry {
         // completion configured (a real usage indication, not just the on/off setting).
         $completionactive = 0;
         if ($DB->get_manager()->table_exists('local_annoto_completion')) {
-            $completionactive = (int)$DB->count_records('local_annoto_completion',
-                ['enabled' => self::COMPLETION_TRACKING_AUTOMATIC]);
+            $completionactive = (int)$DB->count_records(
+                'local_annoto_completion',
+                ['enabled' => self::COMPLETION_TRACKING_AUTOMATIC],
+            );
         }
 
         // Whether the CDN URLs have been overridden from their shipped defaults.
