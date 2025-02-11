@@ -502,8 +502,6 @@ function local_annoto_set_jslog($log = '') {
  * The extension is triggered by standard_coursemodule_elements() function in moodle/course/moodleform_mod.php
  */
 function local_annoto_coursemodule_standard_elements($formwrapper, $mform) {
-    log::debug('local_annoto_coursemodule_standard_elements');
-
     $settings = get_config('local_annoto');
 
     $supportedmodtypes = [
@@ -679,8 +677,6 @@ function local_annoto_coursemodule_edit_post_actions($data, $course) {
     $settings = get_config('local_annoto');
     $cmid = $data->coursemodule;
 
-    log::debug('local_annoto_coursemodule_edit_post_actions');
-
     if (isset($data->annotocompletionenabled) && $settings->activitycompletion) {
         $completionenabled = $data->annotocompletionenabled;
         $completionview = $data->annotocompletionview;
@@ -697,8 +693,6 @@ function local_annoto_coursemodule_edit_post_actions($data, $course) {
         $completionrecord->replies  = $completionreplies['enabled'] ? $completionreplies['value'] : 0;
         // phpcs:ignore Squiz.PHP.CommentedOutCode.Found 
         // FIXME: $completiondata->completionexpected  = $completionexpected;.
-
-        log::debug('coursemodule_edit_post_actions - completiondata: ' . json_encode($completionrecord));
 
         if (!$record = annoto_completion::get_record(['cmid' => $cmid])) {
             $record = new annoto_completion(0, $completionrecord);
@@ -737,13 +731,11 @@ function local_annoto_coursemodule_edit_post_actions($data, $course) {
         // coursemodule_edit_post_actions is called after edit_module_post_actions() clears the cache
         // because we change the cm we need to clear it again.
         if (method_exists(\course_modinfo::class, 'purge_course_module_cache')) {
-            log::debug('coursemodule_edit_post_actions - purge_course_module_cache and partial rebuild_course_cache v4');
             // Moodle v4 and up.
             \course_modinfo::purge_course_module_cache($cm->course, $cmid);
             rebuild_course_cache($cm->course, true, true);
         } else {
             // Moodle v3.
-            log::debug('coursemodule_edit_post_actions - rebuild_course_cache v3');
             rebuild_course_cache($cm->course, true);
         }
     }
