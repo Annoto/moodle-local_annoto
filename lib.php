@@ -40,6 +40,9 @@ if (!defined('DEFAULTHEIGHT')) {
     define('DEFAULTHEIGHT', 480);
 }
 
+if (!defined('LOCAL_ANNOTO_TOP_OF_BODY_THEMES')) {
+    define('LOCAL_ANNOTO_TOP_OF_BODY_THEMES', 'lambda,adaptable,academi');
+}
 
 require_once($CFG->libdir . '/completionlib.php');
 require_once(__DIR__ . '/classes/completion.php');
@@ -66,7 +69,7 @@ function local_annoto_before_footer() {
 function local_annoto_before_standard_top_of_body_html() {
     global $PAGE;
     // Prevent callback loading for all themes except those:.
-    $themes = ['lambda', 'adaptable', 'academi']; // Added academi theme.
+    $themes = explode(',', LOCAL_ANNOTO_TOP_OF_BODY_THEMES);
     if (in_array($PAGE->theme->name, $themes)) {
         local_annoto_init();
     }
