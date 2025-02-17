@@ -211,8 +211,8 @@ function local_annoto_has_capability($allowedroles, $courseid, $capability) {
 
 /**
  * Get parameters for Anooto's JS script
+ *
  * @param int $courseid the id of the course.
- * @param string $pageurl url of the current page.
  * @param int $modid mod id.
  * @return array
  */
@@ -288,10 +288,10 @@ function local_annoto_get_jsparam($courseid, $modid) {
 /**
  * Adds module specific settings to the settings block
  *
- * @param settings_navigation $settings The settings navigation object
- * @param context_course $context The node to add module settings to
+ * @param settings_navigation $settingsnav The settings navigation object
+ * @param context $context The node to add module settings to
  */
-function local_annoto_extend_settings_navigation(settings_navigation $settingsnav, context  $context) {
+function local_annoto_extend_settings_navigation(settings_navigation $settingsnav, context $context) {
     global $CFG, $PAGE, $COURSE;
 
     if ((strpos($PAGE->pagetype, 'mod-') === false) &&
@@ -658,7 +658,7 @@ function local_annoto_coursemodule_standard_elements($formwrapper, $mform) {
             'suffix' => false,
         ]
     );
-    // phpcs:ignore Squiz.PHP.CommentedOutCode.Found 
+    // phpcs:ignore Squiz.PHP.CommentedOutCode.Found
     // FIXME: $mform->addElement('date_time_selector', $completionexpected,
     // get_string($completionexpected, 'local_annoto'), ['optional' => true]);.
 }
@@ -686,7 +686,7 @@ function local_annoto_coursemodule_edit_post_actions($data, $course) {
         $completionview = $data->annotocompletionview;
         $completioncomments = $data->annotocompletioncomments;
         $completionreplies = $data->annotocompletionreplies;
-        // phpcs:ignore Squiz.PHP.CommentedOutCode.Found 
+        // phpcs:ignore Squiz.PHP.CommentedOutCode.Found
         // FIXME: $completionexpected = $data->annotocompletionexpected;.
         $completionrecord = new stdClass();
         $completionrecord->courseid = $course->id;
@@ -695,7 +695,7 @@ function local_annoto_coursemodule_edit_post_actions($data, $course) {
         $completionrecord->totalview  = $completionview['enabled'] ? $completionview['value'] : 0;
         $completionrecord->comments  = $completioncomments['enabled'] ? $completioncomments['value'] : 0;
         $completionrecord->replies  = $completionreplies['enabled'] ? $completionreplies['value'] : 0;
-        // phpcs:ignore Squiz.PHP.CommentedOutCode.Found 
+        // phpcs:ignore Squiz.PHP.CommentedOutCode.Found
         // FIXME: $completiondata->completionexpected  = $completionexpected;.
 
         log::debug('coursemodule_edit_post_actions - completiondata: ' . json_encode($completionrecord));
