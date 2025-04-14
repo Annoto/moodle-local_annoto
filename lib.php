@@ -23,21 +23,21 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-if (!defined('USREGION')) {
-    define('USREGION', 'us.annoto.net');
+if (!defined('LOCAL_ANNOTO_US_REGION')) {
+    define('LOCAL_ANNOTO_US_REGION', 'us.annoto.net');
 }
-if (!defined('EUREGION')) {
-    define('EUREGION', 'eu.annoto.net');
+if (!defined('LOCAL_ANNOTO_EU_REGION')) {
+    define('LOCAL_ANNOTO_EU_REGION', 'eu.annoto.net');
 }
-if (!defined('CUSTOM')) {
-    define('CUSTOM', 'custom');
+if (!defined('LOCAL_ANNOTO_CUSTOM')) {
+    define('LOCAL_ANNOTO_CUSTOM', 'custom');
 }
 
-if (!defined('DEFAULTWIDTH')) {
-    define('DEFAULTWIDTH', 854);
+if (!defined('LOCAL_ANNOTO_DEFAULT_WIDTH')) {
+    define('LOCAL_ANNOTO_DEFAULT_WIDTH', 854);
 }
-if (!defined('DEFAULTHEIGHT')) {
-    define('DEFAULTHEIGHT', 480);
+if (!defined('LOCAL_ANNOTO_DEFAULT_HEIGHT')) {
+    define('LOCAL_ANNOTO_DEFAULT_HEIGHT', 480);
 }
 
 if (!defined('LOCAL_ANNOTO_TOP_OF_BODY_THEMES')) {
@@ -357,7 +357,7 @@ function local_annoto_extend_settings_navigation(settings_navigation $settingsna
         }
     }
 
-    $text = get_string('lti_activity_name', 'local_annoto');
+    $text = new lang_string('lti_activity_name', 'local_annoto');
     $type = navigation_node::TYPE_SETTING;
     $icon = new pix_icon('icon', '', 'local_annoto');
     $url = new moodle_url($cm->url->out());
@@ -423,14 +423,14 @@ function local_annoto_create_lti_course_module($ltitool) {
 
     $toolconfig = lti_get_type_config($ltitool->id);
 
-    $newdashboard = new stdClass;
+    $newdashboard = new stdClass();
     $newdashboard->modulename = 'lti';
-    $newdashboard->name = get_string('lti_activity_name', 'local_annoto');
+    $newdashboard->name = new lang_string('lti_activity_name', 'local_annoto');
     $newdashboard->course = $PAGE->course->id;
     $newdashboard->introeditor = [
         'itemid' => 0,
         'format' => FORMAT_PLAIN,
-        'text'   => get_string('pluginname', 'local_annoto'),
+        'text'   => new lang_string('pluginname', 'local_annoto'),
     ];
     $newdashboard->section = 0;
     $newdashboard->visible = 0;
@@ -562,7 +562,7 @@ function local_annoto_coursemodule_standard_elements($formwrapper, $mform) {
         }
     }
 
-    $mform->addElement('header', 'annotocompletion', get_string('annotocompletion', 'local_annoto'));
+    $mform->addElement('header', 'annotocompletion', new lang_string('annotocompletion', 'local_annoto'));
 
     $cmid = null;
     $cm = $formwrapper->get_coursemodule();
@@ -587,7 +587,7 @@ function local_annoto_coursemodule_standard_elements($formwrapper, $mform) {
     // FIXME: $completionexpected = 'annotocompletionexpected';.
 
     $completionmenu = annoto_completion::get_enabled_menu();
-    $mform->addElement('select', $completionenabledel, get_string('completionenabled', 'local_annoto'), $completionmenu);
+    $mform->addElement('select', $completionenabledel, new lang_string('completionenabled', 'local_annoto'), $completionmenu);
     $mform->setDefault($completionenabledel, $completionoptions->enabled);
     $mform->disabledIf($completionenabledel, 'completion', 'noteq', 0);
     $mform->disabledIf('completion', $completionenabledel, 'noteq', annoto_completion::COMPLETION_TRACKING_NONE);
@@ -605,14 +605,14 @@ function local_annoto_coursemodule_standard_elements($formwrapper, $mform) {
 
         $group = [$mform->createElement('advcheckbox', $enabledel)];
         if (isset($info) && $info->prefix) {
-            $group[] = &$mform->createElement('static', 'prefix', null, get_string($groupname . 'prefix', 'local_annoto'));
+            $group[] = &$mform->createElement('static', 'prefix', null, new lang_string($groupname . 'prefix', 'local_annoto'));
         }
         $group[] = &$mform->createElement('text', $valueel);
         if (isset($info) && $info->suffix) {
-            $group[] = &$mform->createElement('static', 'suffix', null, get_string($groupname . 'suffix', 'local_annoto'));
+            $group[] = &$mform->createElement('static', 'suffix', null, new lang_string($groupname . 'suffix', 'local_annoto'));
         }
 
-        $mform->addGroup($group, $groupname, get_string($groupname, 'local_annoto'));
+        $mform->addGroup($group, $groupname, new lang_string($groupname, 'local_annoto'));
         $mform->disabledIf($getvalueingroup($groupname), $getenabledingroup($groupname), 'notchecked');
         $mform->setType($getvalueingroup($groupname), PARAM_INT);
         $mform->setDefault($getvalueingroup($groupname), $value);
@@ -629,7 +629,7 @@ function local_annoto_coursemodule_standard_elements($formwrapper, $mform) {
         $completionview,
         $completionoptions->totalview,
         [
-            [get_string('numericrule', 'local_annoto'), 'numeric'],
+            [new lang_string('numericrule', 'local_annoto'), 'numeric'],
         ],
         (object) [
             'prefix' => true,
@@ -640,7 +640,7 @@ function local_annoto_coursemodule_standard_elements($formwrapper, $mform) {
         $completioncomments,
         $completionoptions->comments,
         [
-            [get_string('numericrule', 'local_annoto'), 'numeric'],
+            [new lang_string('numericrule', 'local_annoto'), 'numeric'],
         ],
         (object) [
             'prefix' => true,
@@ -651,7 +651,7 @@ function local_annoto_coursemodule_standard_elements($formwrapper, $mform) {
         $completionreplies,
         $completionoptions->replies,
         [
-            [get_string('numericrule', 'local_annoto'), 'numeric'],
+            [new lang_string('numericrule', 'local_annoto'), 'numeric'],
         ],
         (object) [
             'prefix' => true,
@@ -660,7 +660,7 @@ function local_annoto_coursemodule_standard_elements($formwrapper, $mform) {
     );
     // phpcs:ignore Squiz.PHP.CommentedOutCode.Found 
     // FIXME: $mform->addElement('date_time_selector', $completionexpected,
-    // get_string($completionexpected, 'local_annoto'), ['optional' => true]);.
+    // new lang_string($completionexpected, 'local_annoto'), ['optional' => true]);.
 }
 
 /**

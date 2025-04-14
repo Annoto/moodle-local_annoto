@@ -27,6 +27,7 @@ namespace local_annoto;
 
 use core\persistent;
 use local_annoto\annoto_completiondata;
+use lang_string;
 
 /**
  * Class representing the Annoto completion.
@@ -58,8 +59,8 @@ class annoto_completion extends persistent {
      */
     public static function get_enabled_menu() {
         return [
-            static::COMPLETION_TRACKING_NONE => get_string('completion_none', 'completion'),
-            static::COMPLETION_TRACKING_AUTOMATIC => get_string('completion_automatic', 'completion'),
+            static::COMPLETION_TRACKING_NONE => new lang_string('completion_none', 'completion'),
+            static::COMPLETION_TRACKING_AUTOMATIC => new lang_string('completion_automatic', 'completion'),
         ];
     }
 
