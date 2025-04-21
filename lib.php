@@ -261,8 +261,7 @@ function local_annoto_get_jsparam($courseid, $modid) {
 
     global $COURSE;
 
-    $course = clone $COURSE;
-    $category = core_course_category::get($course->category);
+    $category = core_course_category::get($COURSE->category);
 
     $categoryname = $category->name;
     
