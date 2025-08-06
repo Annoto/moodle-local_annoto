@@ -81,7 +81,7 @@ $string['defaultheightdesc'] = 'Media player height if a height is not specified
 
 $string['activitycompletion_settings'] = 'Activity completion (Beta)';
 $string['activitycompletion_enable'] = 'Enable Annoto activity completion';
-$string['activitycompletion_enabledesc'] = 'If enabled, Annoto activity completion will be available in page, label, h5p, hvp and Kaltura activity settings';
+$string['activitycompletion_enabledesc'] = 'If enabled, Annoto activity completion will be available in page, label, Annoto LTI, h5p, hvp and Kaltura activity settings';
 
 $string['annotocompletion'] = 'Annoto completion conditions';
 $string['completiontask'] = 'Annoto Completion Task';
