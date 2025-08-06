@@ -62,6 +62,8 @@ $string['locale'] = 'Locale';
 $string['locale_desc'] = 'If enable will set per page and course based on Course and User preferences';
 $string['moderatorroles'] = 'Moderator roles';
 $string['moderatorrolesdesc'] = 'Specify who is allowed to moderate discussions (only roles that at least include the following capabilities are available: local/annoto:moderatediscussion).';
+$string['debuglogging'] = 'Enable debug logging';
+$string['debuglogging_desc'] = 'If enabled, debug-level log messages from the Annoto plugin will be output. This is useful for troubleshooting and development, but should be disabled in production.';
 
 // Media player settings.
 $string['media_player_setting'] = 'Media Player Setting';
