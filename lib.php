@@ -289,9 +289,9 @@ function local_annoto_get_jsparam($courseid, $modid) {
  * Adds module specific settings to the settings block
  *
  * @param settings_navigation $settingsnav The settings navigation object
- * @param context_course $context The node to add module settings to
+ * @param context $context The node to add module settings to
  */
-function local_annoto_extend_settings_navigation(settings_navigation $settingsnav, context_course $context) {
+function local_annoto_extend_settings_navigation(settings_navigation $settingsnav, context $context) {
     global $CFG, $PAGE, $COURSE;
 
     if ((strpos($PAGE->pagetype, 'mod-') === false) &&
