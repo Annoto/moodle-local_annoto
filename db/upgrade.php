@@ -20,7 +20,7 @@
  * @copyright  Annoto Ltd.
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  *
- * @param int
+ * @param int $oldversion the version we are upgrading from
  * @return bool
  */
 function xmldb_local_annoto_upgrade($oldversion = 0) {

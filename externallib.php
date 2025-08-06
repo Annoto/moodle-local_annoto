@@ -56,7 +56,7 @@ class local_annoto_external extends external_api {
 
     /**
      * Returns description of method result value
-     * @return external_value
+     * @return external_single_structure
      */
     public static function get_jsparams_returns() {
         // phpcs:ignore Squiz.PHP.CommentedOutCode.Found
@@ -105,7 +105,7 @@ class local_annoto_external extends external_api {
 
     /**
      * Sets the completion data for a user.
-     * @param $jsondata
+     * @param string $jsondata JSON encoded completion data
      * @return array result of set_completion
      */
     public static function set_completion($jsondata) {
