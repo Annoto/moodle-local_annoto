@@ -259,6 +259,12 @@ function local_annoto_get_jsparam($courseid, $modid) {
         }
     }
 
+    global $COURSE;
+
+    $category = core_course_category::get($COURSE->category);
+
+    $categoryname = $category->name;
+    
     $jsparams = [
         'deploymentDomain' => local_annoto_get_deployment_domain(),
         'bootstrapUrl' => $settings->scripturl,
@@ -269,7 +275,7 @@ function local_annoto_get_jsparam($courseid, $modid) {
         'mediaTitle' => $cmtitle ?? '',
         'mediaDescription' => $cmintro ?? '',
         'mediaGroupId' => $courseid,
-        'mediaGroupTitle' => $course->fullname,
+        'mediaGroupTitle' => '[' . $categoryname . '] ' . $course->fullname,
         'mediaGroupDescription' => $course->summary,
         'locale' => $settings->locale ? local_annoto_get_lang($course) : false,
         'cmid' => $modid ?? null,
