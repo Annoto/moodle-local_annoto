@@ -25,15 +25,14 @@
 defined('MOODLE_INTERNAL') || die;
 
 if ($hassiteconfig) {
-
-    require_once($CFG->dirroot. '/local/annoto/classes/admin_setting_custompickroles.php');
+    require_once($CFG->dirroot . '/local/annoto/classes/admin_setting_custompickroles.php');
     require_once($CFG->dirroot . '/local/annoto/lib.php');
 
     $pluginmanager = core_plugin_manager::instance();
     $plugininfo = $pluginmanager->get_plugin_info('local_annoto');
     $version = $plugininfo->versiondb;
     $release = $plugininfo->release;
-    $name = get_string('pluginname', 'local_annoto').' (rel. '.$release.' ver. '.$version.')';
+    $name = get_string('pluginname', 'local_annoto') . ' (rel. ' . $release . ' ver. ' . $version . ')';
 
     $settings = new admin_settingpage('local_annoto', $name);
     $ADMIN->add('localplugins', $settings);
@@ -107,7 +106,7 @@ if ($hassiteconfig) {
     ));
 
     // Dashboard access roles.
-    list($roles, $defaultroles) = local_annoto_get_all_dashboard_roles();
+    [$roles, $defaultroles] = local_annoto_get_all_dashboard_roles();
     $settings->add(new admin_setting_configmulticheckbox(
         'local_annoto/managementdashboard',
         get_string('managementdashboard', 'local_annoto'),
@@ -153,8 +152,10 @@ if ($hassiteconfig) {
     /* Media player settings */
     $settings->add(new admin_setting_heading(
         'local_annoto/mediaplayersettingheading',
-        get_string('media_player_setting',
-        'local_annoto'),
+        get_string(
+            'media_player_setting',
+            'local_annoto'
+        ),
         ''
     ));
 

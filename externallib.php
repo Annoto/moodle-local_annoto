@@ -40,14 +40,13 @@ use local_annoto\log;
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class local_annoto_external extends external_api {
-
     /**
      * Returns description of method parameters
      * @return external_function_parameters
      */
     public static function get_jsparams_parameters() {
         return new external_function_parameters(
-                [
+            [
                   'courseid' => new external_value(PARAM_INT, 'Course id', VALUE_DEFAULT, null),
                   'modid' => new external_value(PARAM_INT, 'Mod id', VALUE_DEFAULT, 0),
                 ]
@@ -85,7 +84,7 @@ class local_annoto_external extends external_api {
         $context = context_course::instance($courseid);
         self::validate_context(context_course::instance($courseid));
 
-        list($result, $response) = !is_guest($context) ? [true, local_annoto_get_jsparam($courseid, $modid)] : [false, null];
+        [$result, $response] = !is_guest($context) ? [true, local_annoto_get_jsparam($courseid, $modid)] : [false, null];
 
         return ['result' => $result, 'params' => json_encode($response, JSON_HEX_TAG)];
     }
@@ -112,7 +111,8 @@ class local_annoto_external extends external_api {
         global $USER;
         $settings = get_config('local_annoto');
 
-        self::validate_parameters(self::set_completion_parameters(),
+        self::validate_parameters(
+            self::set_completion_parameters(),
             [
                 'data' => $jsondata,
             ]
@@ -144,23 +144,26 @@ class local_annoto_external extends external_api {
             $cleandata->sso_id = isset($data->sso_id) ? $data->sso_id : null;
             $cleandata->widget_index = isset($data->widget_index) ? $data->widget_index : null;
 
-            list($course, $cm) = get_course_and_cm_from_cmid($cmid);
+            [$course, $cm] = get_course_and_cm_from_cmid($cmid);
             $context = \context_course::instance($course->id);
 
             if (is_enrolled($context, $USER, '', true)) {
                 $completionrecord = annoto_completion::get_record(['cmid' => $cmid]);
                 // Moodle v3 do not have clean_param and returns type string.
-                if ($completionrecord &&
+                if (
+                    $completionrecord &&
                     (int)$completionrecord->get('enabled') == annoto_completion::COMPLETION_TRACKING_AUTOMATIC
                 ) {
                     $completionid = $completionrecord->get('id');
 
-                    if ($completiondata = annoto_completiondata::get_record(
+                    if (
+                        $completiondata = annoto_completiondata::get_record(
                             ['completionid' => $completionid, 'userid' => $userid]
-                    )) {
+                        )
+                    ) {
                         $completiondata->set('data', json_encode($cleandata));
                         $completiondata->update();
-                        $message = 'Updated completion for user '. $userid . ' cmid ' . $cmid;
+                        $message = 'Updated completion for user ' . $userid . ' cmid ' . $cmid;
                     } else {
                         $record = (object) [
                             'userid' => $userid,

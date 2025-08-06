@@ -29,7 +29,6 @@ function xmldb_local_annoto_upgrade($oldversion = 0) {
     $dbman = $DB->get_manager();
 
     if ($oldversion < 2024011600) {
-
         // Define table local_annoto_completion to be created.
         $table = new xmldb_table('local_annoto_completion');
 

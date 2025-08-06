@@ -42,7 +42,6 @@ use local_annoto\annoto_completiondata;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class completion extends \core\task\scheduled_task {
-
     /**
      * Return localised task name.
      *
@@ -82,7 +81,7 @@ class completion extends \core\task\scheduled_task {
             }
 
             try {
-                list($course, $cm) = get_course_and_cm_from_cmid($cmid);
+                [$course, $cm] = get_course_and_cm_from_cmid($cmid);
             } catch (\Exception $e) {
                 mtrace('AnnotoCompletionTask: Error fetching course and cm for cmid: ' . $cmid . ' - ' . $e->getMessage());
                 continue;
