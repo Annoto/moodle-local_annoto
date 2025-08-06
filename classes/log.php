@@ -35,7 +35,9 @@ class log {
      * @param string $message The message to log.
      */
     public static function debug($message = '') {
-        self::debugging($message, DEBUG_DEVELOPER);
+        if (get_config('local_annoto', 'debuglogging')) {
+            self::debugging($message, DEBUG_DEVELOPER);
+        }
     }
 
     /**
