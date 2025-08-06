@@ -142,6 +142,14 @@ if ($hassiteconfig) {
         ]
     ));
 
+    // Enable/disable debug logging.
+    $settings->add(new admin_setting_configcheckbox(
+        'local_annoto/debuglogging',
+        get_string('debuglogging', 'local_annoto'),
+        get_string('debuglogging_desc', 'local_annoto'),
+        0
+    ));
+
     /* Media player settings */
     $settings->add(new admin_setting_heading(
         'local_annoto/mediaplayersettingheading',
