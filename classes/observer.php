@@ -44,7 +44,6 @@ use local_annoto\annoto_completiondata;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class observer {
-
     /**
      * Observer for \core\event\course_module_deleted event.
      *
@@ -70,10 +69,12 @@ class observer {
 
         // FIXME: optimize this.
         foreach ($comprecords as $record) {
-            foreach (annoto_completiondata::get_records(
+            foreach (
+                annoto_completiondata::get_records(
                     ['completionid' => $record->get('id'),
                     'userid' => $event->relateduserid]
-                ) as $data) {
+                ) as $data
+            ) {
                 $data->delete();
             }
         }

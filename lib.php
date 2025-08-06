@@ -137,12 +137,12 @@ function local_annoto_get_user_token($settings, $courseid) {
     $expire = $issuedat + 60 * 20;             // Adding 20 minutes.
 
     $payload = [
-        "jti" => $USER->id,                     // User's id in Moodle.
-        "name" => fullname($USER),              // User's fullname in Moodle.
-        "email" => $USER->email,                // User's email.
-        "photoUrl" => is_object($userpictureurl) ? $userpictureurl->out() : '',  // User's avatar in Moodle.
-        "iss" => $settings->clientid,           // ClientID from global settings.
-        "exp" => $expire,                       // JWT token expiration time.
+        "jti" => $USER->id, // User's id in Moodle.
+        "name" => fullname($USER), // User's fullname in Moodle.
+        "email" => $USER->email, // User's email.
+        "photoUrl" => is_object($userpictureurl) ? $userpictureurl->out() : '', // User's avatar in Moodle.
+        "iss" => $settings->clientid, // ClientID from global settings.
+        "exp" => $expire, // JWT token expiration time.
         "scope" => local_annoto_get_user_scope($settings, $courseid),
     ];
     $enctoken = \Firebase\JWT\JWT::encode($payload, $settings->ssosecret, 'HS256');
@@ -248,8 +248,10 @@ function local_annoto_get_jsparam($courseid, $modid) {
                 if ((int)$completionrecord->get('enabled') == annoto_completion::COMPLETION_TRACKING_AUTOMATIC) {
                     $activitycompletionenabled = true;
                     if ($userscope === 'user') {
-                        if ($completiondata = annoto_completiondata::get_record(
-                            ['completionid' => $completionrecord->get('id'), 'userid' => $USER->id])
+                        if (
+                            $completiondata = annoto_completiondata::get_record(
+                                ['completionid' => $completionrecord->get('id'), 'userid' => $USER->id]
+                            )
                         ) {
                             $activitycompletionreq->user_data = $completiondata->to_record();
                         }
@@ -294,7 +296,8 @@ function local_annoto_get_jsparam($courseid, $modid) {
 function local_annoto_extend_settings_navigation(settings_navigation $settingsnav, context $context) {
     global $CFG, $PAGE, $COURSE;
 
-    if ((strpos($PAGE->pagetype, 'mod-') === false) &&
+    if (
+        (strpos($PAGE->pagetype, 'mod-') === false) &&
         (strpos($PAGE->pagetype, 'course-view-') === false)
     ) {
         return;
@@ -423,7 +426,7 @@ function local_annoto_create_lti_course_module($ltitool) {
 
     $toolconfig = lti_get_type_config($ltitool->id);
 
-    $newdashboard = new stdClass;
+    $newdashboard = new stdClass();
     $newdashboard->modulename = 'lti';
     $newdashboard->name = get_string('lti_activity_name', 'local_annoto');
     $newdashboard->course = $PAGE->course->id;

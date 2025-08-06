@@ -44,8 +44,9 @@ class hook_callbacks {
      *
      * @param \core\hook\output\before_standard_top_of_body_html_generation $hook
      */
-    public static function before_standard_top_of_body_html_generation(\core\hook\output\before_standard_top_of_body_html_generation
-        $hook): void {
+    public static function before_standard_top_of_body_html_generation(
+        \core\hook\output\before_standard_top_of_body_html_generation $hook
+    ): void {
         global $PAGE;
         // Prevent callback loading for all themes except those.
         $themes = explode(',', LOCAL_ANNOTO_TOP_OF_BODY_THEMES);
@@ -54,4 +55,3 @@ class hook_callbacks {
         }
     }
 }
-
