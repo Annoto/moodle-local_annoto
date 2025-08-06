@@ -15,12 +15,20 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * This file keeps track of upgrades to local_annoto.
+ *
+ * @package    local_annoto
+ * @copyright  Annoto Ltd.
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
+/**
  * Upgrades.
  * @package    local_annoto
  * @copyright  Annoto Ltd.
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  *
- * @param int
+ * @param int $oldversion the version we are upgrading from
  * @return bool
  */
 function xmldb_local_annoto_upgrade($oldversion = 0) {
