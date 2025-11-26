@@ -54,29 +54,6 @@ use local_annoto\annoto_completion;
 use local_annoto\annoto_completiondata;
 
 /**
- * Function allows plugins to injecting JS across the site, like analytics.
- *
- */
-function local_annoto_before_footer() {
-    local_annoto_init();
-    return '';
-}
-
-/**
- * Function Insert a chunk of html at the start of the html document.
- * @return string HTML fragment.
- */
-function local_annoto_before_standard_top_of_body_html() {
-    global $PAGE;
-    // Prevent callback loading for all themes except those:.
-    $themes = explode(',', LOCAL_ANNOTO_TOP_OF_BODY_THEMES);
-    if (in_array($PAGE->theme->name, $themes)) {
-        local_annoto_init();
-    }
-    return '';
-}
-
-/**
  * Function init plugin according to the proper environment conditions.
  * @return boolean
  */
@@ -141,11 +118,11 @@ function local_annoto_get_user_token($settings, $courseid) {
         "name" => fullname($USER), // User's fullname in Moodle.
         "email" => $USER->email, // User's email.
         "photoUrl" => is_object($userpictureurl) ? $userpictureurl->out() : '', // User's avatar in Moodle.
-        "iss" => $settings->clientid, // ClientID from global settings.
+        "iss" => $settings->clientid ?? '', // ClientID from global settings.
         "exp" => $expire, // JWT token expiration time.
         "scope" => local_annoto_get_user_scope($settings, $courseid),
     ];
-    $enctoken = \Firebase\JWT\JWT::encode($payload, $settings->ssosecret, 'HS256');
+    $enctoken = \Firebase\JWT\JWT::encode($payload, $settings->ssosecret ?? '', 'HS256');
 
     return $enctoken;
 }
@@ -210,13 +187,21 @@ function local_annoto_has_capability($allowedroles, $courseid, $capability) {
 }
 
 /**
- * Get parameters for Anooto's JS script
- * @param int $courseid the id of the course.
- * @param string $pageurl url of the current page.
- * @param int $modid mod id.
- * @return array
+ * Generate JavaScript parameters for the Annoto plugin.
+ *
+ * This function retrieves and constructs the necessary configuration and context-specific
+ * parameters for the Annoto plugin's client-side integration. It accounts for course settings,
+ * user context, module information, and activity completion requirements where applicable.
+ *
+ * @param int $courseid The course ID for which the JS parameters are being generated.
+ * @param int|null $modid (Optional) The module ID for activity-specific data, or null for course-level data.
+ * @return array An array of parameters for use in Annoto's JavaScript client.
+ *
+ * @see    local_annoto_get_user_scope()
+ * @see    local_annoto_get_user_token()
+ * @see    local_annoto_get_deployment_domain()
  */
-function local_annoto_get_jsparam($courseid, $modid) {
+function local_annoto_get_jsparam(int $courseid, ?int $modid = null) {
     global $CFG;
     global $USER;
     $course = get_course($courseid);
@@ -264,7 +249,7 @@ function local_annoto_get_jsparam($courseid, $modid) {
     $jsparams = [
         'deploymentDomain' => local_annoto_get_deployment_domain(),
         'bootstrapUrl' => $settings->scripturl,
-        'clientId' => $settings->clientid,
+        'clientId' => $settings->clientid ?? '',
         'userToken' => local_annoto_get_user_token($settings, $courseid),
         'loginUrl' => $loginurl,
         'logoutUrl' => $logouturl,
