@@ -81,7 +81,7 @@ class local_annoto_admin_setting_custompickroles extends admin_setting_configmul
         global $CFG;
 
         if (during_initial_install()) {
-            return null;
+            return [];
         }
         $result = [];
         foreach ($this->types as $archetype) {
