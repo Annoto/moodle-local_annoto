@@ -43,7 +43,7 @@ class annoto_completion extends persistent {
     /**
      * Completion tracking none constant.
      */
-    const COMPLETION_TRACKING_NONE = COMPLETION_TRACKING_NONE;
+    const COMPLETION_TRACKING_NONE = \COMPLETION_TRACKING_NONE;
 
     /**
      * Completion tracking automatic constant.
