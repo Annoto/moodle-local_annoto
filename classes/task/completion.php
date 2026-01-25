@@ -121,15 +121,15 @@ class completion extends \core\task\scheduled_task {
                 // var_export($totalviewcompleted, true) . ' comments: ' . var_export($commentscompleted, true) .
                 // ' replies: ' . var_export($repliescompleted, true));.
 
-                if ($completed && $completionstate <= COMPLETION_INCOMPLETE) {
+                if ($completed && $completionstate <= \COMPLETION_INCOMPLETE) {
                     // TRACE: mtrace('AnnotoCompletionTask: Updating completion state for user '
                     // . $userid . ' to COMPLETION_COMPLETE');.
-                    $completion->update_state($cm, COMPLETION_COMPLETE, $userid);
-                } else if (!$completed && $completionstate > COMPLETION_INCOMPLETE) {
+                    $completion->update_state($cm, \COMPLETION_COMPLETE, $userid);
+                } else if (!$completed && $completionstate > \COMPLETION_INCOMPLETE) {
                     // TRACE: mtrace('AnnotoCompletionTask: Updating completion
                     // state for user ' . $userid . ' to COMPLETION_INCOMPLETE');.
                     // Need to set override param to true, otherwise completion will not be updated.
-                    $completion->update_state($cm, COMPLETION_INCOMPLETE, $userid, true);
+                    $completion->update_state($cm, \COMPLETION_INCOMPLETE, $userid, true);
                 }
             }
         }
