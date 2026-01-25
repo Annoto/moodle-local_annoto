@@ -78,7 +78,7 @@ function local_annoto_before_standard_top_of_body_html() {
 
 /**
  * Function init plugin according to the proper environment conditions.
- * @return boolean
+ * @return void
  */
 function local_annoto_init() {
     global $PAGE, $COURSE;
