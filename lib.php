@@ -97,7 +97,6 @@ function local_annoto_init() {
         }
     }
     // Start local_annoto on a specific pages only.
-    local_annoto_set_jslog('Page ' . $istargetpage);
 
     if ($istargetpage) {
         $courseid = $COURSE->id;
