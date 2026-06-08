@@ -10,6 +10,17 @@ https://docs.annoto.net/setup/moodle/widget-integration
 Test Annoto:
 https://www.youtube.com/watch?v=IKg1PNLPLwQ
 
+## Requirements
+
+- **Moodle:** 3.11 up to 5.2 (declared via `$plugin->supported = [311, 502]`). The minimum required version is Moodle 3.11 (`$plugin->requires = 2021051700`).
+- **PHP:** any PHP version supported by your Moodle release (Moodle 5.2 requires PHP 8.3+).
+- A valid Annoto subscription (see note below).
+
+On Moodle 4.4 and later the plugin uses the core Hooks API
+(`db/hooks.php` → `local_annoto\hook_callbacks`); on Moodle 3.11–4.3 it falls
+back to the legacy `lib.php` callbacks. Both paths are kept so a single release
+supports the full 3.11–5.2 range.
+
 <p>
     <span style="font-size: 14pt;"><strong>Please Note: Subscription is required to use this service.</strong></span>
 </p>
