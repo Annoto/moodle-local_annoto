@@ -1,3 +1,62 @@
+# moodle-local_annoto — BGU build (combined / locally-served JS)
+
+> **This is the BGU build of the `local_annoto` Moodle plugin, combined with its
+> `moodle-local-js` front-end bundle.** Unlike the upstream plugin, which loads
+> its JavaScript from the Annoto CDN
+> (`https://cdn.annoto.net/moodle-local-js/latest/annoto.js`), this branch builds
+> that bundle from source and serves it **locally from inside the plugin**
+> (`local/annoto/js/annoto.js`).
+>
+> The Annoto **widget** itself (`bootstrapUrl` / the `scripturl` setting,
+> `cdn.annoto.net/widget/...`) is the commercial SaaS product and is still
+> loaded remotely — only the open-source `moodle-local-js` glue bundle is
+> localized here.
+
+## Repository layout
+
+| Path | What it is |
+| --- | --- |
+| `lib.php`, `externallib.php`, `classes/`, `db/`, `lang/`, `amd/`, … | The Moodle `local_annoto` plugin (deploy this whole tree as `local/annoto/`). |
+| `js-src/` | TypeScript source + webpack toolchain for the front-end bundle (from the `moodle-local-js` repo). |
+| `js/annoto.js` | **Built** bundle, served locally by Moodle. Committed on purpose so the plugin runs without a build step. |
+
+## How the local serving works
+
+1. `js-src/` (webpack) builds a UMD bundle named `AnnotoMoodle` directly into
+   `js/annoto.js` (see `js-src/webpack.common.js` → `output.path: ../js/`).
+2. `local_annoto_get_jsparam()` in [`lib.php`](lib.php) sets the
+   `annotoMoodleCdnUrl` param to `$CFG->wwwroot . '/local/annoto/js/annoto.js?ver=<plugin version>'`
+   (the `?ver=` is a cache-buster tied to the plugin version).
+3. The AMD loader [`amd/src/annoto.js`](amd/src/annoto.js) already does
+   `require([params.annotoMoodleCdnUrl], (AnnotoMoodle) => AnnotoMoodle.setup())`,
+   so it now loads the local file instead of the CDN.
+4. An admin setting **"Moodle JS bundle URL (override)"**
+   (`local_annoto/moodlejsurl`) lets you point back at the CDN or any other URL;
+   leave it empty to use the local bundle.
+
+## BGU customizations
+
+- **Locally-served JS bundle** (above) instead of the Annoto CDN.
+- **Dual-mode guard:** Annoto is not loaded when the page URL contains `dual=1`
+  (e.g. the dual-display video viewer at `blocks/video/viewvideo.php`). See the
+  early return in `local_annoto_init()` in [`lib.php`](lib.php).
+
+## Building / updating the front-end bundle
+
+```bash
+cd js-src
+npm install          # first time only
+npm run build        # outputs ../js/annoto.js (prod)
+# or, while developing:
+npm run watch        # rebuilds ../js/annoto.js on change
+```
+
+Commit the regenerated `js/annoto.js` (and `js/annoto.map`) together with your
+source changes. Bump `$plugin->version` in [`version.php`](version.php) so the
+`?ver=` cache-buster forces browsers to fetch the new bundle.
+
+---
+
 # moodle-local_annoto
 Annoto is an in-video collaboration solution that turns static, 1-way video Stream/VOD into an active group learning experience, where participants contribute, share and learn together. Users can lean forward and become participants and not just passive and lonely viewers, causing all users to be actively involved and return to the video content, sharing more ideas and creating more meaningful content. Resulting in higher engagement and retention, supported by comprehensive analytics and insights, that facilitate dramatic improvements to content, communications, and measurable outcomes. Annoto local plugin will identify videos at the content of the activities and will add annoto to matched video based on plugin settings.
 

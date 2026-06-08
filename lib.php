@@ -83,6 +83,13 @@ function local_annoto_before_standard_top_of_body_html() {
 function local_annoto_init() {
     global $PAGE, $COURSE;
 
+    // Do not load Annoto when the page is requested in "dual" mode (dual=1 in
+    // the URL, e.g. the dual-display video viewer at blocks/video/viewvideo.php).
+    if (optional_param('dual', 0, PARAM_INT) === 1) {
+        local_annoto_set_jslog('Skipped: dual mode');
+        return;
+    }
+
     $istargetpage = false;
     $possiblepages = [
         'mod-',
@@ -261,9 +268,17 @@ function local_annoto_get_jsparam($courseid, $modid) {
         }
     }
 
+    // URL of the moodle-local-js bundle. By default it is served locally from
+    // this plugin (local/annoto/js/annoto.js) with a version cache-buster, so
+    // the script no longer has to be fetched from the Annoto CDN. Admins can
+    // override this via the 'moodlejsurl' setting (e.g. to point back to the CDN).
+    $localjsurl = $CFG->wwwroot . '/local/annoto/js/annoto.js?ver=' . ($settings->version ?? '');
+    $annotomoodlejsurl = !empty($settings->moodlejsurl) ? $settings->moodlejsurl : $localjsurl;
+
     $jsparams = [
         'deploymentDomain' => local_annoto_get_deployment_domain(),
         'bootstrapUrl' => $settings->scripturl,
+        'annotoMoodleCdnUrl' => $annotomoodlejsurl,
         'clientId' => $settings->clientid,
         'userToken' => local_annoto_get_user_token($settings, $courseid),
         'loginUrl' => $loginurl,

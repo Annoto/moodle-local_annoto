@@ -1,0 +1,14 @@
+# macOS
+.DS_Store
+
+# Node / build toolchain (js-src/)
+js-src/node_modules/
+js-src/dist/
+*.log
+npm-debug.log*
+.npm
+.idea
+
+# NOTE: js/annoto.js and js/annoto.map are the locally-served build output and
+# ARE committed on purpose so the plugin works when dropped into Moodle without
+# running a build. Run `npm --prefix js-src run build` to regenerate them.

@@ -68,6 +68,16 @@ if ($hassiteconfig) {
         'https://cdn.annoto.net/widget/latest/bootstrap.js'
     ));
 
+    // Moodle-local-js bundle url. Empty = serve the bundle shipped inside this
+    // plugin (local/annoto/js/annoto.js). Set a URL to load it from elsewhere
+    // (e.g. the Annoto CDN) instead.
+    $settings->add(new admin_setting_configtext(
+        'local_annoto/moodlejsurl',
+        get_string('moodlejsurl', 'local_annoto'),
+        get_string('moodlejsurldesc', 'local_annoto'),
+        ''
+    ));
+
     // Deployment domain.
     $settings->add(new admin_setting_configselect(
         'local_annoto/deploymentdomain',
