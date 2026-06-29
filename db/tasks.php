@@ -28,7 +28,10 @@ $tasks = [
     [
          'classname' => 'local_annoto\task\completion',
          'blocking'  => 0,
-         'minute'    => '*',
+         // Runs every 5 minutes rather than every minute: the task full-scans
+         // all active completion records and every user's completion data, so a
+         // 1-minute cadence is needlessly heavy at scale.
+         'minute'    => '*/5',
          'hour'      => '*',
          'day'       => '*',
          'dayofweek' => '*',
