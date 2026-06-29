@@ -58,11 +58,12 @@ class local_annoto_external extends external_api {
      * @return external_single_structure
      */
     public static function get_jsparams_returns() {
-        // phpcs:ignore Squiz.PHP.CommentedOutCode.Found
-        // FIXME: return new external_value(PARAM_TEXT, 'json jsparams');.
         return new external_single_structure([
             'result' => new external_value(PARAM_BOOL, 'True if the params was successfully sended'),
-            'params'    => new external_value(PARAM_TEXT, 'json jsparams'),
+            // PARAM_RAW: the value is an opaque JSON blob (it embeds the course
+            // summary/fullname). PARAM_TEXT runs tag/multilang cleaning over the
+            // serialized JSON and can corrupt it.
+            'params'    => new external_value(PARAM_RAW, 'json jsparams'),
         ]);
     }
 
