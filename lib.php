@@ -635,7 +635,7 @@ function local_annoto_coursemodule_standard_elements($formwrapper, $mform) {
         $mform->setType($getvalueingroup($groupname), PARAM_INT);
         $mform->setDefault($getvalueingroup($groupname), $value);
         $mform->setDefault($getenabledingroup($groupname), $value > 0);
-        if (isset($valurules)) {
+        if (isset($valuerules)) {
             $grouprule = [];
             $grouprule[$valueel] = $valuerules;
             $mform->addGroupRule($groupname, $grouprule);
