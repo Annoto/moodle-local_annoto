@@ -501,11 +501,13 @@ function local_annoto_set_jslog($log = '') {
     $version = $plugininfo->versiondb;
     $release = $plugininfo->release;
 
+    // Encode every interpolated value with json_encode() so it is emitted as a
+    // safe JS string literal rather than concatenated raw into the source.
     $jscode = "(function () {
-        console.dir('AnnotoBackend: Moodle version " . $CFG->release . "');
-        console.dir('AnnotoBackend: Plugin version " . $release . ' - ' . $version . "');
-        console.dir('AnnotoBackend: theme " . $themename . "');
-        console.dir('AnnotoBackend: " . $log . "');
+        console.dir('AnnotoBackend: Moodle version ' + " . json_encode($CFG->release) . ");
+        console.dir('AnnotoBackend: Plugin version ' + " . json_encode($release . ' - ' . $version) . ");
+        console.dir('AnnotoBackend: theme ' + " . json_encode($themename) . ");
+        console.dir('AnnotoBackend: ' + " . json_encode($log) . ");
     }());";
     $PAGE->requires->js_amd_inline($jscode);
 }
