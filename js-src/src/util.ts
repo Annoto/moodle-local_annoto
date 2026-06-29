@@ -2,11 +2,12 @@ import { IMoodleRelease } from './interfaces';
 
 export const parseMoodleVersion = (release?: string): IMoodleRelease => {
     const version = release?.split(' ')[0];
-    const [major, minor, patch] = (version || '').split('.').map((v) => parseInt(v, 10));
-    if (typeof major !== 'number' || typeof minor !== 'number' || typeof patch !== 'number') {
-        return { major: 0, minor: 0, patch: 0 };
-    }
-    return { major, minor, patch };
+    const parts = (version || '').split('.').map((v) => parseInt(v, 10));
+    // parseInt yields NaN for missing/invalid parts, and `typeof NaN === 'number'`,
+    // so the original typeof guard never caught them. Coerce each part to 0
+    // individually so a partial release (e.g. "4.4dev") still keeps major/minor.
+    const toInt = (v: number): number => (Number.isNaN(v) ? 0 : v);
+    return { major: toInt(parts[0]), minor: toInt(parts[1]), patch: toInt(parts[2]) };
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
