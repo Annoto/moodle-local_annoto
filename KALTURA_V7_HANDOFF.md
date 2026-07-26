@@ -68,20 +68,26 @@ in the uiConf). The Moodle side only intercepts setup, injects Moodle context, a
   - `boot()` + plugin config `manualBoot: true` — deferred boot,
   - plugin config keys: `clientId` (omit = demo mode), `manualBoot`.
 
-### ⚠️ Verify before/while implementing (CDN was unreachable from the research environment)
+### ✅ Verified against `Annoto/playkit-plugin` source (`src/annoto.service.ts`, `src/annoto.tsx`)
 
-1. Exact signature of the annoto service `onSetup` hook — does it pass `(config, next)` like V2's
-   `annotoPluginSetup` + `await(doneCb)`, or must the host use `manualBoot: true` + `boot()` after
-   configuring? Check `playkit-plugin` source (`Annoto/playkit-plugin` repo) or
-   `https://cdn.annoto.net/playkit-plugin/latest/plugin.js`.
-2. Whether `annoto-loader` (the configurator-installed bundle plugin) registers the same
-   `'annoto'` service on `getService`, and whether its runtime config key is `annoto-loader`
-   vs `annoto`.
-3. Whether `getService('annoto')` is available immediately after `setup()` returns or only after
-   a player event (e.g. source/media loaded) — may need to defer per-player hook registration.
+1. **`onSetup` signature** — `onSetup(handle: (config: IConfig) => Promise<IConfig>): void`. It is
+   NOT `(config, next)`. The widget's `hooks.setup` awaits the handler and boots with whatever
+   config the returned promise resolves to. So "release the boot" = resolve that promise with the
+   (Moodle-enriched) config. Our host handler stores `config` on the entry, keeps the promise
+   pending, and exposes its `resolve` as `entry.doneCb` — the exact analog of V2's `params.await(doneCb)`.
+2. **Service name** — the plugin does `player.registerService('annoto', service)` unconditionally
+   (`src/annoto.tsx`), and `pluginName === 'annoto'` (`src/constants.ts`). So `getService('annoto')`
+   is correct regardless of how the configurator names the plugin config block; the loader still
+   registers the `'annoto'` service.
+3. **Timing** — the service is registered synchronously in the plugin constructor, which runs during
+   `KalturaPlayer.setup()`/`configure()`. Actual widget boot is deferred behind an async bootstrap
+   script load (`awaitBootstrap`), so registering `onSetup` synchronously right after the player is
+   created (existing players enumerated + `KalturaPlayer.setup` wrapped) reliably wins the race.
+   Players not prepared with the plugin have no `'annoto'` service → skipped quietly.
 
-Only the ~10 lines that capture config and release the boot depend on these answers; the overall
-flow does not change.
+SSO: the current V2 flow no longer calls `api.auth()` explicitly — `configOverride` carries
+`ssoToken` and the widget authenticates on boot. V7 reuses the same `setupKalturaPlugin` override,
+so `ssoToken` covers SSO there too (no `getApi().auth()` needed).
 
 ## Proposed implementation
 
@@ -187,7 +193,8 @@ host-side config/SSO would follow the existing Wistia iframe pattern
 ## Status
 
 - [x] Research + solution design (this document)
-- [ ] Verify playkit-plugin service API details (checklist above)
-- [ ] Implement Step 1 in `initkaltura.js` on this branch
-- [ ] Implement Step 2 in `moodle-local-js` (separate repo — coordinate with Annoto CDN deploy)
+- [x] Verify playkit-plugin service API details (checklist above — verified against source)
+- [x] Implement Step 1 in `initkaltura.js` on this branch
+- [x] Implement Step 2 in `moodle-local-js` (branch `claude/kaltura-v7-embed-support` — `kalturaV7Init`,
+      `setupKalturaV7PlayersMap`, `setupKalturaV7Player`; typecheck + lint + build pass. Coordinate CDN deploy.)
 - [ ] Phase 2: fallback injection setting, KAF iframe support
