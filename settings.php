@@ -68,6 +68,14 @@ if ($hassiteconfig) {
         'https://cdn.annoto.net/widget/latest/bootstrap.js'
     ));
 
+    // Annoto Moodle CDN script url.
+    $settings->add(new admin_setting_configtext(
+        'local_annoto/moodlejsurl',
+        get_string('moodlejsurl', 'local_annoto'),
+        get_string('moodlejsurldesc', 'local_annoto'),
+        'https://cdn.annoto.net/moodle-local-js/latest/annoto.js'
+    ));
+
     // Deployment domain.
     $settings->add(new admin_setting_configselect(
         'local_annoto/deploymentdomain',
