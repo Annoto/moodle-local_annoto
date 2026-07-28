@@ -264,6 +264,7 @@ function local_annoto_get_jsparam($courseid, $modid) {
     $jsparams = [
         'deploymentDomain' => local_annoto_get_deployment_domain(),
         'bootstrapUrl' => $settings->scripturl,
+        'annotoMoodleCdnUrl' => $settings->moodlejsurl,
         'clientId' => $settings->clientid,
         'userToken' => local_annoto_get_user_token($settings, $courseid),
         'loginUrl' => $loginurl,
