@@ -141,11 +141,12 @@ function local_annoto_get_user_token($settings, $courseid) {
         "name" => fullname($USER), // User's fullname in Moodle.
         "email" => $USER->email, // User's email.
         "photoUrl" => is_object($userpictureurl) ? $userpictureurl->out() : '', // User's avatar in Moodle.
-        "iss" => $settings->clientid, // ClientID from global settings.
+        "iss" => $settings->clientid ?? '', // ClientID from global settings.
         "exp" => $expire, // JWT token expiration time.
         "scope" => local_annoto_get_user_scope($settings, $courseid),
     ];
-    $enctoken = \Firebase\JWT\JWT::encode($payload, $settings->ssosecret, 'HS256');
+    $secret = $settings->ssosecret ?? '';
+    $enctoken = \Firebase\JWT\JWT::encode($payload, $secret, 'HS256');
 
     return $enctoken;
 }
@@ -265,7 +266,7 @@ function local_annoto_get_jsparam($courseid, $modid) {
         'deploymentDomain' => local_annoto_get_deployment_domain(),
         'bootstrapUrl' => $settings->scripturl,
         'annotoMoodleCdnUrl' => $settings->moodlejsurl,
-        'clientId' => $settings->clientid,
+        'clientId' => $settings->clientid ?? '',
         'userToken' => local_annoto_get_user_token($settings, $courseid),
         'loginUrl' => $loginurl,
         'logoutUrl' => $logouturl,
