@@ -20,89 +20,108 @@
      * Kaltura V7 (playkit) widget-global bootstrap for Moodle pages.
      *
      * The Annoto playkit plugin boots the widget by referencing the global `Annoto`
-     * (window.Annoto), which is created as a side effect of the widget bootstrap UMD's factory
-     * running. The plugin loads that bootstrap with a plain <script> tag. On a Moodle page
-     * RequireJS is present, so window.define.amd is truthy and the UMD takes its AMD branch
-     * (`define([], factory)`) - an anonymous define with no require context whose factory RequireJS
-     * never executes, so window.Annoto is never set. The plugin then calls Annoto.boot() on an
-     * undefined global -> "ReferenceError: Annoto is not defined".
+     * (window.Annoto). That global is set as a side effect of the widget bootstrap UMD running -
+     * but only when the UMD takes its plain-global branch. The plugin loads the bootstrap with
+     * `KalturaPlayer.core.utils.Dom.loadScriptAsync` (a plain <script> tag). On a Moodle page
+     * RequireJS is present, so window.define.amd is truthy and the UMD instead takes its AMD branch
+     * (`define([], factory)`) - an anonymous define with no require context. RequireJS never runs
+     * that factory (and logs "Mismatched anonymous define()"), so window.Annoto is never set and the
+     * plugin's boot throws "ReferenceError: Annoto is not defined" (annoto.tsx:295).
      *
-     * Fix: load the same bootstrap through Moodle's AMD loader (require([url], cb)). That gives it a
-     * proper require context, so the factory runs and sets window.Annoto - the exact mechanism the
-     * non-Kaltura path and amd/src/annoto.js already rely on. We then boot the plugin ourselves once
-     * the global is guaranteed present (see annotoKalturaV7HookSetup), turning a timing race into a
-     * strict happens-before. This URL matches the plugin's own baked-in widgetUrl, so both share the
-     * browser cache and the same widget version.
+     * The plugin's own config carries manualBoot/clientId etc. from the *server-side* uiConf (written
+     * by the kaltura-v7-player-configurator), not from the client KalturaPlayer.setup() config, so it
+     * cannot be forced to manual boot from here. Instead we wrap Dom.loadScriptAsync so that, only
+     * while the widget bootstrap script loads and runs, window.define.amd is hidden. The UMD then
+     * takes its plain-global branch and assigns window.Annoto exactly as on a non-AMD page - no
+     * RequireJS involvement, no mismatched define, no duplicate download, and the plugin's own load
+     * sets the global (deterministic, no race). define.amd is restored as soon as the script has run,
+     * so Moodle's RequireJS is otherwise untouched.
      */
-    var ANNOTO_WIDGET_BOOTSTRAP_URL = 'https://cdn.annoto.net/widget/latest/bootstrap.js';
-    var annotoWidgetGlobalReqRetry = 0;
+    var annotoAmdHideDepth = 0;
+    var annotoSavedAmd;
 
-    function annotoEnsureWidgetGlobal() {
-        if (window.Annoto || window.moodleAnnoto.widgetGlobalRequested) {
-            return;
+    // Hide window.define.amd (once, ref-counted for concurrent loads). Returns false when not on a
+    // RequireJS page, so callers fall back to loading unchanged.
+    function annotoHideAmd() {
+        if (!window.define) {
+            return false;
         }
-        if (!window.require) {
-            // Moodle's AMD loader not ready yet - retry briefly (it is normally present already).
-            if (annotoWidgetGlobalReqRetry < 50) {
-                annotoWidgetGlobalReqRetry++;
-                setTimeout(annotoEnsureWidgetGlobal, 100);
-            }
-            return;
-        }
-        window.moodleAnnoto.widgetGlobalRequested = true;
-        annotoDebugLog('loading widget global via AMD: ', ANNOTO_WIDGET_BOOTSTRAP_URL);
-        try {
-            window.require([ANNOTO_WIDGET_BOOTSTRAP_URL], function (AnnotoExport) {
-                // The bootstrap factory sets window.Annoto itself; keep the module export as a
-                // fallback in case a future build stops self-assigning the global.
-                if (!window.Annoto && AnnotoExport) {
-                    window.Annoto = AnnotoExport;
-                }
-                annotoDebugLog('widget global ready: ', !!window.Annoto);
-            }, function (err) {
-                annotoDebugLog('widget global load failed: ', err);
-            });
-        } catch (err) {
-            annotoDebugLog('widget global require threw: ', err);
-        }
-    }
-
-    function annotoWhenWidgetGlobalReady(cb) {
-        var retry = 0;
-        (function poll() {
-            if (window.Annoto) {
-                cb();
-                return;
-            }
-            if (retry < 100) {
-                retry++;
-                setTimeout(poll, 50);
-                return;
-            }
-            annotoDebugLog('widget global not ready in time, skipping boot');
-        })();
-    }
-
-    // Force the Annoto playkit plugin to manual boot so it does not auto-boot (and crash on the
-    // not-yet-defined window.Annoto) before we have loaded the widget. Only touches existing
-    // annoto plugin configs; returns whether one was present.
-    function annotoForceManualBoot(conf) {
-        try {
-            var plugins = conf && conf.plugins;
-            if (!plugins) {
+        if (annotoAmdHideDepth === 0) {
+            if (!window.define.amd) {
                 return false;
             }
-            var found = false;
-            Object.keys(plugins).forEach(function (key) {
-                if (/annoto/i.test(key) && plugins[key] && typeof plugins[key] === 'object') {
-                    plugins[key].manualBoot = true;
-                    found = true;
+            annotoSavedAmd = window.define.amd;
+            window.define.amd = undefined;
+        }
+        annotoAmdHideDepth++;
+        return true;
+    }
+
+    function annotoRestoreAmd() {
+        if (annotoAmdHideDepth === 0) {
+            return;
+        }
+        annotoAmdHideDepth--;
+        if (annotoAmdHideDepth <= 0) {
+            annotoAmdHideDepth = 0;
+            if (window.define) {
+                window.define.amd = annotoSavedAmd;
+            }
+        }
+    }
+
+    // Wrap KalturaPlayer.core.utils.Dom.loadScriptAsync so the Annoto widget bootstrap loads with
+    // define.amd hidden (see block comment above). Idempotent; every other Kaltura script load is
+    // passed through untouched.
+    function annotoWrapKalturaScriptLoader() {
+        try {
+            var core = window.KalturaPlayer && window.KalturaPlayer.core;
+            var dom = core && core.utils && core.utils.Dom;
+            if (!dom || typeof dom.loadScriptAsync !== 'function' || dom.annotoAmdWrapped) {
+                return;
+            }
+            dom.annotoAmdWrapped = true;
+            var origLoad = dom.loadScriptAsync;
+            dom.loadScriptAsync = function (url) {
+                // The widget bootstrap is the load that defines window.Annoto, so hide AMD for it
+                // whether we recognise its URL (the standard cdn.annoto.net widget) or simply
+                // because the global is not set yet - the latter also covers a self-hosted
+                // config.bootstrapUrl. Once window.Annoto exists, every load is passed through.
+                var isWidgetLoad = typeof url === 'string' &&
+                    (/\/widget\/.*bootstrap|annoto/i.test(url) || !window.Annoto);
+                if (!isWidgetLoad || !annotoHideAmd()) {
+                    return origLoad.apply(this, arguments);
                 }
-            });
-            return found;
+                annotoDebugLog('loading widget with define.amd hidden: ', url);
+                var restored = false;
+                var restore = function () {
+                    if (restored) {
+                        return;
+                    }
+                    restored = true;
+                    annotoRestoreAmd();
+                };
+                // Failsafe: never leave AMD hidden if the load never settles.
+                setTimeout(restore, 30000);
+                var result;
+                try {
+                    result = origLoad.apply(this, arguments);
+                } catch (err) {
+                    restore();
+                    throw err;
+                }
+                if (result && typeof result.then === 'function') {
+                    // loadScriptAsync resolves on the script's onload, i.e. after it has executed,
+                    // so window.Annoto is already set by the time we restore define.amd.
+                    result.then(restore, restore);
+                } else {
+                    setTimeout(restore);
+                }
+                return result;
+            };
+            annotoDebugLog('wrapped Kaltura Dom.loadScriptAsync');
         } catch (err) {
-            annotoDebugLog('forceManualBoot error: ', err);
-            return false;
+            annotoDebugLog('wrapKalturaScriptLoader error: ', err);
         }
     }
 
@@ -189,6 +208,9 @@
         }
 
         annotoDebugLog('annotoKalturaV7HookSetup init done');
+        // Wrap the Kaltura script loader before any player (and its Annoto plugin) is constructed,
+        // so the widget bootstrap loads with define.amd hidden and sets window.Annoto.
+        annotoWrapKalturaScriptLoader();
         var maKV7App = {
             playersMap: {},
 
@@ -231,25 +253,6 @@
                         });
                     });
                 });
-
-                // Load the widget global, then boot the plugin ourselves. On Moodle the plugin's
-                // own plain-<script> widget load is swallowed by RequireJS, so window.Annoto is
-                // never set and its auto-boot throws "Annoto is not defined" (which is why we set
-                // manualBoot in the setup wrap). Booting only after the global is ready guarantees
-                // Annoto.boot() never sees an undefined global, and also recovers a player that
-                // already auto-boot-crashed (the crash is before isWidgetBooted is set, so boot()
-                // runs again).
-                annotoEnsureWidgetGlobal();
-                annotoWhenWidgetGlobalReady(function () {
-                    if (typeof entry.service.boot !== 'function') {
-                        return;
-                    }
-                    try {
-                        entry.service.boot();
-                    } catch (err) {
-                        annotoDebugLog('service.boot error: ', err);
-                    }
-                });
             },
         };
 
@@ -260,12 +263,9 @@
 
         var origSetup = window.KalturaPlayer.setup;
         window.KalturaPlayer.setup = function (conf) {
-            // Before the player (and its Annoto plugin) is constructed: stop the plugin from
-            // auto-booting on the not-yet-defined window.Annoto, and start loading the widget
-            // global so it is ready by the time we boot the plugin in playerReady.
-            if (annotoForceManualBoot(conf)) {
-                annotoEnsureWidgetGlobal();
-            }
+            // Ensure the loader is wrapped before this player's Annoto plugin runs its widget load
+            // inside origSetup (covers players created before the poll installed the wrap above).
+            annotoWrapKalturaScriptLoader();
             var player = origSetup.call(window.KalturaPlayer, conf);
             try {
                 maKV7App.playerReady(player);

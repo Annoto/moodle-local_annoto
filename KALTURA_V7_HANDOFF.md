@@ -201,16 +201,22 @@ Observed on a live V7 page after Steps 1–2. Root-caused (adversarially verifie
   whose factory RequireJS never executes — so `window.Annoto` is never set. The plugin has no
   `if (!Annoto)` guard, so `boot()` → `Annoto.boot()` (annoto.tsx:295) throws. (Non-Moodle pages
   have no AMD loader, fall through to `t.Annoto=e()`, and work.)
-- **Fix (this branch, `initkaltura.js`, no build step):** load the same bootstrap through Moodle's
-  AMD loader — `window.require(['https://cdn.annoto.net/widget/latest/bootstrap.js'], cb)` — which
-  runs the factory and sets `window.Annoto` (the mechanism `amd/src/annoto.js:72` and the bundle's
-  non-Kaltura path already use). To make it a strict happens-before instead of a race, the
-  `KalturaPlayer.setup` wrap sets `manualBoot:true` on the annoto plugin config so the plugin does
-  not auto-boot; we then call `service.boot()` only after `window.Annoto` exists. This also recovers
-  a player that already auto-boot-crashed (the crash precedes `isWidgetBooted = true`). Verified
-  against the deployed `plugin.js`: registers as `pluginName='annoto'`, honors `manualBoot`, exposes
-  `service.boot()`, and its baked `widgetUrl` is exactly the URL above. Bumped to `5.5.1` /
-  `2026072801` to bust Moodle's JS cache.
+- **Fix (this branch, `initkaltura.js`, no build step):** the plugin loads the widget via
+  `KalturaPlayer.core.utils.Dom.loadScriptAsync(widgetUrl)`. Wrap that loader so that, only while the
+  widget bootstrap loads and runs, `window.define.amd` is hidden (`undefined`); the UMD then takes
+  its plain-global branch (`t.Annoto=e()`) and assigns `window.Annoto` itself — no RequireJS, no
+  mismatched define, no duplicate download, and the plugin's own load sets the global
+  (deterministic, no race). `define.amd` is restored when the load settles (ref-counted for
+  concurrent loads, 30s failsafe). The wrap is installed at hook init and again in the
+  `KalturaPlayer.setup` wrap before `origSetup`. To also cover a self-hosted `config.bootstrapUrl`
+  that our URL pattern would not match, AMD is hidden for any `loadScriptAsync` issued while
+  `window.Annoto` is still undefined. Bumped to `5.5.2` / `2026080300` to bust Moodle's JS cache.
+
+  Two earlier attempts on this branch were wrong and are superseded: (a) `require([widgetUrl])` —
+  collided with the plugin's own plain-tag `define([],e)` on RequireJS's shared queue
+  ("Mismatched anonymous define()") and never set the global; (b) forcing `manualBoot` via the
+  client `KalturaPlayer.setup(conf)` — the plugin's config (manualBoot/clientId) comes from the
+  server-side uiConf, not the client argument, so the mutation never reached the plugin.
 
 > **BLOCKER for the full flow:** the V7 code in `moodle-local-js` is **not yet deployed** to
 > `cdn.annoto.net/moodle-local-js/latest/annoto.js` (the live bundle has none of `kalturaV7Init` /
