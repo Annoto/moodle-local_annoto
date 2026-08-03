@@ -16,6 +16,96 @@
         }
     } catch(err) {}
 
+    /*
+     * Kaltura V7 (playkit) widget-global bootstrap for Moodle pages.
+     *
+     * The Annoto playkit plugin boots the widget by referencing the global `Annoto`
+     * (window.Annoto), which is created as a side effect of the widget bootstrap UMD's factory
+     * running. The plugin loads that bootstrap with a plain <script> tag. On a Moodle page
+     * RequireJS is present, so window.define.amd is truthy and the UMD takes its AMD branch
+     * (`define([], factory)`) - an anonymous define with no require context whose factory RequireJS
+     * never executes, so window.Annoto is never set. The plugin then calls Annoto.boot() on an
+     * undefined global -> "ReferenceError: Annoto is not defined".
+     *
+     * Fix: load the same bootstrap through Moodle's AMD loader (require([url], cb)). That gives it a
+     * proper require context, so the factory runs and sets window.Annoto - the exact mechanism the
+     * non-Kaltura path and amd/src/annoto.js already rely on. We then boot the plugin ourselves once
+     * the global is guaranteed present (see annotoKalturaV7HookSetup), turning a timing race into a
+     * strict happens-before. This URL matches the plugin's own baked-in widgetUrl, so both share the
+     * browser cache and the same widget version.
+     */
+    var ANNOTO_WIDGET_BOOTSTRAP_URL = 'https://cdn.annoto.net/widget/latest/bootstrap.js';
+    var annotoWidgetGlobalReqRetry = 0;
+
+    function annotoEnsureWidgetGlobal() {
+        if (window.Annoto || window.moodleAnnoto.widgetGlobalRequested) {
+            return;
+        }
+        if (!window.require) {
+            // Moodle's AMD loader not ready yet - retry briefly (it is normally present already).
+            if (annotoWidgetGlobalReqRetry < 50) {
+                annotoWidgetGlobalReqRetry++;
+                setTimeout(annotoEnsureWidgetGlobal, 100);
+            }
+            return;
+        }
+        window.moodleAnnoto.widgetGlobalRequested = true;
+        annotoDebugLog('loading widget global via AMD: ', ANNOTO_WIDGET_BOOTSTRAP_URL);
+        try {
+            window.require([ANNOTO_WIDGET_BOOTSTRAP_URL], function (AnnotoExport) {
+                // The bootstrap factory sets window.Annoto itself; keep the module export as a
+                // fallback in case a future build stops self-assigning the global.
+                if (!window.Annoto && AnnotoExport) {
+                    window.Annoto = AnnotoExport;
+                }
+                annotoDebugLog('widget global ready: ', !!window.Annoto);
+            }, function (err) {
+                annotoDebugLog('widget global load failed: ', err);
+            });
+        } catch (err) {
+            annotoDebugLog('widget global require threw: ', err);
+        }
+    }
+
+    function annotoWhenWidgetGlobalReady(cb) {
+        var retry = 0;
+        (function poll() {
+            if (window.Annoto) {
+                cb();
+                return;
+            }
+            if (retry < 100) {
+                retry++;
+                setTimeout(poll, 50);
+                return;
+            }
+            annotoDebugLog('widget global not ready in time, skipping boot');
+        })();
+    }
+
+    // Force the Annoto playkit plugin to manual boot so it does not auto-boot (and crash on the
+    // not-yet-defined window.Annoto) before we have loaded the widget. Only touches existing
+    // annoto plugin configs; returns whether one was present.
+    function annotoForceManualBoot(conf) {
+        try {
+            var plugins = conf && conf.plugins;
+            if (!plugins) {
+                return false;
+            }
+            var found = false;
+            Object.keys(plugins).forEach(function (key) {
+                if (/annoto/i.test(key) && plugins[key] && typeof plugins[key] === 'object') {
+                    plugins[key].manualBoot = true;
+                    found = true;
+                }
+            });
+            return found;
+        } catch (err) {
+            annotoDebugLog('forceManualBoot error: ', err);
+            return false;
+        }
+    }
+
     function annotoKalturaHookSetup() {
         annotoDebugLog('annotoKalturaHookSetup');
         if (!window.kWidget) {
@@ -141,6 +231,25 @@
                         });
                     });
                 });
+
+                // Load the widget global, then boot the plugin ourselves. On Moodle the plugin's
+                // own plain-<script> widget load is swallowed by RequireJS, so window.Annoto is
+                // never set and its auto-boot throws "Annoto is not defined" (which is why we set
+                // manualBoot in the setup wrap). Booting only after the global is ready guarantees
+                // Annoto.boot() never sees an undefined global, and also recovers a player that
+                // already auto-boot-crashed (the crash is before isWidgetBooted is set, so boot()
+                // runs again).
+                annotoEnsureWidgetGlobal();
+                annotoWhenWidgetGlobalReady(function () {
+                    if (typeof entry.service.boot !== 'function') {
+                        return;
+                    }
+                    try {
+                        entry.service.boot();
+                    } catch (err) {
+                        annotoDebugLog('service.boot error: ', err);
+                    }
+                });
             },
         };
 
@@ -151,6 +260,12 @@
 
         var origSetup = window.KalturaPlayer.setup;
         window.KalturaPlayer.setup = function (conf) {
+            // Before the player (and its Annoto plugin) is constructed: stop the plugin from
+            // auto-booting on the not-yet-defined window.Annoto, and start loading the widget
+            // global so it is ready by the time we boot the plugin in playerReady.
+            if (annotoForceManualBoot(conf)) {
+                annotoEnsureWidgetGlobal();
+            }
             var player = origSetup.call(window.KalturaPlayer, conf);
             try {
                 maKV7App.playerReady(player);

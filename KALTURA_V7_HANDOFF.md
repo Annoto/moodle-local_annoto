@@ -190,11 +190,42 @@ host-side config/SSO would follow the existing Wistia iframe pattern
 5. Non-Kaltura pages → V7 poll gives up quietly after 50 retries.
 6. Debug logging via `sessionStorage.setItem('moodleAnnotoDebugKaltura', '1')`.
 
+## Runtime fix — "ReferenceError: Annoto is not defined" (annoto.tsx:295)
+
+Observed on a live V7 page after Steps 1–2. Root-caused (adversarially verified against source):
+
+- **AMD/UMD collision (the crash).** The playkit plugin loads the widget bootstrap via a plain
+  `<script>` tag (`Dom.loadScriptAsync`, annoto.tsx:249). The widget sets `window.Annoto` as a
+  side effect of its UMD **factory** running. On a Moodle page RequireJS makes `window.define.amd`
+  truthy, so the UMD takes its AMD branch (`define([], factory)`) — a mismatched anonymous define
+  whose factory RequireJS never executes — so `window.Annoto` is never set. The plugin has no
+  `if (!Annoto)` guard, so `boot()` → `Annoto.boot()` (annoto.tsx:295) throws. (Non-Moodle pages
+  have no AMD loader, fall through to `t.Annoto=e()`, and work.)
+- **Fix (this branch, `initkaltura.js`, no build step):** load the same bootstrap through Moodle's
+  AMD loader — `window.require(['https://cdn.annoto.net/widget/latest/bootstrap.js'], cb)` — which
+  runs the factory and sets `window.Annoto` (the mechanism `amd/src/annoto.js:72` and the bundle's
+  non-Kaltura path already use). To make it a strict happens-before instead of a race, the
+  `KalturaPlayer.setup` wrap sets `manualBoot:true` on the annoto plugin config so the plugin does
+  not auto-boot; we then call `service.boot()` only after `window.Annoto` exists. This also recovers
+  a player that already auto-boot-crashed (the crash precedes `isWidgetBooted = true`). Verified
+  against the deployed `plugin.js`: registers as `pluginName='annoto'`, honors `manualBoot`, exposes
+  `service.boot()`, and its baked `widgetUrl` is exactly the URL above. Bumped to `5.5.1` /
+  `2026072801` to bust Moodle's JS cache.
+
+> **BLOCKER for the full flow:** the V7 code in `moodle-local-js` is **not yet deployed** to
+> `cdn.annoto.net/moodle-local-js/latest/annoto.js` (the live bundle has none of `kalturaV7Init` /
+> `setupKalturaV7PlayersMap` / the `.kaltura-player-container` double-boot guard). Until it is
+> deployed, the `onSetup`→`doneCb` handshake never fires, so the widget boots but **stalls at the
+> setup hook** (no Moodle SSO / course-group context). The crash is gone without it, but the widget
+> only appears once the bundle is deployed.
+
 ## Status
 
 - [x] Research + solution design (this document)
 - [x] Verify playkit-plugin service API details (checklist above — verified against source)
 - [x] Implement Step 1 in `initkaltura.js` on this branch
 - [x] Implement Step 2 in `moodle-local-js` (branch `claude/kaltura-v7-embed-support` — `kalturaV7Init`,
-      `setupKalturaV7PlayersMap`, `setupKalturaV7Player`; typecheck + lint + build pass. Coordinate CDN deploy.)
+      `setupKalturaV7PlayersMap`, `setupKalturaV7Player`; typecheck + lint + build pass.)
+- [x] Runtime fix: AMD/UMD `window.Annoto` bootstrap + `manualBoot`-gated boot in `initkaltura.js`
+- [ ] **Deploy `moodle-local-js` V7 bundle to cdn.annoto.net** (required for SSO/context; see BLOCKER above)
 - [ ] Phase 2: fallback injection setting, KAF iframe support
