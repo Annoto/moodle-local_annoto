@@ -127,6 +127,16 @@ function local_annoto_get_user_token($settings, $courseid) {
         return '';
     }
 
+    // Skip token generation when the plugin is not fully configured (no client id or SSO
+    // secret). This avoids signing a JWT with an empty secret and prevents PHP warnings on
+    // every page when Annoto has not been set up yet - e.g. during Behat runs of other
+    // plugins. empty() is null- and undefined-property-safe, so it does not warn itself.
+    if (empty($settings->clientid) || empty($settings->ssosecret)) {
+        debugging('local_annoto: clientid or ssosecret is not configured, skipping user token generation.',
+            DEBUG_DEVELOPER);
+        return '';
+    }
+
     // Provide page and js with data.
     // Get user's avatar.
     $userpicture = new user_picture($USER);
@@ -264,7 +274,8 @@ function local_annoto_get_jsparam($courseid, $modid) {
     $jsparams = [
         'deploymentDomain' => local_annoto_get_deployment_domain(),
         'bootstrapUrl' => $settings->scripturl,
-        'clientId' => $settings->clientid,
+        'annotoMoodleCdnUrl' => $settings->moodlejsurl,
+        'clientId' => $settings->clientid ?? '',
         'userToken' => local_annoto_get_user_token($settings, $courseid),
         'loginUrl' => $loginurl,
         'logoutUrl' => $logouturl,
