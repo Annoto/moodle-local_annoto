@@ -202,21 +202,28 @@ Observed on a live V7 page after Steps 1–2. Root-caused (adversarially verifie
   `if (!Annoto)` guard, so `boot()` → `Annoto.boot()` (annoto.tsx:295) throws. (Non-Moodle pages
   have no AMD loader, fall through to `t.Annoto=e()`, and work.)
 - **Fix (this branch, `initkaltura.js`, no build step):** the plugin loads the widget via
-  `KalturaPlayer.core.utils.Dom.loadScriptAsync(widgetUrl)`. Wrap that loader so that, only while the
-  widget bootstrap loads and runs, `window.define.amd` is hidden (`undefined`); the UMD then takes
-  its plain-global branch (`t.Annoto=e()`) and assigns `window.Annoto` itself — no RequireJS, no
-  mismatched define, no duplicate download, and the plugin's own load sets the global
-  (deterministic, no race). `define.amd` is restored when the load settles (ref-counted for
-  concurrent loads, 30s failsafe). The wrap is installed at hook init and again in the
-  `KalturaPlayer.setup` wrap before `origSetup`. To also cover a self-hosted `config.bootstrapUrl`
-  that our URL pattern would not match, AMD is hidden for any `loadScriptAsync` issued while
-  `window.Annoto` is still undefined. Bumped to `5.5.2` / `2026080300` to bust Moodle's JS cache.
+  `KalturaPlayer.core.utils.Dom.loadScriptAsync(widgetUrl)`. Wrap that loader so the widget bootstrap
+  is loaded **through Moodle's AMD loader** (`require([url])`) instead of a plain tag. `require()`
+  gives the anonymous `define([],factory)` a proper context, so the factory runs and sets
+  `window.Annoto` — exactly how `amd/src/annoto.js` loads the CDN bundle and the Vimeo API today. It
+  is a drop-in replacement for the plugin's single widget load (only one load, no plain-tag/require
+  collision, no "Mismatched anonymous define()"). The wrap is installed at hook init and again in the
+  `KalturaPlayer.setup` wrap before `origSetup`; non-widget loads and the no-RequireJS case pass
+  straight through. Bumped to `5.5.3` / `2026080400`.
 
-  Two earlier attempts on this branch were wrong and are superseded: (a) `require([widgetUrl])` —
-  collided with the plugin's own plain-tag `define([],e)` on RequireJS's shared queue
-  ("Mismatched anonymous define()") and never set the global; (b) forcing `manualBoot` via the
-  client `KalturaPlayer.setup(conf)` — the plugin's config (manualBoot/clientId) comes from the
-  server-side uiConf, not the client argument, so the mutation never reached the plugin.
+  Three earlier attempts on this branch were wrong and are superseded:
+  (a) a *separate* `require([widgetUrl])` preload while the plugin still did its own plain-tag load —
+  the two collided on RequireJS's shared queue ("Mismatched anonymous define()") and never set the
+  global. The current fix avoids this by *replacing* the plugin's load, so only one load happens.
+  (b) forcing `manualBoot` via the client `KalturaPlayer.setup(conf)` — the plugin's config
+  (manualBoot/clientId) comes from the server-side uiConf, not the client argument, so the mutation
+  never reached the plugin.
+  (c) temporarily hiding `window.define.amd` globally during the widget load so the UMD self-assigns
+  the global — this is a **global** mutation and intermittently broke *other* concurrent RequireJS
+  loads, in particular the `moodle-local-js` CDN bundle (itself an anonymous UMD loaded via
+  `require([annotoMoodleCdnUrl])` at roughly the same time): with `define.amd` hidden it took the
+  global branch, `require`'s callback got `undefined`, `AnnotoMoodle.setup()` threw, and the widget
+  hung. The `require()`-replacement fix touches `define.amd` not at all, so no other load is affected.
 
 > **BLOCKER for the full flow:** the V7 code in `moodle-local-js` is **not yet deployed** to
 > `cdn.annoto.net/moodle-local-js/latest/annoto.js` (the live bundle has none of `kalturaV7Init` /
