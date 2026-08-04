@@ -192,13 +192,42 @@
                 if (!id || this.playersMap[id]) {
                     return;
                 }
-                var annotoService = player.getService('annoto');
-                if (!annotoService || typeof annotoService.onSetup !== 'function') {
-                    // Player was not prepared with the Annoto plugin (annoto-loader). Skip quietly.
-                    annotoDebugLog('playerReady: no annoto service, skipping ', id);
+
+                // The Annoto plugin is configured via the player's uiConf, which Kaltura fetches
+                // ASYNCHRONOUSLY - so getService('annoto') is usually not available yet at the
+                // moment the player is created. Poll for it (the plugin registers its service in
+                // its constructor, before it boots the widget) so we can register onSetup in time.
+                // Players genuinely without the Annoto plugin simply time out and are skipped.
+                var self = this;
+                var retries = 0;
+                var pollService = function () {
+                    if (self.playersMap[id]) {
+                        return;
+                    }
+                    var annotoService = null;
+                    try {
+                        annotoService = player.getService && player.getService('annoto');
+                    } catch (err) {
+                        annotoDebugLog('getService threw, will retry: ', err);
+                    }
+                    if (annotoService && typeof annotoService.onSetup === 'function') {
+                        self.capturePlayer(id, player, annotoService);
+                        return;
+                    }
+                    if (retries < 100) {
+                        retries++;
+                        setTimeout(pollService, 100);
+                    } else {
+                        annotoDebugLog('playerReady: no annoto service after retries, skipping ', id);
+                    }
+                };
+                pollService();
+            },
+
+            capturePlayer: function (id, player, annotoService) {
+                if (this.playersMap[id]) {
                     return;
                 }
-
                 annotoDebugLog('playerReady: ', id);
                 var entry = {
                     id: id,
