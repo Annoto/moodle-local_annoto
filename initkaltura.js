@@ -39,9 +39,12 @@
      * script load, and the load when RequireJS is somehow unavailable, is passed straight through.
      */
     function annotoIsWidgetUrl(url) {
-        // The Annoto widget bootstrap: annoto-hosted, or a *-bootstrap.js (covers a self-hosted
-        // config.bootstrapUrl). Intentionally narrow so no unrelated Kaltura script is rerouted.
-        return typeof url === 'string' && (/annoto/i.test(url) || /bootstrap\.js(\?|$)/i.test(url));
+        // Match ONLY the widget bootstrap (a *-bootstrap.js, or a /widget/.../bootstrap path). Kept
+        // deliberately narrow - a bare /annoto/ match would also reroute the Annoto plugin bundle
+        // (cdn.annoto.net/playkit-plugin/...) and other annoto-hosted assets through require(),
+        // breaking scripts that read their own document.currentScript (e.g. ?auto_boot detection).
+        return typeof url === 'string' &&
+            (/\/widget\/.*bootstrap/i.test(url) || /bootstrap\.js(\?|$)/i.test(url));
     }
 
     // Wrap KalturaPlayer.core.utils.Dom.loadScriptAsync so the Annoto widget bootstrap loads via
@@ -61,8 +64,6 @@
                     return origLoad.apply(this, arguments);
                 }
                 annotoDebugLog('loading widget via AMD loader: ', url);
-                var self = this;
-                var args = arguments;
                 return new Promise(function (resolve, reject) {
                     window.require([url], function (widgetExport) {
                         // require() ran the UMD factory in a proper context, so window.Annoto is set;
@@ -73,19 +74,12 @@
                         annotoDebugLog('widget loaded, window.Annoto set: ', !!window.Annoto);
                         resolve();
                     }, function (err) {
-                        // Fall back to the plugin's original plain-tag load so behaviour is never
-                        // worse than without this wrap.
-                        annotoDebugLog('widget AMD load failed, falling back to plain load: ', err);
-                        try {
-                            var p = origLoad.apply(self, args);
-                            if (p && typeof p.then === 'function') {
-                                p.then(resolve, reject);
-                            } else {
-                                resolve();
-                            }
-                        } catch (e) {
-                            reject(e);
-                        }
+                        // Do NOT fall back to the plugin's plain-tag load: on a RequireJS page it
+                        // would re-trigger the anonymous-define collision (window.Annoto stays
+                        // unset + "Mismatched anonymous define()"). Reject so the plugin's own
+                        // catch runs its bootstrapDone() path cleanly.
+                        annotoDebugLog('widget AMD load failed: ', err);
+                        reject(err);
                     });
                 });
             };
@@ -179,7 +173,7 @@
 
         annotoDebugLog('annotoKalturaV7HookSetup init done');
         // Wrap the Kaltura script loader before any player (and its Annoto plugin) is constructed,
-        // so the widget bootstrap loads with define.amd hidden and sets window.Annoto.
+        // so the widget bootstrap loads via require() (setting window.Annoto).
         annotoWrapKalturaScriptLoader();
         var maKV7App = {
             playersMap: {},
@@ -195,14 +189,12 @@
 
                 // The Annoto plugin is configured via the player's uiConf, which Kaltura fetches
                 // ASYNCHRONOUSLY - so getService('annoto') is usually not available yet at the
-                // moment the player is created. Poll for it (the plugin registers its service in
-                // its constructor, before it boots the widget) so we can register onSetup in time.
-                // Players genuinely without the Annoto plugin simply time out and are skipped.
+                // moment the player is created, and we must register onSetup BEFORE the plugin boots
+                // the widget (a warm-cached widget bootstrap can boot in well under a poll interval).
                 var self = this;
-                var retries = 0;
-                var pollService = function () {
+                var tryCapture = function () {
                     if (self.playersMap[id]) {
-                        return;
+                        return true;
                     }
                     var annotoService = null;
                     try {
@@ -212,6 +204,35 @@
                     }
                     if (annotoService && typeof annotoService.onSetup === 'function') {
                         self.capturePlayer(id, player, annotoService);
+                        return true;
+                    }
+                    return false;
+                };
+
+                // 1. Already constructed (e.g. player created before this hook ran) - capture now.
+                if (tryCapture()) {
+                    return;
+                }
+
+                // 2. Primary signal: the plugin dispatches 'annotoserviceready' on the player bus
+                //    synchronously the moment it registers its service (in its constructor, before
+                //    init/boot). Catching it guarantees onSetup is registered before the widget's
+                //    setup hook fires, regardless of how fast a warm-cached bootstrap loads.
+                if (typeof player.addEventListener === 'function') {
+                    try {
+                        player.addEventListener('annotoserviceready', function () {
+                            tryCapture();
+                        });
+                    } catch (err) {
+                        annotoDebugLog('addEventListener failed: ', err);
+                    }
+                }
+
+                // 3. Fallback poll (event unavailable, or service registered in the gap before the
+                //    listener attached). Players genuinely without the Annoto plugin time out here.
+                var retries = 0;
+                var pollService = function () {
+                    if (tryCapture()) {
                         return;
                     }
                     if (retries < 100) {
@@ -241,8 +262,14 @@
                     annotoDebugLog('annotoServiceSetup: ', id);
                     entry.config = config;
                     return new Promise(function (resolve) {
-                        // Releasing the boot = resolving with the (Moodle-enriched) config.
+                        var settled = false;
+                        // Releasing the boot = resolving with the (Moodle-enriched) config. Guarded
+                        // so the CDN bundle and the fallback timeout below can't double-resolve.
                         entry.doneCb = function () {
+                            if (settled) {
+                                return;
+                            }
+                            settled = true;
                             resolve(entry.config);
                         };
                         setTimeout(function () {
@@ -250,6 +277,15 @@
                                 window.moodleAnnoto.setupKalturaV7PlayersMap(playersMap);
                             }
                         });
+                        // Fallback: if the CDN bundle at moodlejsurl is missing/stale/never completes
+                        // the handshake, don't hang the widget forever - boot with the un-enriched
+                        // config. SSO/Moodle context is then absent (diagnosable via this log).
+                        setTimeout(function () {
+                            if (!settled) {
+                                annotoDebugLog('CDN handshake timed out, booting widget un-enriched: ', id);
+                                entry.doneCb();
+                            }
+                        }, 10000);
                     });
                 });
             },
