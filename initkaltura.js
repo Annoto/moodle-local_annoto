@@ -288,19 +288,11 @@
                         }, 10000);
                     });
                 });
-
-                // Boot the widget on page load rather than waiting for the plugin's own auto-boot,
-                // which on a configurator-prepared player is tied to first play. onSetup is already
-                // registered above, so this boot runs through the Moodle handshake. boot() waits for
-                // the widget script (awaitBootstrap) internally and is a no-op if already booted, so
-                // it is safe alongside the plugin's auto-boot.
-                if (typeof annotoService.boot === 'function') {
-                    try {
-                        annotoService.boot();
-                    } catch (err) {
-                        annotoDebugLog('service.boot error: ', err);
-                    }
-                }
+                // NOTE: do NOT force service.boot() here. The playkit plugin boots the widget when
+                // the player has resolved its media (first play by default); booting earlier - before
+                // the media/entry is known - leaves the widget with nothing to attach to and it never
+                // renders. "Load without clicking" must come from the player preloading its media
+                // (a Kaltura embed/configurator setting), not from forcing the boot here.
             },
         };
 
