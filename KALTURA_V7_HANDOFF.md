@@ -1,244 +1,117 @@
-# Handoff: Kaltura V7 Player Embed Support
+# Kaltura V7 (playkit) Player Embed Support — Reference
 
-Task branch: `claude/kaltura-v7-embed-support-t87nsy`
+**Status: DONE — embed + SSO + group/course scoping working end-to-end (2026-08-06).**
+
+- Plugin (`moodle-local_annoto`): `5.5.5 / 2026080501`, branch `feat-Kaltura-V7-(playkit)-player-embed-support`.
+- CDN bundle (`moodle-local-js`): branch `claude/kaltura-v7-embed-support` (commits `e1d19d0` SSO, `b4e0994` group).
 
 ## Goal
 
-Add support for the Kaltura V7 player (playkit, `window.KalturaPlayer`) embedded on Moodle pages,
-mirroring the existing Kaltura V2 (kWidget) integration flow. The solution must work with players
-prepared using the [kaltura-v7-player-configurator](https://github.com/Annoto/kaltura-v7-player-configurator),
-which bundles the Annoto loader into the player itself.
+Support the Kaltura V7 player (playkit, `window.KalturaPlayer`) embedded on Moodle pages, for players
+prepared with the [kaltura-v7-player-configurator](https://github.com/Annoto/kaltura-v7-player-configurator)
+(which bundles the Annoto [playkit-plugin](https://github.com/Annoto/playkit-plugin) into the player's
+uiConf). The plugin is thin; work is split across two repos:
 
-## Current architecture (V2 flow — the model to replicate)
+- **`moodle-local_annoto`** — `lib.php` injects `initkaltura.js` (raw ES5, no build) + the AMD module
+  `amd/src/annoto.js` on target pages. `amd/src/annoto.js` calls `get_jsparams`, stores the result on
+  `window.moodleAnnoto.params`, then `require([annotoMoodleCdnUrl], AnnotoMoodle => AnnotoMoodle.setup())`.
+  `get_jsparams` (`lib.php`) returns `clientId`, `userToken` (SSO JWT), `mediaGroupId/Title/Description`
+  (course context), `mediaTitle/Description`, `locale`, `loginUrl`, `bootstrapUrl`, `deploymentDomain`,
+  `annotoMoodleCdnUrl` (the bundle URL, admin setting `local_annoto/moodlejsurl`).
+- **`moodle-local-js`** — the `AnnotoMoodle` CDN bundle served from `moodlejsurl`.
 
-The plugin is deliberately thin. Responsibilities are split across two repos:
+## How it works (the final flow)
 
-1. **This repo (`moodle-local_annoto`)**
-   - `lib.php` (`local_annoto_get_lib_params` → page hook) injects two scripts on target pages:
-     - `initkaltura.js` — early raw JS hook for Kaltura V2.
-     - AMD module `amd/src/annoto.js` — calls the `get_jsparams` web service, stores params on
-       `window.moodleAnnoto.params`, then loads the CDN bundle
-       (`https://cdn.annoto.net/moodle-local-js/latest/annoto.js`) and calls `AnnotoMoodle.setup()`.
-   - `get_jsparams` (externallib.php) returns everything the widget needs: `clientId`, `userToken`
-     (SSO JWT), `mediaGroupId/Title/Description` (course context), `mediaTitle/Description`,
-     `locale`, `loginUrl`, `bootstrapUrl`, `deploymentDomain`.
-   - `initkaltura.js` flow (keep as reference — V7 must mirror this):
-     1. Poll for `window.kWidget` every 100ms, up to 50 retries.
-     2. `kWidget.addReadyCallback(playerId)` → build `kdpMap[playerId] = {id, player}`.
-     3. `player.kBind('annotoPluginSetup', params)` → capture `params.config` and a continue
-        callback via `params.await(doneCb)`.
-     4. Hand off: `window.moodleAnnoto.setupKalturaKdpMap(kdpMap)` (provided by the CDN bundle).
-        If the bundle isn't loaded yet, the map waits on `window.moodleAnnoto.kApp` — the bundle's
-        `setup()` checks for it on init. This dual handshake makes load order irrelevant.
+The V7 widget is booted by the player's **own playkit plugin** (from the uiConf). The Moodle side only
+captures the player, injects Moodle context, applies group, and SSO-auths.
 
-2. **CDN bundle `moodle-local-js` (separate Annoto repo, deployed to cdn.annoto.net)**
-   - `setupKalturaKdpMap(kdpMap)` → per player `setupKalturaKdp(kdp)`:
-     - Skip if `!kdp.config || kdp.setupDone || !kdp.doneCb`.
-     - `kBind('annotoPluginReady', authKalturaPlayer)` → `api.auth(params.userToken)`.
-     - `setupKalturaPlugin(config)` — overrides ONLY: `clientId`, `hooks.getPageUrl`,
-       `hooks.ssoAuthRequestHandle` (→ `params.loginUrl`), `hooks.mediaDetails`
-       (enrich, don't replace — the Kaltura plugin already knows the entry title),
-       `group` (course), `locale`. **Never touches player type/element** — the Kaltura plugin
-       set those.
-     - `kdp.doneCb()` releases the widget boot.
-   - The full pre-CDN version of this logic is preserved in this repo's git history:
-     `git show 200e756^:amd/src/annoto.js` — use it as the authoritative reference for the
-     bundle's flow (`setupKaltura`, `setupKalturaKdpMap`, `setupKalturaPlugin`,
-     `authKalturaPlayer`, `enrichMediaDetails`, and the analogous Wistia iframe flow
-     `setupWistiaIframeEmbed`).
+1. **`initkaltura.js`** polls for `window.KalturaPlayer`; on it:
+   - **Crash fix — load the widget via `require()`.** The playkit plugin loads the widget bootstrap via
+     `KalturaPlayer.core.utils.Dom.loadScriptAsync(widgetUrl)` — a plain `<script>`. On a Moodle page
+     RequireJS makes `window.define.amd` truthy, so the widget UMD takes its `define([],factory)` branch;
+     from a plain tag that anonymous define has no context, RequireJS never runs the factory, `window.Annoto`
+     is never set, and the plugin's `Annoto.boot()` throws `ReferenceError: Annoto is not defined`
+     (annoto.tsx:295). Fix: wrap `Dom.loadScriptAsync` so the widget bootstrap is loaded through
+     `require([url])` instead — `require` gives the anonymous define a proper context, the factory runs, and
+     `window.Annoto` is set (exactly how `amd/src/annoto.js` loads the bundle and Vimeo). It's a drop-in
+     replacement for the plugin's single widget load (no plain-tag/require collision, no "Mismatched
+     anonymous define()"), and it **never mutates `define.amd`** (a global toggle would break the bundle's
+     own `require([...])` load). Only widget-bootstrap URLs are rerouted; everything else passes through.
+   - **Player capture — on the `annotoserviceready` event.** The plugin is configured from the *async*
+     uiConf, so `getService('annoto')` is usually empty when `KalturaPlayer.setup()` returns. The plugin
+     dispatches `annotoserviceready` on the player bus synchronously when it registers its service (before it
+     boots), so `playerReady` listens for that (poll fallback), then `capturePlayer` registers
+     `service.onSetup(handler)` and adds an entry to `window.moodleAnnoto.kV7App.playersMap`. The handler
+     stores `config` on the entry, returns a pending Promise whose `resolve` is `entry.doneCb`, and pings the
+     bundle (`setupKalturaV7PlayersMap`) if it's loaded. A 10s fallback resolves `doneCb` un-enriched if the
+     bundle never completes the handshake (so a missing bundle degrades instead of hanging).
+2. **`moodle-local-js`** — `kalturaV7Init()` publishes `setupKalturaV7PlayersMap` and processes any
+   already-captured `kV7App.playersMap` (load-order independent via the `setupDone`/`doneCb` guards).
+   `setupKalturaV7Player(entry)` → `setupKalturaPlugin(entry.config)` (applies `configOverride`: `clientId`,
+   `backend`, `hooks`, `group`, `locale`, `ssoToken`) → `entry.doneCb()` → `finalizeKalturaV7Player(entry)`.
 
-Key insight: for Kaltura, the Annoto widget is booted **by the player's own plugin** (configured
-in the uiConf). The Moodle side only intercepts setup, injects Moodle context, and SSO-auths.
+### Key playkit insight: apply Moodle config explicitly on the ready widget API
 
-## V7 facts (researched)
+**The playkit widget does NOT reliably apply what you put in the setup-hook config** — neither `ssoToken`
+nor `group` took effect that way (V2's kWidget flow did, but playkit doesn't). So `finalizeKalturaV7Player`
+gets the ready widget API and applies them explicitly, mirroring what V2 effectively did:
 
-- No `kWidget`. Global is `window.KalturaPlayer`: `KalturaPlayer.setup(config)` creates a player,
-  `KalturaPlayer.getPlayers()` returns a map of existing players. There is no
-  `addReadyCallback` equivalent — existing players must be enumerated and future ones captured
-  by wrapping `KalturaPlayer.setup`.
-- Annoto's V7 integration is the playkit plugin ([Annoto/playkit-plugin](https://github.com/Annoto/playkit-plugin)),
-  script: `https://cdn.annoto.net/playkit-plugin/latest/plugin.js?auto_boot=1`.
-- The [kaltura-v7-player-configurator](https://github.com/Annoto/kaltura-v7-player-configurator)
-  writes `"playkit-annoto-loader": "{latest}"` into the player uiConf `confVars.versions` and sets
-  `config.plugins["annoto-loader"]` (`clientId`, `region`). A player configured this way loads
-  Annoto automatically in every embed — the V7 analog of a V2 uiConf with the Annoto plugin.
-- Host-page API (per playkit-plugin README): `player.getService('annoto')` returns a service with:
-  - `onSetup()` — config customization hook,
-  - `getApi()` — promise resolving to the widget API (`api.auth(jwt)` for SSO),
-  - `boot()` + plugin config `manualBoot: true` — deferred boot,
-  - plugin config keys: `clientId` (omit = demo mode), `manualBoot`.
-
-### ✅ Verified against `Annoto/playkit-plugin` source (`src/annoto.service.ts`, `src/annoto.tsx`)
-
-1. **`onSetup` signature** — `onSetup(handle: (config: IConfig) => Promise<IConfig>): void`. It is
-   NOT `(config, next)`. The widget's `hooks.setup` awaits the handler and boots with whatever
-   config the returned promise resolves to. So "release the boot" = resolve that promise with the
-   (Moodle-enriched) config. Our host handler stores `config` on the entry, keeps the promise
-   pending, and exposes its `resolve` as `entry.doneCb` — the exact analog of V2's `params.await(doneCb)`.
-2. **Service name** — the plugin does `player.registerService('annoto', service)` unconditionally
-   (`src/annoto.tsx`), and `pluginName === 'annoto'` (`src/constants.ts`). So `getService('annoto')`
-   is correct regardless of how the configurator names the plugin config block; the loader still
-   registers the `'annoto'` service.
-3. **Timing** — the service is registered synchronously in the plugin constructor, which runs during
-   `KalturaPlayer.setup()`/`configure()`. Actual widget boot is deferred behind an async bootstrap
-   script load (`awaitBootstrap`), so registering `onSetup` synchronously right after the player is
-   created (existing players enumerated + `KalturaPlayer.setup` wrapped) reliably wins the race.
-   Players not prepared with the plugin have no `'annoto'` service → skipped quietly.
-
-SSO: the current V2 flow no longer calls `api.auth()` explicitly — `configOverride` carries
-`ssoToken` and the widget authenticates on boot. V7 reuses the same `setupKalturaPlugin` override,
-so `ssoToken` covers SSO there too (no `getApi().auth()` needed).
-
-## Proposed implementation
-
-### Step 1 — this repo: V7 hook in `initkaltura.js`
-
-Extend `initkaltura.js` (already injected early via `lib.php:109`; keeps PHP untouched) with an
-independent poll for `window.KalturaPlayer` (same 100ms × 50 pattern — a page can have both V2
-and V7). Sketch:
-
-```js
-function annotoKalturaV7HookSetup() {
-    if (!window.KalturaPlayer || !window.KalturaPlayer.getPlayers) {
-        return false;
-    }
-    var maKV7App = {
-        playersMap: {},
-        playerReady: function (player) {
-            var id = player.config && player.config.targetId;
-            if (!id || this.playersMap[id]) { return; }
-            var annotoService = player.getService && player.getService('annoto');
-            if (!annotoService) { return; } // player not configured with annoto-loader
-            var entry = { id: id, player: player, service: annotoService };
-            this.playersMap[id] = entry;
-            var self = this;
-            // VERIFY: onSetup signature (see checklist above)
-            annotoService.onSetup(function (config, next) {
-                entry.config = config;
-                entry.doneCb = next;
-                setTimeout(function () {
-                    if (window.moodleAnnoto.setupKalturaV7PlayersMap) {
-                        window.moodleAnnoto.setupKalturaV7PlayersMap(self.playersMap);
-                    }
-                });
-            });
-        },
-    };
-    var players = window.KalturaPlayer.getPlayers();
-    Object.keys(players).forEach(function (pid) { maKV7App.playerReady(players[pid]); });
-    var origSetup = window.KalturaPlayer.setup;
-    window.KalturaPlayer.setup = function (conf) {
-        var p = origSetup.call(window.KalturaPlayer, conf);
-        maKV7App.playerReady(p);
-        return p;
-    };
-    window.moodleAnnoto.kV7App = maKV7App;
-    return true;
-}
+```
+service.getApi()
+  → api.load(entry.config)   // (re)applies the Moodle-enriched config incl. IGroupDetails group
+  → api.auth(userToken)      // SSO — runs last so it sticks; load failure is caught, never blocks auth
 ```
 
-Follow the file's existing conventions: same debug logging via
-`sessionStorage 'moodleAnnotoDebugKaltura'`, same poll wrapper, IIFE style, no ES6+ that breaks
-old browsers (the file currently uses `var`/ES5).
+`api.load()` is the widget API's supported way to (re)apply a config (the bundle already uses it for media
+changes). `IGroupDetails` = `{ id: courseid, title: course.fullname, description: course.summary }`.
 
-### Step 2 — CDN repo `moodle-local-js`: `setupKalturaV7`
+## SSO configuration (not code — a real gotcha)
 
-Mirror of `setupKaltura`, reusing the existing config/auth helpers:
+`invalid sso token` (SSO_AUTH_ERR 205, 401 from `auth.<region>.annoto.net`) is a **config** issue:
 
-- `setup()` additionally checks `window.moodleAnnoto.kV7App` and exports
-  `window.moodleAnnoto.setupKalturaV7PlayersMap` (dual handshake, same as V2's `kApp`).
-- `setupKalturaV7PlayersMap(map)` → per entry:
-  - skip if `!entry.config || entry.setupDone || !entry.doneCb`;
-  - `entry.setupDone = true`;
-  - reuse `setupKalturaPlugin(entry.config)` verbatim (clientId, hooks, group, locale —
-    do NOT touch player type/element);
-  - `entry.doneCb()`;
-  - `entry.service.getApi().then(api => authKalturaPlayer(api))` — same JWT SSO.
+- Moodle **`clientID`** must be the **raw clientId UUID** (e.g. `a95…f`), NOT a signed-clientId JWT
+  (`eyJ…`). The token is built by `local_annoto_get_user_token()` with `iss => clientid` (HS256, signed
+  with `ssosecret`); a signed-clientId JWT as `iss` isn't resolvable by the backend.
+- **`ssosecret`** must exactly match the SSO secret Annoto has registered for that clientId (right account
+  + region; the auth call goes to the region in `deploymentDomain`).
+- The token is generated by the shared `local_annoto_get_user_token()`, so **V2 and V7 share this
+  requirement** — if V2 SSO works, V7 will too once the code path is right.
 
-### Step 3 — optional fallback (phase 2, admin-gated)
+## Branches, build, conventions
 
-For V7 players NOT prepared with the configurator: inject
-`https://cdn.annoto.net/playkit-plugin/latest/plugin.js?auto_boot=1` early from `initkaltura.js`
-(must be present before `KalturaPlayer.setup()` runs). Gate behind a new admin setting in
-`settings.php` (+ lang strings in `lang/en` and `lang/he`), default OFF — the
-configurator-prepared player is the primary path.
+- **Bundle** → `claude/kaltura-v7-embed-support` (only). Build: `npm run build` (lint + webpack prod →
+  `dist/annoto.js`). Serve `dist/annoto.js` and point `moodlejsurl` at it.
+- **Plugin** → `feat-Kaltura-V7-(playkit)-player-embed-support`. `initkaltura.js` is a plain ES5 script
+  (no build). Bump `version.php` for any shipped change. Do not touch `main` unless asked.
+- Debug logs: `sessionStorage.setItem('moodleAnnotoDebug','1')` (bundle `AnnotoMoodle:` logs) and
+  `moodleAnnotoDebugKaltura` (initkaltura `AnnotoMoodle | Kaltura:` logs).
 
-### Out of scope (phase 2+)
+## Verified at runtime
 
-KAF/`browseandembed` iframe embeds (Kaltura Video Package for Moodle) are cross-origin — the host
-page cannot reach `KalturaPlayer` inside them. There, the loader boots Annoto inside the iframe;
-host-side config/SSO would follow the existing Wistia iframe pattern
-(`setupWistiaIframeEmbed` + `https://cdn.annoto.net/widget-iframe-api/latest/client.js`:
-`onSetup(next)` → inject config, `onReady(api)` → `api.auth(token)`).
+Widget boots (no `Annoto is not defined` / `Mismatched anonymous define()`); player captured
+(`kV7App.playersMap` non-empty); `api.load` applies the course group; `api.auth` authenticates the Moodle
+user; V2 / non-Kaltura paths unaffected. A full multi-agent adversarial review (both repos) validated the
+architecture; its one HIGH finding (poll losing the capture race on warm cache) is closed by the
+`annotoserviceready` event capture.
 
-## Build & repo conventions
+## Out of scope (phase 2+)
 
-- `initkaltura.js` is a plain script (NOT an AMD module) — no build step, edit directly.
-- If `amd/src/annoto.js` is touched, rebuild `amd/build/annoto.min.js` with Moodle's grunt
-  (`grunt amd`); keep `.min.js.map` in sync.
-- Bump `version.php` (`$plugin->version`, `$plugin->release`) for any shipped change.
-- Commit style in this repo: conventional commits (`feat: ...`, `fix: ...`).
-- Push to `claude/kaltura-v7-embed-support-t87nsy` only.
+KAF / `browseandembed` iframe embeds (Kaltura Video Package for Moodle) are cross-origin — the host page
+can't reach `KalturaPlayer` inside the iframe. There the loader boots Annoto inside the iframe; host-side
+config/SSO would follow the Wistia iframe pattern (`setupWistiaIframeEmbed` +
+`widget-iframe-api/latest/client.js`: `onSetup(next)` → inject config, `onReady(api)` → `api.auth(token)`).
 
-## Test matrix
+## History (superseded — kept for context)
 
-1. V7 dynamic embed, configurator-prepared player → widget boots, course group set, media title
-   from Kaltura entry preserved, SSO auth succeeds (check `api.auth` with `userToken`).
-2. Player created after page init (late `KalturaPlayer.setup`) → captured via the setup wrap.
-3. V7 player WITHOUT annoto service → graceful skip, no console errors.
-4. V2 and V7 on the same page → both flows run independently.
-5. Non-Kaltura pages → V7 poll gives up quietly after 50 retries.
-6. Debug logging via `sessionStorage.setItem('moodleAnnotoDebugKaltura', '1')`.
-
-## Runtime fix — "ReferenceError: Annoto is not defined" (annoto.tsx:295)
-
-Observed on a live V7 page after Steps 1–2. Root-caused (adversarially verified against source):
-
-- **AMD/UMD collision (the crash).** The playkit plugin loads the widget bootstrap via a plain
-  `<script>` tag (`Dom.loadScriptAsync`, annoto.tsx:249). The widget sets `window.Annoto` as a
-  side effect of its UMD **factory** running. On a Moodle page RequireJS makes `window.define.amd`
-  truthy, so the UMD takes its AMD branch (`define([], factory)`) — a mismatched anonymous define
-  whose factory RequireJS never executes — so `window.Annoto` is never set. The plugin has no
-  `if (!Annoto)` guard, so `boot()` → `Annoto.boot()` (annoto.tsx:295) throws. (Non-Moodle pages
-  have no AMD loader, fall through to `t.Annoto=e()`, and work.)
-- **Fix (this branch, `initkaltura.js`, no build step):** the plugin loads the widget via
-  `KalturaPlayer.core.utils.Dom.loadScriptAsync(widgetUrl)`. Wrap that loader so the widget bootstrap
-  is loaded **through Moodle's AMD loader** (`require([url])`) instead of a plain tag. `require()`
-  gives the anonymous `define([],factory)` a proper context, so the factory runs and sets
-  `window.Annoto` — exactly how `amd/src/annoto.js` loads the CDN bundle and the Vimeo API today. It
-  is a drop-in replacement for the plugin's single widget load (only one load, no plain-tag/require
-  collision, no "Mismatched anonymous define()"). The wrap is installed at hook init and again in the
-  `KalturaPlayer.setup` wrap before `origSetup`; non-widget loads and the no-RequireJS case pass
-  straight through. Bumped to `5.5.3` / `2026080400`.
-
-  Three earlier attempts on this branch were wrong and are superseded:
-  (a) a *separate* `require([widgetUrl])` preload while the plugin still did its own plain-tag load —
-  the two collided on RequireJS's shared queue ("Mismatched anonymous define()") and never set the
-  global. The current fix avoids this by *replacing* the plugin's load, so only one load happens.
-  (b) forcing `manualBoot` via the client `KalturaPlayer.setup(conf)` — the plugin's config
-  (manualBoot/clientId) comes from the server-side uiConf, not the client argument, so the mutation
-  never reached the plugin.
-  (c) temporarily hiding `window.define.amd` globally during the widget load so the UMD self-assigns
-  the global — this is a **global** mutation and intermittently broke *other* concurrent RequireJS
-  loads, in particular the `moodle-local-js` CDN bundle (itself an anonymous UMD loaded via
-  `require([annotoMoodleCdnUrl])` at roughly the same time): with `define.amd` hidden it took the
-  global branch, `require`'s callback got `undefined`, `AnnotoMoodle.setup()` threw, and the widget
-  hung. The `require()`-replacement fix touches `define.amd` not at all, so no other load is affected.
-
-> **BLOCKER for the full flow:** the V7 code in `moodle-local-js` is **not yet deployed** to
-> `cdn.annoto.net/moodle-local-js/latest/annoto.js` (the live bundle has none of `kalturaV7Init` /
-> `setupKalturaV7PlayersMap` / the `.kaltura-player-container` double-boot guard). Until it is
-> deployed, the `onSetup`→`doneCb` handshake never fires, so the widget boots but **stalls at the
-> setup hook** (no Moodle SSO / course-group context). The crash is gone without it, but the widget
-> only appears once the bundle is deployed.
-
-## Status
-
-- [x] Research + solution design (this document)
-- [x] Verify playkit-plugin service API details (checklist above — verified against source)
-- [x] Implement Step 1 in `initkaltura.js` on this branch
-- [x] Implement Step 2 in `moodle-local-js` (branch `claude/kaltura-v7-embed-support` — `kalturaV7Init`,
-      `setupKalturaV7PlayersMap`, `setupKalturaV7Player`; typecheck + lint + build pass.)
-- [x] Runtime fix: AMD/UMD `window.Annoto` bootstrap + `manualBoot`-gated boot in `initkaltura.js`
-- [ ] **Deploy `moodle-local-js` V7 bundle to cdn.annoto.net** (required for SSO/context; see BLOCKER above)
-- [ ] Phase 2: fallback injection setting, KAF iframe support
+Approaches that were tried and replaced, so they aren't re-attempted:
+- **`config.ssoToken` / setup-hook config for SSO & group** — playkit ignores it; use explicit
+  `api.auth` / `api.load` (above).
+- **Separate `require([widgetUrl])` preload** (while the plugin also plain-tag-loaded) — the two collided
+  on RequireJS's queue ("Mismatched anonymous define()"). Fixed by *replacing* the plugin's load.
+- **Forcing `manualBoot` via `KalturaPlayer.setup(conf)`** — the plugin's config comes from the server-side
+  uiConf, not the client argument, so the mutation never reached it.
+- **Hiding `window.define.amd` globally** during the widget load — a global mutation that intermittently
+  broke the concurrently-loading `moodle-local-js` bundle (also an anonymous UMD via `require`). The
+  `require()`-replacement touches `define.amd` not at all.
+- **100ms `getService` poll for capture** — lost the race on a warm cache / 2nd player. Replaced by the
+  `annotoserviceready` event (poll kept only as fallback).
