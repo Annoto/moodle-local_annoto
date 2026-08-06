@@ -288,6 +288,19 @@
                         }, 10000);
                     });
                 });
+
+                // Boot the widget on page load rather than waiting for the plugin's own auto-boot,
+                // which on a configurator-prepared player is tied to first play. onSetup is already
+                // registered above, so this boot runs through the Moodle handshake. boot() waits for
+                // the widget script (awaitBootstrap) internally and is a no-op if already booted, so
+                // it is safe alongside the plugin's auto-boot.
+                if (typeof annotoService.boot === 'function') {
+                    try {
+                        annotoService.boot();
+                    } catch (err) {
+                        annotoDebugLog('service.boot error: ', err);
+                    }
+                }
             },
         };
 
