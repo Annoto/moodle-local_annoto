@@ -306,6 +306,20 @@
             // Ensure the loader is wrapped before this player's Annoto plugin runs its widget load
             // inside origSetup (covers players created before the poll installed the wrap above).
             annotoWrapKalturaScriptLoader();
+            // Make the player preload its media so it resolves the entry on page load - this lets
+            // the Annoto plugin boot the widget without a first play (only works if the plugin boots
+            // on media-load rather than on actual play). Only forced when preload isn't already set.
+            try {
+                if (conf && typeof conf === 'object') {
+                    conf.playback = conf.playback || {};
+                    if (conf.playback.preload == null || conf.playback.preload === 'none') {
+                        conf.playback.preload = 'auto';
+                        annotoDebugLog('set playback.preload=auto');
+                    }
+                }
+            } catch (err) {
+                annotoDebugLog('preload set error: ', err);
+            }
             var player = origSetup.call(window.KalturaPlayer, conf);
             try {
                 maKV7App.playerReady(player);
