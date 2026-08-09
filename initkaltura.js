@@ -187,9 +187,10 @@
                     return;
                 }
 
-                // Ask the (already-created) player to preload its media, so it resolves the entry on
-                // page load and the Annoto plugin can boot the widget without a first play. Only
-                // helps if the plugin boots on media-load rather than on actual play (a test).
+                // Make the player preload its media so it resolves the media/entry at page load.
+                // The Annoto playkit plugin boots the widget once the media is ready; without this
+                // the widget would only appear after the user's first play. Applied via configure()
+                // because the player is created (by the embed) before our KalturaPlayer.setup wrap.
                 try {
                     if (typeof player.configure === 'function') {
                         player.configure({ playback: { preload: 'auto' } });
@@ -300,11 +301,10 @@
                         }, 10000);
                     });
                 });
-                // NOTE: do NOT force service.boot() here. The playkit plugin boots the widget when
-                // the player has resolved its media (first play by default); booting earlier - before
-                // the media/entry is known - leaves the widget with nothing to attach to and it never
-                // renders. "Load without clicking" must come from the player preloading its media
-                // (a Kaltura embed/configurator setting), not from forcing the boot here.
+                // We do not force service.boot() here: the playkit plugin boots the widget itself
+                // once the player has resolved its media, and booting before the media/entry is
+                // known leaves the widget with nothing to attach to. Loading without a first play is
+                // instead achieved by preloading the media (see player.configure above).
             },
         };
 

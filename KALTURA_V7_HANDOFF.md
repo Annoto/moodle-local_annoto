@@ -1,9 +1,9 @@
 # Kaltura V7 (playkit) Player Embed Support — Reference
 
-**Status: DONE — embed + SSO + group/course scoping working end-to-end (2026-08-06).**
+**Status: DONE — embed + SSO + group/course scoping + load-on-page-load working end-to-end.**
 
-- Plugin (`moodle-local_annoto`): `5.5.5 / 2026080501`, branch `feat-Kaltura-V7-(playkit)-player-embed-support`.
-- CDN bundle (`moodle-local-js`): branch `claude/kaltura-v7-embed-support` (commits `e1d19d0` SSO, `b4e0994` group).
+- Plugin (`moodle-local_annoto`): `5.6.0`, branch `feat-Kaltura-V7-(playkit)-player-embed-support`.
+- CDN bundle (`moodle-local-js`): branch `claude/kaltura-v7-embed-support`.
 
 ## Goal
 
@@ -45,10 +45,23 @@ captures the player, injects Moodle context, applies group, and SSO-auths.
      stores `config` on the entry, returns a pending Promise whose `resolve` is `entry.doneCb`, and pings the
      bundle (`setupKalturaV7PlayersMap`) if it's loaded. A 10s fallback resolves `doneCb` un-enriched if the
      bundle never completes the handshake (so a missing bundle degrades instead of hanging).
+   - **Load on page load (no first play required).** The playkit plugin boots the widget only once the
+     player has resolved its media, which defaults to first play. `playerReady` calls
+     `player.configure({ playback: { preload: 'auto' } })` on the (already-created) player so the media
+     resolves at page load and the plugin boots the widget without a click. (We do NOT force
+     `service.boot()` — booting before the media/entry is known leaves the widget nothing to attach to.)
 2. **`moodle-local-js`** — `kalturaV7Init()` publishes `setupKalturaV7PlayersMap` and processes any
    already-captured `kV7App.playersMap` (load-order independent via the `setupDone`/`doneCb` guards).
    `setupKalturaV7Player(entry)` → `setupKalturaPlugin(entry.config)` (applies `configOverride`: `clientId`,
-   `backend`, `hooks`, `group`, `locale`, `ssoToken`) → `entry.doneCb()` → `finalizeKalturaV7Player(entry)`.
+   `backend`, `hooks`, `group`, `locale`, `ssoToken`) → `entry.doneCb()` → `fixKalturaV7Overflow(entry)` →
+   `finalizeKalturaV7Player(entry)`.
+   - **`fixKalturaV7Overflow`** — the playkit player renders inline inside Moodle's `.no-overflow` activity
+     wrapper (`overflow:auto`), which clips the widget panel opening beside the video. Sets
+     `overflow:visible` on the player's `.no-overflow` ancestors, re-applied at several delays + on resize
+     (Moodle's layout JS re-sets it on the page-load path).
+   - **Double-boot guard** — once the media preloads, the `<video>` is present at page load, so the bundle's
+     generic `bootstrap()` skips entirely whenever a `.kaltura-player-container` is on the page (otherwise it
+     would find the video and boot the widget the plugin already booted → "already running").
 
 ### Key playkit insight: apply Moodle config explicitly on the ready widget API
 
