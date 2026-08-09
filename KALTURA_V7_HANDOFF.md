@@ -2,7 +2,7 @@
 
 **Status: DONE — embed + SSO + group/course scoping + load-on-page-load working end-to-end.**
 
-- Plugin (`moodle-local_annoto`): `5.6.0`, branch `feat-Kaltura-V7-(playkit)-player-embed-support`.
+- Plugin (`moodle-local_annoto`): `5.5.2`, branch `feat-Kaltura-V7-(playkit)-player-embed-support`.
 - CDN bundle (`moodle-local-js`): branch `claude/kaltura-v7-embed-support`.
 
 ## Goal
