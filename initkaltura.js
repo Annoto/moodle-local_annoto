@@ -7,6 +7,13 @@
 
     window.moodleAnnoto = window.moodleAnnoto || {};
 
+    // Signal to the CDN bundle (moodle-local-js) that this plugin version handles Kaltura V7
+    // (playkit) players itself. The bundle gates its V7-specific behaviour (not booting the generic
+    // widget on a `.kaltura-player-container` video) on this flag, so an older plugin without it
+    // keeps the previous behaviour and is unaffected by a newer bundle. Set synchronously here,
+    // before the bundle loads.
+    window.moodleAnnoto.kalturaV7 = true;
+
     var annotoDebugLog = function() {};
     try {
         if (window.sessionStorage.getItem('moodleAnnotoDebugKaltura')) {
