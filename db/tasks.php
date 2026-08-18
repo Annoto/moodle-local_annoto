@@ -34,4 +34,14 @@ $tasks = [
          'dayofweek' => '*',
          'month'     => '*',
      ],
+    [
+         // Usage telemetry. Runs daily; internally throttled to send at most once per week.
+         'classname' => 'local_annoto\task\telemetry',
+         'blocking'  => 0,
+         'minute'    => '13',
+         'hour'      => '3',
+         'day'       => '*',
+         'dayofweek' => '*',
+         'month'     => '*',
+     ],
 ];

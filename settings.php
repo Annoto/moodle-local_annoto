@@ -149,6 +149,14 @@ if ($hassiteconfig) {
         ]
     ));
 
+    // Share usage analytics with Annoto (non-personal telemetry; on by default, admin may opt out).
+    $settings->add(new admin_setting_configcheckbox(
+        'local_annoto/telemetryenabled',
+        get_string('telemetryenabled', 'local_annoto'),
+        get_string('telemetryenabled_desc', 'local_annoto'),
+        1
+    ));
+
     // Enable/disable debug logging.
     $settings->add(new admin_setting_configcheckbox(
         'local_annoto/debuglogging',
