@@ -80,7 +80,7 @@ $string['defaultheight'] = 'גובה מדיה';
 $string['defaultheightdesc'] = 'גובה נגן המדיה אם לא צוין גובה והנגן לא יכול לקבוע את הגובה בפועל של קובץ המדיה';
 
 // Activities completion.
-$string['activitycompletion_settings'] = 'השלמת פעילות (בטא)';
+$string['activitycompletion_settings'] = 'השלמת פעילות';
 $string['activitycompletion_enable'] = 'אפשר השלמת פעילות Annoto';
 $string['activitycompletion_enabledesc'] = 'אם מאופשר, השלמת פעילות Annoto תהיה זמינה בהגדרות עמוד, תווית, Annoto LTI, h5p, hvp ו-Kaltura';
 
@@ -112,3 +112,12 @@ $string['privacy:metadata:annoto'] = 'על מנת להשתלב עם שירות �
 $string['privacy:metadata:annoto:userid'] = 'מזהה המשתמש נשלח ממודל כדי לאפשר לך גישה לנתונים שלך במערכת החיצונית.';
 $string['privacy:metadata:annoto:fullname'] = 'השם המלא שלך נשלח למערכת החיצונית כדי לאפשר חוויית משתמש טובה יותר.';
 $string['privacy:metadata:annoto:email'] = 'כתובת הדוא"ל שלך נשלחת למערכת החיצונית כדי לאפשר חוויית משתמש טובה יותר.';
+
+// Usage analytics (telemetry).
+$string['telemetryenabled'] = 'שיתוף נתוני שימוש עם Annoto';
+$string['telemetryenabled_desc'] = 'שליחת נתוני התקנה ושימוש ל-Annoto. ביטול הסימון מבטל את השיתוף.';
+$string['telemetrytask'] = 'משימת נתוני שימוש של Annoto';
+
+// Privacy API - usage telemetry.
+$string['privacy:metadata:annoto_telemetry'] = 'כדי לסייע ל-Annoto להבין ולתמוך בהתקנות התוסף, מידע לא-אישי על האתר (כתובת, שם, גרסאות, אזור, מספרים מצטברים, תצורת התוסף ושימוש בהשלמת פעילות) נשלח ל-Annoto באמצעות Google Analytics. שום מידע אישי על מנהלי המערכת, לומדים או תלמידים אינו נשלח.';
+$string['privacy:metadata:annoto_telemetry:siteurl'] = 'כתובת האתר ושמו נשלחים כדי לזהות את ההתקנה.';

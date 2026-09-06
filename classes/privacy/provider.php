@@ -50,6 +50,13 @@ class provider implements
             'email' => 'privacy:metadata:annoto:email',
           ], 'privacy:metadata:annoto');
 
+        // Usage telemetry: when enabled, non-personal site information (URL, name,
+        // versions, region, aggregate counts) is sent to Annoto via Google Analytics
+        // so Annoto knows which sites use the plugin. No personal data is sent.
+        $collection->add_external_location_link('annoto_telemetry', [
+            'siteurl' => 'privacy:metadata:annoto_telemetry:siteurl',
+          ], 'privacy:metadata:annoto_telemetry');
+
           return $collection;
     }
 }

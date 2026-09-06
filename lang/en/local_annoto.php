@@ -81,7 +81,7 @@ $string['defaultheightdesc'] = 'Media player height if a height is not specified
 
 // Activities completion.
 
-$string['activitycompletion_settings'] = 'Activity completion (Beta)';
+$string['activitycompletion_settings'] = 'Activity completion';
 $string['activitycompletion_enable'] = 'Enable Annoto activity completion';
 $string['activitycompletion_enabledesc'] = 'If enabled, Annoto activity completion will be available in page, label, Annoto LTI, h5p, hvp and Kaltura activity settings';
 
@@ -114,3 +114,12 @@ $string['privacy:metadata:annoto'] = 'In order to integrate with a remote servic
 $string['privacy:metadata:annoto:userid'] = 'The userid is sent from Moodle to allow you to access your data on the remote system.';
 $string['privacy:metadata:annoto:fullname'] = 'Your full name is sent to the remote system to allow a better user experience.';
 $string['privacy:metadata:annoto:email'] = 'Your e-mail name is sent to the remote system to allow a better user experience.';
+
+// Usage analytics (telemetry).
+$string['telemetryenabled'] = 'Share usage analytics with Annoto';
+$string['telemetryenabled_desc'] = 'Send installation and usage telemetry to Annoto. Uncheck to opt out.';
+$string['telemetrytask'] = 'Annoto usage telemetry task';
+
+// Privacy API - usage telemetry.
+$string['privacy:metadata:annoto_telemetry'] = 'To help Annoto understand and support plugin installations, non-personal information about the site (URL, name, versions, region, aggregate counts, plugin configuration and activity-completion usage) is sent to Annoto via Google Analytics. No personal data about administrators, learners or students is sent.';
+$string['privacy:metadata:annoto_telemetry:siteurl'] = 'The site URL and name are sent to identify the installation.';
