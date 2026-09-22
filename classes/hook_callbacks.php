@@ -48,6 +48,13 @@ class hook_callbacks {
         \core\hook\output\before_standard_top_of_body_html_generation $hook
     ): void {
         global $PAGE;
+        // The Kaltura embed hook must be in the page ahead of every player embed, so it is emitted
+        // here rather than queued for the footer by local_annoto_init().
+        $html = local_annoto_kaltura_hook_html();
+        if ($html !== '') {
+            $hook->add_html($html);
+            local_annoto_kaltura_hook_emitted(true);
+        }
         // Prevent callback loading for all themes except those.
         $themes = explode(',', LOCAL_ANNOTO_TOP_OF_BODY_THEMES);
         if (in_array($PAGE->theme->name, $themes)) {
