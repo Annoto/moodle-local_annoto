@@ -122,6 +122,15 @@ registered, or `window.KalturaPlayer` was redefined by a second Kaltura bundle a
 `api.load()`, no `api.auth()`. The widget stays booted on its bare uiConf config: anonymous, and
 with no course group.
 
+**Which half fixes what.** The bundle (moodle-local-js, PR #26) fixes the bug on its own, for
+every installed plugin version: it no longer waits to be handed the player — `kalturaV7Sweep()`
+reads `moodleAnnoto.kV7App.playersMap` *and* enumerates `window.KalturaPlayer.getPlayers()` itself
+on a timer, then seeds/recovers/fails-closed as in parts 2–4 below. With a ≤ 5.5.3 plugin on a warm
+cache the widget can still boot before the bundle runs, so the user briefly sees the anonymous
+widget until `api.load` + `api.auth` repair it. Part 1 (this plugin, 5.5.4) is what removes that
+flash: with the hook at the top of the body the capture — and the seed — precede boot, so there is
+nothing to repair. Ship the bundle first; the plugin follows on its normal cadence.
+
 **Fix, part 1 — load the hook before any embed (the root cause).** `local_annoto_init()` queued
 `initkaltura.js` with `$PAGE->requires->js($url)`, and without `$inhead` Moodle emits that at the
 **end of the body** — after every Kaltura embed has created its player, and on a warm cache after
