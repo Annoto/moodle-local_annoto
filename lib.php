@@ -68,12 +68,77 @@ function local_annoto_before_footer() {
  */
 function local_annoto_before_standard_top_of_body_html() {
     global $PAGE;
+    $html = local_annoto_kaltura_hook_html();
+    if ($html !== '') {
+        local_annoto_kaltura_hook_emitted(true);
+    }
     // Prevent callback loading for all themes except those:.
     $themes = explode(',', LOCAL_ANNOTO_TOP_OF_BODY_THEMES);
     if (in_array($PAGE->theme->name, $themes)) {
         local_annoto_init();
     }
-    return '';
+    return $html;
+}
+
+/**
+ * Whether the plugin should run on the current page.
+ * @return bool
+ */
+function local_annoto_is_target_page() {
+    global $PAGE;
+
+    $possiblepages = [
+        'mod-',
+        'course-view-',
+        'blocks-',
+    ];
+
+    foreach ($possiblepages as $possiblepage) {
+        if ((strpos($PAGE->pagetype, $possiblepage) !== false)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+/**
+ * Tracks whether the Kaltura hook script tag has been emitted at the top of the body.
+ * @param bool $set pass true to record that it was emitted.
+ * @return bool
+ */
+function local_annoto_kaltura_hook_emitted($set = false) {
+    static $emitted = false;
+    if ($set) {
+        $emitted = true;
+    }
+    return $emitted;
+}
+
+/**
+ * Script tag for the Kaltura embed hook, emitted at the very top of the body.
+ *
+ * initkaltura.js has to run BEFORE any Kaltura player embed on the page. It wraps
+ * KalturaPlayer.setup so that every player is captured, and the Annoto playkit plugin's setup hook
+ * can only be intercepted before the plugin boots the widget. $PAGE->requires->js() without
+ * $inhead emits at the END of the body - after every embed has created its player and, on a warm
+ * cache, after the widget has already booted from the bare uiConf config, which leaves it with no
+ * course group and no SSO. Emitting the tag here puts it ahead of all page content instead.
+ *
+ * Does not mark itself as emitted - the caller does that once it has actually placed the html.
+ *
+ * @return string HTML fragment, empty when not needed or already emitted.
+ */
+function local_annoto_kaltura_hook_html() {
+    global $CFG;
+
+    if (local_annoto_kaltura_hook_emitted() || !local_annoto_is_target_page()) {
+        return '';
+    }
+    // Revved so that an upgrade busts the browser cache, the way $PAGE->requires->js() does.
+    // A negative jsrev means caching is off for development, so rev per request.
+    $jsrev = isset($CFG->jsrev) ? (int)$CFG->jsrev : 1;
+    $rev = $jsrev > 0 ? $jsrev : time();
+    return html_writer::script('', new moodle_url('/local/annoto/initkaltura.js', ['rev' => $rev]));
 }
 
 /**
@@ -83,19 +148,7 @@ function local_annoto_before_standard_top_of_body_html() {
 function local_annoto_init() {
     global $PAGE, $COURSE;
 
-    $istargetpage = false;
-    $possiblepages = [
-        'mod-',
-        'course-view-',
-        'blocks-',
-    ];
-
-    foreach ($possiblepages as $possiblepage) {
-        if ((strpos($PAGE->pagetype, $possiblepage) !== false)) {
-            $istargetpage = true;
-            break;
-        }
-    }
+    $istargetpage = local_annoto_is_target_page();
     // Start local_annoto on a specific pages only.
     local_annoto_set_jslog('Page ' . $istargetpage);
 
@@ -106,7 +159,11 @@ function local_annoto_init() {
             $modid = (int)$PAGE->cm->id;
         }
 
-        $PAGE->requires->js('/local/annoto/initkaltura.js');
+        // Normally already in the page from the top-of-body callback, ahead of every embed (see
+        // local_annoto_kaltura_hook_html). Fall back to the footer only if that did not run.
+        if (!local_annoto_kaltura_hook_emitted()) {
+            $PAGE->requires->js('/local/annoto/initkaltura.js');
+        }
         $PAGE->requires->js_call_amd('local_annoto/annoto', 'init', [$courseid, $modid]);
     }
 }

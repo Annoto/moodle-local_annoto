@@ -165,16 +165,10 @@
      * the bundle publishes window.moodleAnnoto.setupKalturaV7PlayersMap for the reverse order.
      * This dual handshake makes load order irrelevant.
      */
-    function annotoKalturaV7HookSetup() {
-        annotoDebugLog('annotoKalturaV7HookSetup');
-        if (!window.KalturaPlayer || !window.KalturaPlayer.getPlayers || !window.KalturaPlayer.setup) {
-            return false;
-        }
-
-        annotoDebugLog('annotoKalturaV7HookSetup init done');
-        // Wrap the Kaltura script loader before any player (and its Annoto plugin) is constructed,
-        // so the widget bootstrap loads via require() (setting window.Annoto).
-        annotoWrapKalturaScriptLoader();
+    // Builds the V7 app object (the player map + capture logic). Created once and published on
+    // window.moodleAnnoto.kV7App; the wrapping and enumeration around it are re-appliable, so
+    // that they can be repaired if a later Kaltura bundle redefines window.KalturaPlayer.
+    function annotoCreateKV7App() {
         var maKV7App = {
             playersMap: {},
 
@@ -186,6 +180,13 @@
                 if (!id || this.playersMap[id]) {
                     return;
                 }
+                // Guard on the player object, not on playersMap: a player that has no Annoto
+                // plugin never lands in playersMap, and the sweep below re-enumerates every player
+                // on every tick - without this each tick would start another capture poll for it.
+                if (player.annotoMoodleWatched) {
+                    return;
+                }
+                player.annotoMoodleWatched = true;
 
                 // Make the player preload its media so it resolves the media/entry at page load.
                 // The Annoto playkit plugin boots the widget once the media is ready; without this
@@ -301,6 +302,25 @@
                         }, 10000);
                     });
                 });
+                // Hand the player to the bundle right away, not only from inside the onSetup
+                // handler above. If the plugin's setup hook already fired before we registered
+                // (a warm cache boots the widget in well under a poll interval) that handler is
+                // never called, so without this ping the bundle would never learn the player
+                // exists - and the widget would stay booted on its bare uiConf config, leaving
+                // the user anonymous ("Log in to the site") with no course group. The bundle
+                // recovers from a missed hook on its own, but only if it is handed the entry.
+                setTimeout(function () {
+                    if (window.moodleAnnoto.setupKalturaV7PlayersMap) {
+                        window.moodleAnnoto.setupKalturaV7PlayersMap(playersMap);
+                    }
+                });
+                try {
+                    if (annotoService.plugin && annotoService.plugin.isWidgetBooted) {
+                        annotoDebugLog('captured after widget boot, setup hook missed: ', id);
+                    }
+                } catch (err) {
+                    annotoDebugLog('isWidgetBooted probe failed: ', err);
+                }
                 // We do not force service.boot() here: the playkit plugin boots the widget itself
                 // once the player has resolved its media, and booting before the media/entry is
                 // known leaves the widget with nothing to attach to. Loading without a first play is
@@ -308,36 +328,91 @@
             },
         };
 
-        var players = window.KalturaPlayer.getPlayers();
-        Object.keys(players).forEach(function (pid) {
-            maKV7App.playerReady(players[pid]);
-        });
+        return maKV7App;
+    }
 
-        var origSetup = window.KalturaPlayer.setup;
-        window.KalturaPlayer.setup = function (conf) {
+    // Wrap KalturaPlayer.setup so every player created from here on is handed to playerReady.
+    // Idempotent (marked on the wrapper) and re-appliable: a second Kaltura bundle redefining
+    // window.KalturaPlayer replaces setup with an unwrapped one, and the sweep re-wraps it.
+    function annotoWrapKalturaSetup(app) {
+        var kp = window.KalturaPlayer;
+        if (!kp || typeof kp.setup !== 'function' || kp.setup.annotoSetupWrapped) {
+            return;
+        }
+        var origSetup = kp.setup;
+        var wrapped = function () {
             // Ensure the loader is wrapped before this player's Annoto plugin runs its widget load
             // inside origSetup (covers players created before the poll installed the wrap above).
             annotoWrapKalturaScriptLoader();
-            var player = origSetup.call(window.KalturaPlayer, conf);
+            var player = origSetup.apply(kp, arguments);
             try {
-                maKV7App.playerReady(player);
+                app.playerReady(player);
             } catch (err) {
                 annotoDebugLog('playerReady error: ', err);
             }
             return player;
         };
+        wrapped.annotoSetupWrapped = true;
+        kp.setup = wrapped;
+        annotoDebugLog('wrapped KalturaPlayer.setup');
+    }
 
-        window.moodleAnnoto.kV7App = maKV7App;
+    function annotoKalturaV7Enumerate(app) {
+        try {
+            var players = window.KalturaPlayer.getPlayers();
+            Object.keys(players).forEach(function (pid) {
+                app.playerReady(players[pid]);
+            });
+        } catch (err) {
+            annotoDebugLog('getPlayers failed: ', err);
+        }
+    }
+
+    // Install (or repair) the whole V7 hook. Safe to call repeatedly.
+    function annotoKalturaV7HookSetup() {
+        if (!window.KalturaPlayer || !window.KalturaPlayer.getPlayers || !window.KalturaPlayer.setup) {
+            return false;
+        }
+        var app = window.moodleAnnoto.kV7App;
+        if (!app) {
+            annotoDebugLog('annotoKalturaV7HookSetup init done');
+            app = annotoCreateKV7App();
+            window.moodleAnnoto.kV7App = app;
+        }
+        // Wrap the Kaltura script loader before any player (and its Annoto plugin) is constructed,
+        // so the widget bootstrap loads via require() (setting window.Annoto).
+        annotoWrapKalturaScriptLoader();
+        annotoWrapKalturaSetup(app);
+        annotoKalturaV7Enumerate(app);
         return true;
     }
 
-    var setupV7Retry = 0;
-    function annotoKalturaV7HookSetupPoll() {
-        if (!window.moodleAnnoto.kV7App && setupV7Retry < 50 && !annotoKalturaV7HookSetup()) {
-            setupV7Retry++;
-            setTimeout(annotoKalturaV7HookSetupPoll, 100);
+    /*
+     * Keep sweeping instead of stopping at the first success. Two things can still go wrong after
+     * the hook is installed:
+     *  - a second Kaltura bundle (another uiConf) redefines window.KalturaPlayer, dropping both the
+     *    KalturaPlayer.setup wrap and the Dom.loadScriptAsync wrap with it;
+     *  - a player is created in the gap before the wrap is installed, so its 'annotoserviceready'
+     *    has already fired and nothing ever calls playerReady for it.
+     * Either way the player is never captured, the widget boots on its bare uiConf config, and the
+     * user is left anonymous with no course group - the failure is silent, because everything that
+     * logs hangs off the capture. Re-wrapping and re-enumerating on a timer costs a few property
+     * reads per tick and closes both gaps.
+     *
+     * The first 5s tick fast (the capture has to beat the widget boot, which on a warm cache
+     * happens in well under a second); after that a 1s tick keeps watching for the rest of a
+     * minute, which covers a player added by a late AJAX render.
+     */
+    var SWEEP_FAST_TICKS = 50; // 50 x 100ms = 5s
+    var SWEEP_TOTAL_TICKS = 105; // + 55 x 1000ms = 60s in total
+    var sweepTicks = 0;
+    function annotoKalturaV7Sweep() {
+        annotoKalturaV7HookSetup();
+        sweepTicks++;
+        if (sweepTicks < SWEEP_TOTAL_TICKS) {
+            setTimeout(annotoKalturaV7Sweep, sweepTicks < SWEEP_FAST_TICKS ? 100 : 1000);
         }
     }
-    annotoKalturaV7HookSetupPoll();
+    annotoKalturaV7Sweep();
 
 })();

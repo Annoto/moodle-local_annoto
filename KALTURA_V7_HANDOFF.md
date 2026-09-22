@@ -107,6 +107,106 @@ user; V2 / non-Kaltura paths unaffected. A full multi-agent adversarial review (
 architecture; its one HIGH finding (poll losing the capture race on warm cache) is closed by the
 `annotoserviceready` event capture.
 
+## Failure mode: the setup hook is missed (fixed 5.5.4)
+
+**Symptom:** on some pages the widget renders but the user is anonymous ("Log in to the site")
+even though SSO works on other pages — typically the *second* video visited in a session, i.e. the
+first one loaded with a warm cache. Nothing is logged: the console shows `setup Kaltura V7 players`
+with no `setup Kaltura V7 player: <id>` line after it.
+
+**Cause:** every Moodle-side effect hung off the setup-hook handshake. If the capture lost the race
+(the widget bootstrap and app chunks come from cache and boot before `service.onSetup` is
+registered, or `window.KalturaPlayer` was redefined by a second Kaltura bundle and dropped our
+`setup` wrap), `onSetupHandler` is never called, so `entry.config`/`entry.doneCb` are never set,
+`initkaltura.js` never pings the bundle, and `setupKalturaV7Player` returned early — no
+`api.load()`, no `api.auth()`. The widget stays booted on its bare uiConf config: anonymous, and
+with no course group.
+
+**Which half fixes what.** The bundle (moodle-local-js, PR #26) fixes the bug on its own, for
+every installed plugin version: it no longer waits to be handed the player — `kalturaV7Sweep()`
+reads `moodleAnnoto.kV7App.playersMap` *and* enumerates `window.KalturaPlayer.getPlayers()` itself
+on a timer, then seeds/recovers/fails-closed as in parts 2–4 below. With a ≤ 5.5.3 plugin on a warm
+cache the widget can still boot before the bundle runs, so the user briefly sees the anonymous
+widget until `api.load` + `api.auth` repair it. Part 1 (this plugin, 5.5.4) is what removes that
+flash: with the hook at the top of the body the capture — and the seed — precede boot, so there is
+nothing to repair. Ship the bundle first; the plugin follows on its normal cadence.
+
+**Fix, part 1 — load the hook before any embed (the root cause).** `local_annoto_init()` queued
+`initkaltura.js` with `$PAGE->requires->js($url)`, and without `$inhead` Moodle emits that at the
+**end of the body** — after every Kaltura embed has created its player, and on a warm cache after
+the plugin has already booted the widget. `local_annoto_kaltura_hook_html()` now emits the script
+tag from the top-of-body callback (`local_annoto_before_standard_top_of_body_html` pre-4.4, the
+`before_standard_top_of_body_html_generation` hook after), ahead of all page content, for every
+theme — `LOCAL_ANNOTO_TOP_OF_BODY_THEMES` still only controls the early full `local_annoto_init()`.
+`local_annoto_init()` falls back to the footer require only if that callback did not run. With the
+wrap installed first, capture happens synchronously as each player is created, which is always
+before the widget can boot (the plugin's `init()` has to load the widget bootstrap first).
+
+**Fix, part 2 — recover if it is still missed.** `service.getApi()` resolves once the widget is
+ready whether or not the setup hook reached us (`annotoApi` just awaits the plugin's `awaitBoot`),
+so:
+
+- `initkaltura.js` pings `setupKalturaV7PlayersMap` from `capturePlayer` as well as from inside the
+  `onSetup` handler, so the bundle always learns the player exists;
+- it keeps sweeping (100ms for 5s, then 1s for a minute) instead of stopping at the first success,
+  re-wrapping `Dom.loadScriptAsync` / `KalturaPlayer.setup` and re-enumerating `getPlayers()`, so a
+  redefined global (a second uiConf bundle) or a player created before the wrap is still picked up;
+- `setupKalturaV7Player` runs `finalizeKalturaV7Player` even with no `config`/`doneCb`, and
+  `finalizeKalturaV7Player` reads `entry.config` *inside* the `getApi().then()` (by which time a
+  handshake still in flight has stored it) and falls back to `recoverKalturaV7Config` — the live
+  config off the plugin behind the service, merged with `configOverride`.
+
+**Fix, part 3 — seed the group so a group-less boot is unreachable.** The setup hook is the
+plugin's intended way to ask for the config, but it fires exactly once and can be missed. The
+widget API has no group setter (`IAnnotoApi` is `auth`/`samlAuth`/`load`/`destroy`/`logout`/
+`show`/`hide`/`getMetadata`/`getWidgetState`; the internal set-commands are `thread_tag` and
+`group_comments_query`), so `api.load()` — a whole `IConfig` — is the only way to change a *running*
+widget. Before boot, though, there is a much better one: `bootWidget()` boots with
+`plugin.widgetConfig`, so `seedKalturaV7Config()` sets
+
+```
+plugin.widgetConfig = plugin.mergeConfigUpdate(configOverride)
+```
+
+as the first thing `setupKalturaV7Player` does, before anything can release the boot.
+`mergeConfigUpdate` is the plugin's own merge: it deep-merges the override over the existing config
+and re-forces the parts only the plugin can supply — `widgets[0].player`
+(type/element/adaptorApi) and `hooks.setup`, so the handshake still works. The group is then in the
+boot config whether or not the hook ever reaches us, and `recoverKalturaV7Config` (which reads that
+same object) inherits it too.
+
+**Fix, part 4 — fail closed, as the last resort.** With seeding in place the only way to end up
+without a group is being unable to reach the plugin at all (a build that renames
+`service.plugin` / `widgetConfig` / `mergeConfigUpdate`), in which case neither seeding nor recovery
+works. So `api.auth()` runs *only* after `api.load()` has applied the enriched config; if no config
+can be obtained, or `load` rejects, the user is deliberately left anonymous and an **error** is
+logged (`course group not applied, skipping SSO auth to avoid mis-scoped activity`). An
+authenticated user on a widget still running the bare uiConf config would file comments against the
+wrong scope — under a different clientId and region even — and that is worse than a login prompt.
+
+### Verifying it without a Moodle
+
+`moodle-local-js` has `npm run test:kaltura-v7` (`test/kaltura-v7-plugin-contract.js`). It downloads
+the **real published** playkit plugin (`cdn.annoto.net/playkit-plugin/latest/plugin.js`), runs it in
+jsdom against stubs for the handful of things it takes from the player library, and asserts the
+whole contract — 24 checks over four scenarios:
+
+| scenario | asserts |
+| --- | --- |
+| capture before boot, seeded | the config `Annoto.boot()` receives carries the course group, title, Moodle clientId, backend and SSO token, **and** keeps `hooks.setup` plus `widgets[0].player` type/element/adaptorApi |
+| capture before boot, not seeded | reproduces the bug: no group, falls back to the uiConf clientId |
+| capture only after boot | seed reports "already booted", `recoverKalturaV7Config` + `api.load` restore the group and clientId with the player wiring intact, and `api.auth` runs only after |
+| plugin internals unreachable | no `load`, **no `auth`** — fail closed |
+
+Run it after any playkit-plugin release: it is what catches a build that renames `service.plugin`,
+`plugin.widgetConfig`, `plugin.mergeConfigUpdate` or `plugin.isWidgetBooted`. `PLUGIN_URL=` pins a
+specific version, `PLUGIN_BUNDLE=` runs against a local copy offline.
+
+Two incidental confirmations from writing it: `bootWidget()` resolves `Annoto` as a **bare global**
+(so the widget bootstrap really must end up assigning `window.Annoto` — hence the `require()` wrap),
+and playkit's `Object.mergeDeep` skips class instances (`isClassInstance`), which is why merging a
+config that carries `widgets[0].player.adaptorApi` terminates instead of recursing forever.
+
 ## Out of scope (phase 2+)
 
 KAF / `browseandembed` iframe embeds (Kaltura Video Package for Moodle) are cross-origin — the host page
