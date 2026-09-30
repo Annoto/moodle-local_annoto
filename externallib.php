@@ -104,6 +104,7 @@ class local_annoto_external extends external_api {
 
     /**
      * Sets the completion data for a user.
+     *
      * @param string $jsondata JSON encoded completion data
      * @return array result of set_completion
      */
