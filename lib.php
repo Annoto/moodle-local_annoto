@@ -102,6 +102,21 @@ function local_annoto_is_target_page() {
 }
 
 /**
+ * Whether the plugin has been set up with an Annoto client id (API key).
+ *
+ * Without one there is no Annoto account to boot the widget against, so the plugin must stay out
+ * of the page entirely: no Kaltura hook (it switches every Kaltura player to preload the media),
+ * no AMD module (it pulls the Vimeo player API and the CDN bundle on every course page) and no
+ * widget. The SSO secret is not required here - a client id alone still boots the widget, only
+ * without SSO.
+ *
+ * @return bool
+ */
+function local_annoto_is_configured() {
+    return !empty(get_config('local_annoto', 'clientid'));
+}
+
+/**
  * Tracks whether the Kaltura hook script tag has been emitted at the top of the body.
  * @param bool $set pass true to record that it was emitted.
  * @return bool
@@ -131,7 +146,7 @@ function local_annoto_kaltura_hook_emitted($set = false) {
 function local_annoto_kaltura_hook_html() {
     global $CFG;
 
-    if (local_annoto_kaltura_hook_emitted() || !local_annoto_is_target_page()) {
+    if (local_annoto_kaltura_hook_emitted() || !local_annoto_is_target_page() || !local_annoto_is_configured()) {
         return '';
     }
     // Revved so that an upgrade busts the browser cache, the way $PAGE->requires->js() does.
@@ -147,6 +162,11 @@ function local_annoto_kaltura_hook_html() {
  */
 function local_annoto_init() {
     global $PAGE, $COURSE;
+
+    // Stay out of the page until an Annoto client id is set (see local_annoto_is_configured).
+    if (!local_annoto_is_configured()) {
+        return;
+    }
 
     $istargetpage = local_annoto_is_target_page();
     // Start local_annoto on a specific pages only.

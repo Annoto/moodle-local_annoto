@@ -113,4 +113,53 @@ final class lib_test extends \advanced_testcase {
         // A JWT has three dot-separated segments (header.payload.signature).
         $this->assertCount(3, explode('.', $token));
     }
+    /**
+     * The plugin counts as configured only once a client id is set; the SSO secret is optional.
+     *
+     * @covers ::local_annoto_is_configured
+     */
+    public function test_is_configured_requires_clientid(): void {
+        $this->resetAfterTest();
+
+        set_config('clientid', '', 'local_annoto');
+        set_config('ssosecret', 'topsecret', 'local_annoto');
+        $this->assertFalse(local_annoto_is_configured());
+
+        set_config('clientid', 'client-123', 'local_annoto');
+        set_config('ssosecret', '', 'local_annoto');
+        $this->assertTrue(local_annoto_is_configured());
+    }
+
+    /**
+     * On a target page the Kaltura hook tag is emitted only when the plugin is configured.
+     *
+     * @covers ::local_annoto_kaltura_hook_html
+     */
+    public function test_kaltura_hook_html_skipped_when_not_configured(): void {
+        global $PAGE;
+        $this->resetAfterTest();
+        $PAGE->set_pagetype('mod-page-view');
+
+        set_config('clientid', '', 'local_annoto');
+        $this->assertSame('', local_annoto_kaltura_hook_html());
+
+        set_config('clientid', 'client-123', 'local_annoto');
+        $this->assertStringContainsString('/local/annoto/initkaltura.js', local_annoto_kaltura_hook_html());
+    }
+
+    /**
+     * An unconfigured plugin queues no Annoto JavaScript on a target page.
+     *
+     * @covers ::local_annoto_init
+     */
+    public function test_init_adds_no_js_when_not_configured(): void {
+        global $PAGE;
+        $this->resetAfterTest();
+        $PAGE->set_pagetype('mod-page-view');
+        set_config('clientid', '', 'local_annoto');
+
+        local_annoto_init();
+
+        $this->assertStringNotContainsString('local_annoto', $PAGE->requires->get_end_code());
+    }
 }
