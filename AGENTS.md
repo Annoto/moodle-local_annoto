@@ -229,7 +229,9 @@ When writing or reviewing code, check for the following. The categories follow t
 
 **Audit trail (required at design time).** Any state-changing endpoint on a sensitive entity — permission changes, content moderation, data deletion, anything financial or graded — specifies, before implementation: which identity is captured (the authenticated user, the API key, or a system identifier), which field or log entry carries it, and where it is extracted from. A state-changing endpoint without identity capture is a compliance and incident-response gap.
 
-In this plugin the boundary is Moodle's: every external function validates its parameters (`*_parameters()` / `validate_parameters`), validates the context, and checks the capability for the course or module it touches; `set_completion` writes grade-like completion state and is the sensitive endpoint. `ssosecret` signs the SSO JWT and never reaches the browser or a log.
+In this plugin the boundary is Moodle's: every external function validates its parameters (`*_parameters()` / `validate_parameters`), validates the context of the course or module it touches (the module's, when it acts on one), and checks a capability where one applies; `set_completion` writes grade-like completion state and is the sensitive endpoint. `ssosecret` signs the SSO JWT and never reaches the browser or a log.
+
+One deliberate exception to the hardcoded-credentials blocker: `GA_MEASUREMENT_ID` and `GA_API_SECRET` in `classes/telemetry.php` ship in the plugin by design. The secret is a write-only GA4 Measurement Protocol key that every site needs to reach Annoto's telemetry stream, and sending stays gated on the admin opt-out. Don't move it to a setting or flag it in review; rotating it is a release decision for the team.
 
 ## Code conventions
 
@@ -245,7 +247,7 @@ In this plugin the boundary is Moodle's: every external function validates its p
 ### PHP
 
 - Code follows the Moodle coding style and PHPDoc rules that `moodle-plugin-ci codechecker` and `phpdoc` enforce.
-- The project's logger is `local_annoto\log` (`classes/log.php`).
+- The project's logger is `local_annoto\log` (`classes/log.php`). One exception: the unconfigured clientid/ssosecret warning in `local_annoto_get_user_token()` calls `debugging()` directly, because `tests/lib_test.php` asserts it fires and `log` is silent under PHPUnit.
 - Use Moodle's APIs: `$DB` with placeholders, `get_config('local_annoto', …)`, `required_param`/`optional_param` — never raw SQL strings with input in them or `$_GET`/`$_POST`.
 - A new user-facing string goes in `lang/en` and `lang/he` together.
 - A new setting, capability, or `db/` change comes with a `version.php` bump.
