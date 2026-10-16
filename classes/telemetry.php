@@ -327,11 +327,11 @@ class telemetry {
         }
         $res = self::dispatch($eventname);
         if (!$res['ok']) {
-            self::log("send failed (event={$eventname}, http={$res['httpcode']}, errno={$res['errno']})");
+            log::debug("telemetry: send failed (event={$eventname}, http={$res['httpcode']}, errno={$res['errno']})");
             return false;
         }
         set_config('telemetry_lastsent', time(), 'local_annoto');
-        self::log("sent (event={$eventname}, http={$res['httpcode']})");
+        log::debug("telemetry: sent (event={$eventname}, http={$res['httpcode']})");
         return true;
     }
 
@@ -352,17 +352,5 @@ class telemetry {
         }
         $eventname = $last ? 'annoto_heartbeat' : 'annoto_install';
         self::send_event($eventname);
-    }
-
-    /**
-     * Developer log helper, gated on the plugin's debug logging setting.
-     *
-     * @param string $message
-     * @return void
-     */
-    protected static function log(string $message): void {
-        if (get_config('local_annoto', 'debuglogging')) {
-            debugging('local_annoto telemetry: ' . $message, DEBUG_DEVELOPER);
-        }
     }
 }
