@@ -131,7 +131,7 @@ class local_annoto_external extends external_api {
         }
 
         if (isset($data->cmid) && !empty($data->cmid)) {
-            $cmid = $data->cmid;
+            $cmid = clean_param($data->cmid, PARAM_INT);
             $cleandata = new stdClass();
             $cleandata->completion = isset($data->completion) ? $data->completion : 0;
             $cleandata->comments = isset($data->comments) ? $data->comments : 0;
@@ -145,6 +145,9 @@ class local_annoto_external extends external_api {
             $cleandata->widget_index = isset($data->widget_index) ? $data->widget_index : null;
 
             [$course, $cm] = get_course_and_cm_from_cmid($cmid);
+            // Require access to this module (course login, visibility, availability), not
+            // only course enrolment: completion must not be written for a hidden module.
+            self::validate_context(\context_module::instance($cm->id));
             $context = \context_course::instance($course->id);
 
             if (is_enrolled($context, $USER, '', true)) {
