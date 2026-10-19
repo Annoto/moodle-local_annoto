@@ -297,6 +297,58 @@ function local_annoto_has_capability($allowedroles, $courseid, $capability) {
 }
 
 /**
+ * Annoto completion requirements of a course module, with the current user's progress.
+ *
+ * @param annoto_completion $completionrecord the course module's Annoto completion settings.
+ * @param string $userscope the user scope from local_annoto_get_user_scope().
+ * @return stdClass the requirements record, with user_data when the user has progress
+ */
+function local_annoto_get_completion_req($completionrecord, $userscope) {
+    global $USER;
+    $req = $completionrecord->to_record();
+    if ($userscope !== 'user') {
+        return $req;
+    }
+    $completiondata = annoto_completiondata::get_record(
+        ['completionid' => $completionrecord->get('id'), 'userid' => $USER->id]
+    );
+    if ($completiondata) {
+        $req->user_data = $completiondata->to_record();
+    }
+    return $req;
+}
+
+/**
+ * Annoto completion requirements of the labels the current user can see in a course.
+ *
+ * A label has no page of its own: it is shown only on the course page, where no course module is
+ * set, so its requirements are sent with the course page params. Other module types keep their
+ * completion on their own page.
+ *
+ * @param stdClass $course the course.
+ * @param string $userscope the user scope from local_annoto_get_user_scope().
+ * @return stdClass[] requirement records, as from local_annoto_get_completion_req()
+ */
+function local_annoto_get_course_label_completions($course, $userscope) {
+    $records = annoto_completion::get_records([
+        'courseid' => $course->id,
+        'enabled' => annoto_completion::COMPLETION_TRACKING_AUTOMATIC,
+    ]);
+    if (!$records) {
+        return [];
+    }
+    $cms = get_fast_modinfo($course)->get_cms();
+    $completions = [];
+    foreach ($records as $record) {
+        $cm = $cms[$record->get('cmid')] ?? null;
+        if ($cm && $cm->modname === 'label' && $cm->uservisible) {
+            $completions[] = local_annoto_get_completion_req($record, $userscope);
+        }
+    }
+    return $completions;
+}
+
+/**
  * Get parameters for Anooto's JS script
  * @param int $courseid the id of the course.
  * @param string $pageurl url of the current page.
@@ -318,6 +370,8 @@ function local_annoto_get_jsparam($courseid, $modid) {
 
     $activitycompletionenabled = false;
     $activitycompletionreq = null;
+    $cmcompletions = [];
+    $trackcompletion = $settings->activitycompletion && $userloggedin;
     $userscope = local_annoto_get_user_scope($settings, $courseid);
     $context = \context_course::instance($courseid);
     $userisenrolled = is_enrolled($context, $USER, '', true);
@@ -327,25 +381,19 @@ function local_annoto_get_jsparam($courseid, $modid) {
         $cm = $modinfo->get_cm($modid);
         $cmtitle = $cm->name;
         $cmintro = $cm->content;
-        if ($settings->activitycompletion && $userloggedin) {
+        if ($trackcompletion) {
             $completionrecord = annoto_completion::get_record(['cmid' => $modid]);
             if ($completionrecord) {
-                $activitycompletionreq = $completionrecord->to_record();
                 // Moodle v3 do not have clean_param and returns type string.
-                if ((int)$completionrecord->get('enabled') == annoto_completion::COMPLETION_TRACKING_AUTOMATIC) {
-                    $activitycompletionenabled = true;
-                    if ($userscope === 'user') {
-                        if (
-                            $completiondata = annoto_completiondata::get_record(
-                                ['completionid' => $completionrecord->get('id'), 'userid' => $USER->id]
-                            )
-                        ) {
-                            $activitycompletionreq->user_data = $completiondata->to_record();
-                        }
-                    }
-                }
+                $activitycompletionenabled =
+                    (int)$completionrecord->get('enabled') == annoto_completion::COMPLETION_TRACKING_AUTOMATIC;
+                $activitycompletionreq = $activitycompletionenabled
+                    ? local_annoto_get_completion_req($completionrecord, $userscope)
+                    : $completionrecord->to_record();
             }
         }
+    } else if ($trackcompletion) {
+        $cmcompletions = local_annoto_get_course_label_completions($course, $userscope);
     }
 
     $jsparams = [
@@ -367,6 +415,7 @@ function local_annoto_get_jsparam($courseid, $modid) {
         'moodleRelease' => $CFG->release,
         'activityCompletionEnabled' => $activitycompletionenabled,
         'activityCompletionReq' => $activitycompletionreq,
+        'cmCompletions' => $cmcompletions,
         'userScope' => $userscope,
         'userIsEnrolled' => $userisenrolled,
     ];

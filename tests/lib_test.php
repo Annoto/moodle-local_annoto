@@ -162,4 +162,151 @@ final class lib_test extends \advanced_testcase {
 
         $this->assertStringNotContainsString('local_annoto', $PAGE->requires->get_end_code());
     }
+
+    /**
+     * Set up a course with activity completion and the plugin configured for Annoto completion,
+     * and log in an enrolled student.
+     *
+     * @return array{0: \stdClass, 1: \stdClass} the course and the student
+     */
+    private function setup_completion_course(): array {
+        set_config('clientid', 'client-123', 'local_annoto');
+        set_config('ssosecret', 'super-secret-value', 'local_annoto');
+        set_config('activitycompletion', 1, 'local_annoto');
+        $course = $this->getDataGenerator()->create_course(['enablecompletion' => 1]);
+        $student = $this->getDataGenerator()->create_and_enrol($course, 'student');
+        $this->setUser($student);
+        return [$course, $student];
+    }
+
+    /**
+     * Save Annoto completion requirements for a course module, as the module settings form does.
+     *
+     * @param \stdClass $course the course
+     * @param int $cmid the course module id
+     * @param int $enabled annoto_completion tracking constant
+     * @return annoto_completion the saved record
+     */
+    private function create_annoto_completion(\stdClass $course, int $cmid, int $enabled): annoto_completion {
+        $record = new annoto_completion(0, (object)[
+            'courseid' => $course->id,
+            'cmid' => $cmid,
+            'enabled' => $enabled,
+            'totalview' => 80,
+            'comments' => 1,
+            'replies' => 0,
+        ]);
+        $record->create();
+        return $record;
+    }
+
+    /**
+     * On the course page (no course module) a label with Annoto completion is sent in
+     * cmCompletions with the current user's progress, since the label has no page of its own.
+     *
+     * @covers ::local_annoto_get_jsparam
+     */
+    public function test_get_jsparam_course_page_sends_label_completions(): void {
+        $this->resetAfterTest();
+        [$course, $student] = $this->setup_completion_course();
+        $label = $this->getDataGenerator()->create_module('label', ['course' => $course->id]);
+        $completion = $this->create_annoto_completion($course, $label->cmid, annoto_completion::COMPLETION_TRACKING_AUTOMATIC);
+        (new annoto_completiondata(0, (object)[
+            'completionid' => $completion->get('id'),
+            'userid' => $student->id,
+            'data' => '{"completion":50,"comments":0,"replies":0}',
+        ]))->create();
+
+        $params = local_annoto_get_jsparam($course->id, 0);
+
+        $this->assertFalse($params['activityCompletionEnabled']);
+        $this->assertNull($params['activityCompletionReq']);
+        $this->assertCount(1, $params['cmCompletions']);
+        $req = $params['cmCompletions'][0];
+        $this->assertEquals($label->cmid, $req->cmid);
+        $this->assertEquals(80, $req->totalview);
+        $this->assertEquals(1, $req->comments);
+        $this->assertSame('{"completion":50,"comments":0,"replies":0}', $req->user_data->data);
+    }
+
+    /**
+     * Only labels the user can see, with Annoto completion enabled, are sent from the course page;
+     * other module types keep their completion on their own page.
+     *
+     * @covers ::local_annoto_get_jsparam
+     */
+    public function test_get_jsparam_course_page_skips_hidden_disabled_and_non_label(): void {
+        $this->resetAfterTest();
+        [$course] = $this->setup_completion_course();
+        $hidden = $this->getDataGenerator()->create_module('label', ['course' => $course->id, 'visible' => 0]);
+        $disabled = $this->getDataGenerator()->create_module('label', ['course' => $course->id]);
+        $page = $this->getDataGenerator()->create_module('page', ['course' => $course->id]);
+        $this->create_annoto_completion($course, $hidden->cmid, annoto_completion::COMPLETION_TRACKING_AUTOMATIC);
+        $this->create_annoto_completion($course, $disabled->cmid, annoto_completion::COMPLETION_TRACKING_NONE);
+        $this->create_annoto_completion($course, $page->cmid, annoto_completion::COMPLETION_TRACKING_AUTOMATIC);
+
+        $params = local_annoto_get_jsparam($course->id, 0);
+
+        $this->assertSame([], $params['cmCompletions']);
+    }
+
+    /**
+     * Another user's progress on a label is never sent: user_data is only the current user's.
+     *
+     * @covers ::local_annoto_get_jsparam
+     */
+    public function test_get_jsparam_course_page_omits_other_users_progress(): void {
+        $this->resetAfterTest();
+        [$course] = $this->setup_completion_course();
+        $other = $this->getDataGenerator()->create_and_enrol($course, 'student');
+        $label = $this->getDataGenerator()->create_module('label', ['course' => $course->id]);
+        $completion = $this->create_annoto_completion($course, $label->cmid, annoto_completion::COMPLETION_TRACKING_AUTOMATIC);
+        (new annoto_completiondata(0, (object)[
+            'completionid' => $completion->get('id'),
+            'userid' => $other->id,
+            'data' => '{"completion":100,"comments":3,"replies":0}',
+        ]))->create();
+
+        $params = local_annoto_get_jsparam($course->id, 0);
+
+        $this->assertCount(1, $params['cmCompletions']);
+        $this->assertFalse(property_exists($params['cmCompletions'][0], 'user_data'));
+    }
+
+    /**
+     * With activity completion turned off in the plugin settings nothing is sent from the course page.
+     *
+     * @covers ::local_annoto_get_jsparam
+     */
+    public function test_get_jsparam_course_page_empty_when_completion_disabled(): void {
+        $this->resetAfterTest();
+        [$course] = $this->setup_completion_course();
+        $label = $this->getDataGenerator()->create_module('label', ['course' => $course->id]);
+        $this->create_annoto_completion($course, $label->cmid, annoto_completion::COMPLETION_TRACKING_AUTOMATIC);
+        set_config('activitycompletion', 0, 'local_annoto');
+
+        $params = local_annoto_get_jsparam($course->id, 0);
+
+        $this->assertSame([], $params['cmCompletions']);
+    }
+
+    /**
+     * An activity page keeps sending its own requirements as before, and no course page list.
+     *
+     * @covers ::local_annoto_get_jsparam
+     */
+    public function test_get_jsparam_activity_page_unchanged(): void {
+        $this->resetAfterTest();
+        [$course] = $this->setup_completion_course();
+        $page = $this->getDataGenerator()->create_module('page', ['course' => $course->id]);
+        $label = $this->getDataGenerator()->create_module('label', ['course' => $course->id]);
+        $this->create_annoto_completion($course, $page->cmid, annoto_completion::COMPLETION_TRACKING_AUTOMATIC);
+        $this->create_annoto_completion($course, $label->cmid, annoto_completion::COMPLETION_TRACKING_AUTOMATIC);
+
+        $params = local_annoto_get_jsparam($course->id, $page->cmid);
+
+        $this->assertTrue($params['activityCompletionEnabled']);
+        $this->assertEquals($page->cmid, $params['activityCompletionReq']->cmid);
+        $this->assertSame([], $params['cmCompletions']);
+    }
 }
