@@ -319,17 +319,38 @@ function local_annoto_get_completion_req($completionrecord, $userscope) {
 }
 
 /**
- * Annoto completion requirements of the labels the current user can see in a course.
+ * Module types that offer Annoto completion in their settings form.
  *
- * A label has no page of its own: it is shown only on the course page, where no course module is
- * set, so its requirements are sent with the course page params. Other module types keep their
- * completion on their own page.
+ * @return string[] module names
+ */
+function local_annoto_get_completion_modtypes() {
+    return [
+        'page',
+        'label',
+        'h5p',
+        'hvp',
+        'h5pactivity',
+        'kalvidres',
+        'lti',
+    ];
+}
+
+/**
+ * Annoto completion requirements of every activity on the course page the current user can see.
+ *
+ * The course page has no course module set, so the requirements of all its activities with Annoto
+ * completion are sent with the course page params: the bundle shows them in each activity's own
+ * completion area, the way Moodle shows its own conditions there. A label is shown only there; the
+ * other types also show their completion on their own page, as before.
+ *
+ * The user's progress is read in one query for the whole course, not one per activity.
  *
  * @param stdClass $course the course.
  * @param string $userscope the user scope from local_annoto_get_user_scope().
- * @return stdClass[] requirement records, as from local_annoto_get_completion_req()
+ * @return stdClass[] requirement records, as from local_annoto_get_completion_req(), with the modname
  */
-function local_annoto_get_course_label_completions($course, $userscope) {
+function local_annoto_get_course_cm_completions($course, $userscope) {
+    global $DB, $USER;
     $records = annoto_completion::get_records([
         'courseid' => $course->id,
         'enabled' => annoto_completion::COMPLETION_TRACKING_AUTOMATIC,
@@ -337,13 +358,40 @@ function local_annoto_get_course_label_completions($course, $userscope) {
     if (!$records) {
         return [];
     }
+    $modtypes = local_annoto_get_completion_modtypes();
     $cms = get_fast_modinfo($course)->get_cms();
-    $completions = [];
+    $visible = [];
     foreach ($records as $record) {
         $cm = $cms[$record->get('cmid')] ?? null;
-        if ($cm && $cm->modname === 'label' && $cm->uservisible) {
-            $completions[] = local_annoto_get_completion_req($record, $userscope);
+        if ($cm && $cm->uservisible && $cm->is_visible_on_course_page() && in_array($cm->modname, $modtypes)) {
+            $visible[$record->get('id')] = [$record, $cm->modname];
         }
+    }
+    if (!$visible) {
+        return [];
+    }
+
+    $userdata = [];
+    if ($userscope === 'user') {
+        [$insql, $inparams] = $DB->get_in_or_equal(array_keys($visible), SQL_PARAMS_NAMED);
+        $datarecords = annoto_completiondata::get_records_select(
+            "completionid $insql AND userid = :userid",
+            $inparams + ['userid' => $USER->id]
+        );
+        foreach ($datarecords as $datarecord) {
+            $userdata[$datarecord->get('completionid')] = $datarecord->to_record();
+        }
+    }
+
+    $completions = [];
+    foreach ($visible as $id => [$record, $modname]) {
+        $req = $record->to_record();
+        // The bundle reports progress from the course page only for a label, which has no page of its own.
+        $req->modname = $modname;
+        if (isset($userdata[$id])) {
+            $req->user_data = $userdata[$id];
+        }
+        $completions[] = $req;
     }
     return $completions;
 }
@@ -393,7 +441,7 @@ function local_annoto_get_jsparam($courseid, $modid) {
             }
         }
     } else if ($trackcompletion) {
-        $cmcompletions = local_annoto_get_course_label_completions($course, $userscope);
+        $cmcompletions = local_annoto_get_course_cm_completions($course, $userscope);
     }
 
     $jsparams = [
@@ -646,15 +694,7 @@ function local_annoto_coursemodule_standard_elements($formwrapper, $mform) {
 
     $settings = get_config('local_annoto');
 
-    $supportedmodtypes = [
-        'page',
-        'label',
-        'h5p',
-        'hvp',
-        'h5pactivity',
-        'kalvidres',
-        'lti',
-    ];
+    $supportedmodtypes = local_annoto_get_completion_modtypes();
 
     // phpcs:ignore Squiz.PHP.CommentedOutCode.Found
     /* $completionel = 'completion';
