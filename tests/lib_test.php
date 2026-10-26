@@ -230,24 +230,82 @@ final class lib_test extends \advanced_testcase {
     }
 
     /**
-     * Only labels the user can see, with Annoto completion enabled, are sent from the course page;
-     * other module types keep their completion on their own page.
+     * Every activity type that offers Annoto completion is sent from the course page, each with the
+     * current user's own progress, so its completion shows on the course page too.
      *
      * @covers ::local_annoto_get_jsparam
+     * @covers ::local_annoto_get_course_cm_completions
      */
-    public function test_get_jsparam_course_page_skips_hidden_disabled_and_non_label(): void {
+    public function test_get_jsparam_course_page_sends_all_supported_types(): void {
+        $this->resetAfterTest();
+        [$course, $student] = $this->setup_completion_course();
+        $label = $this->getDataGenerator()->create_module('label', ['course' => $course->id]);
+        $page = $this->getDataGenerator()->create_module('page', ['course' => $course->id]);
+        $lti = $this->getDataGenerator()->create_module('lti', ['course' => $course->id]);
+        $progress = [];
+        foreach ([$label, $page, $lti] as $i => $mod) {
+            $completion = $this->create_annoto_completion($course, $mod->cmid, annoto_completion::COMPLETION_TRACKING_AUTOMATIC);
+            $progress[$mod->cmid] = '{"completion":' . (10 * ($i + 1)) . ',"comments":0,"replies":0}';
+            (new annoto_completiondata(0, (object)[
+                'completionid' => $completion->get('id'),
+                'userid' => $student->id,
+                'data' => $progress[$mod->cmid],
+            ]))->create();
+        }
+
+        $params = local_annoto_get_jsparam($course->id, 0);
+
+        $this->assertCount(3, $params['cmCompletions']);
+        $modnames = [$label->cmid => 'label', $page->cmid => 'page', $lti->cmid => 'lti'];
+        foreach ($params['cmCompletions'] as $req) {
+            $this->assertArrayHasKey($req->cmid, $progress);
+            $this->assertSame($modnames[$req->cmid], $req->modname);
+            $this->assertSame($progress[$req->cmid], $req->user_data->data);
+        }
+    }
+
+    /**
+     * Activities the user cannot see, with Annoto completion off, or of a type that does not offer
+     * Annoto completion are not sent from the course page.
+     *
+     * @covers ::local_annoto_get_jsparam
+     * @covers ::local_annoto_get_course_cm_completions
+     */
+    public function test_get_jsparam_course_page_skips_hidden_disabled_and_unsupported(): void {
         $this->resetAfterTest();
         [$course] = $this->setup_completion_course();
-        $hidden = $this->getDataGenerator()->create_module('label', ['course' => $course->id, 'visible' => 0]);
+        $hidden = $this->getDataGenerator()->create_module('page', ['course' => $course->id, 'visible' => 0]);
         $disabled = $this->getDataGenerator()->create_module('label', ['course' => $course->id]);
-        $page = $this->getDataGenerator()->create_module('page', ['course' => $course->id]);
+        $forum = $this->getDataGenerator()->create_module('forum', ['course' => $course->id]);
         $this->create_annoto_completion($course, $hidden->cmid, annoto_completion::COMPLETION_TRACKING_AUTOMATIC);
         $this->create_annoto_completion($course, $disabled->cmid, annoto_completion::COMPLETION_TRACKING_NONE);
-        $this->create_annoto_completion($course, $page->cmid, annoto_completion::COMPLETION_TRACKING_AUTOMATIC);
+        $this->create_annoto_completion($course, $forum->cmid, annoto_completion::COMPLETION_TRACKING_AUTOMATIC);
 
         $params = local_annoto_get_jsparam($course->id, 0);
 
         $this->assertSame([], $params['cmCompletions']);
+    }
+
+    /**
+     * A teacher gets the requirements without any progress: progress is sent only to a user scope.
+     *
+     * @covers ::local_annoto_get_course_cm_completions
+     */
+    public function test_get_course_cm_completions_no_progress_for_moderator_scope(): void {
+        $this->resetAfterTest();
+        [$course, $student] = $this->setup_completion_course();
+        $page = $this->getDataGenerator()->create_module('page', ['course' => $course->id]);
+        $completion = $this->create_annoto_completion($course, $page->cmid, annoto_completion::COMPLETION_TRACKING_AUTOMATIC);
+        (new annoto_completiondata(0, (object)[
+            'completionid' => $completion->get('id'),
+            'userid' => $student->id,
+            'data' => '{"completion":50,"comments":0,"replies":0}',
+        ]))->create();
+
+        $reqs = local_annoto_get_course_cm_completions(get_course($course->id), 'super-mod');
+
+        $this->assertCount(1, $reqs);
+        $this->assertFalse(property_exists($reqs[0], 'user_data'));
     }
 
     /**
