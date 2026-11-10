@@ -25,8 +25,6 @@
 
 namespace local_annoto\task;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * The local_annoto usage telemetry task.
  *
