@@ -84,9 +84,67 @@ class local_annoto_external extends external_api {
         $context = context_course::instance($courseid);
         self::validate_context(context_course::instance($courseid));
 
-        [$result, $response] = !is_guest($context) ? [true, local_annoto_get_jsparam($courseid, $modid)] : [false, null];
+        try {
+            [$result, $response] = !is_guest($context) ? [true, local_annoto_get_jsparam($courseid, $modid)] : [false, null];
+        } catch (\Throwable $e) {
+            \local_annoto\telemetry::record_error('client', 'jsparams_failed');
+            throw $e;
+        }
 
         return ['result' => $result, 'params' => json_encode($response, JSON_HEX_TAG)];
+    }
+
+    /**
+     * Returns description of method parameters
+     * @return external_function_parameters
+     */
+    public static function widget_loaded_parameters() {
+        return new external_function_parameters([
+            'courseid' => new external_value(PARAM_INT, 'Course id'),
+            'cmid' => new external_value(PARAM_INT, 'Course module id, 0 for the course page', VALUE_DEFAULT, 0),
+        ]);
+    }
+
+    /**
+     * Record that the CDN bundle found a video and loaded the Annoto widget on a page.
+     *
+     * Feeds the usage telemetry only; records nothing when telemetry is turned off.
+     *
+     * @param int $courseid the id of the course.
+     * @param int $cmid the course module id, 0 for the course page.
+     * @return array
+     */
+    public static function widget_loaded($courseid, $cmid = 0) {
+        $params = self::validate_parameters(self::widget_loaded_parameters(), [
+            'courseid' => $courseid,
+            'cmid' => $cmid,
+        ]);
+        $courseid = (int)$params['courseid'];
+        $cmid = (int)$params['cmid'];
+
+        if ($cmid) {
+            // Throws when the module is not in this course.
+            [$course, $cm] = get_course_and_cm_from_cmid($cmid, '', $courseid);
+            $context = context_module::instance($cm->id);
+        } else {
+            $context = context_course::instance($courseid);
+        }
+        self::validate_context($context);
+
+        if (is_guest(context_course::instance($courseid))) {
+            return ['status' => false];
+        }
+        return ['status' => \local_annoto\telemetry::record_widget_load($courseid, $cmid, $context)];
+    }
+
+    /**
+     * Returns description of method result value
+     * @return external_single_structure
+     */
+    public static function widget_loaded_returns() {
+        return new external_single_structure([
+            'status' => new external_value(PARAM_BOOL, 'Whether the load was recorded'),
+        ]);
     }
 
 
@@ -175,8 +233,13 @@ class local_annoto_external extends external_api {
                         $message = 'Set completion for user ' . $userid . ' cmid ' . $cmid;
                     }
                     $status = true;
+                } else {
+                    // The bundle reported progress on an activity without Annoto completion.
+                    \local_annoto\telemetry::record_error('completion', 'not_configured');
                 }
             }
+        } else {
+            \local_annoto\telemetry::record_error('completion', 'invalid_data');
         }
 
         log::debug('set_completion - ' . $message . ($status ? ' data ' . json_encode($cleandata) : ''));

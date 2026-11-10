@@ -30,6 +30,10 @@ $observers = [
         'callback' => '\local_annoto\observer::course_module_deleted',
     ],
     [
+        'eventname' => '\core\event\course_deleted',
+        'callback' => '\local_annoto\observer::course_deleted',
+    ],
+    [
         'eventname' => '\core\event\user_enrolment_deleted',
         'callback' => '\local_annoto\observer::user_enrolment_deleted',
     ],

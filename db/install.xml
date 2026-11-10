@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<XMLDB PATH="local/annoto/db" VERSION="20240114" COMMENT="XMLDB file for Moodle local/annoto"
+<XMLDB PATH="local/annoto/db" VERSION="20261110" COMMENT="XMLDB file for Moodle local/annoto"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:noNamespaceSchemaLocation="../../../lib/xmldb/xmldb.xsd"
 >
@@ -42,6 +42,22 @@
       </KEYS>
       <INDEXES>
         <INDEX NAME="userid_completionid_unique" UNIQUE="true" FIELDS="userid, completionid" COMMENT="Provide index for userid completionid queries and uniqueness"/>
+      </INDEXES>
+    </TABLE>
+    <TABLE NAME="local_annoto_widgetload" COMMENT="Course pages and activities where the Annoto widget was loaded on a video, for the usage telemetry">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="courseid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="course id"/>
+        <FIELD NAME="cmid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="course module id, 0 for the course page"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="first widget load"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="last widget load, refreshed at most daily"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="courseid_cmid" UNIQUE="true" FIELDS="courseid, cmid"/>
+        <INDEX NAME="cmid" UNIQUE="false" FIELDS="cmid"/>
       </INDEXES>
     </TABLE>
   </TABLES>

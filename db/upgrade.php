@@ -85,5 +85,28 @@ function xmldb_local_annoto_upgrade($oldversion = 0) {
         upgrade_plugin_savepoint(true, 2024011600, 'local', 'annoto');
     }
 
+    if ($oldversion < 2026111000) {
+        // Define table local_annoto_widgetload to be created.
+        $table = new xmldb_table('local_annoto_widgetload');
+
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+        $table->add_field('courseid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+        $table->add_field('cmid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+        $table->add_field('timecreated', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+        $table->add_field('timemodified', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
+
+        $table->add_index('courseid_cmid', XMLDB_INDEX_UNIQUE, ['courseid', 'cmid']);
+        $table->add_index('cmid', XMLDB_INDEX_NOTUNIQUE, ['cmid']);
+
+        if (!$dbman->table_exists($table)) {
+            $dbman->create_table($table);
+        }
+
+        // Annoto savepoint reached.
+        upgrade_plugin_savepoint(true, 2026111000, 'local', 'annoto');
+    }
+
     return true;
 }

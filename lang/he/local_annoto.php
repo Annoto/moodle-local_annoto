@@ -117,7 +117,14 @@ $string['privacy:metadata:annoto:email'] = 'כתובת הדוא"ל שלך נשל
 $string['telemetryenabled'] = 'שיתוף נתוני שימוש עם Annoto';
 $string['telemetryenabled_desc'] = 'שליחת נתוני התקנה ושימוש ל-Annoto. ביטול הסימון מבטל את השיתוף.';
 $string['telemetrytask'] = 'משימת נתוני שימוש של Annoto';
+$string['siteenv'] = 'סביבת האתר';
+$string['siteenv_desc'] = 'איזה עותק של ה-Moodle שלכם זה, נשלח עם נתוני השימוש כדי שעותקי בדיקה ו-staging לא ייספרו כהתקנות נפרדות. מולא מראש לפי ניחוש מכתובת האתר.';
+$string['siteenv_production'] = 'ייצור';
+$string['siteenv_staging'] = 'Staging';
+$string['siteenv_test'] = 'בדיקה';
+$string['siteenv_dev'] = 'פיתוח';
+$string['eventwidgetloaded'] = 'יישומון Annoto נטען';
 
 // Privacy API - usage telemetry.
-$string['privacy:metadata:annoto_telemetry'] = 'כדי לסייע ל-Annoto להבין ולתמוך בהתקנות התוסף, מידע לא-אישי על האתר (כתובת, שם, גרסאות, אזור, מספרים מצטברים, תצורת התוסף ושימוש בהשלמת פעילות) נשלח ל-Annoto באמצעות Google Analytics. שום מידע אישי על מנהלי המערכת, לומדים או תלמידים אינו נשלח.';
+$string['privacy:metadata:annoto_telemetry'] = 'כדי לסייע ל-Annoto להבין ולתמוך בהתקנות התוסף, מידע לא-אישי על האתר (כתובת, שם, מזהה אתר אנונימי, סביבה, מדינה, גרסאות, סביבת השרת, תוספי מדיה מותקנים, מספרים מצטברים של קורסים, פעילויות, משתמשים פעילים והשלמות עם Annoto, תצורת התוסף וקודי שגיאה קצרים) נשלח ל-Annoto באמצעות Google Analytics. שום מידע אישי על מנהלי המערכת, לומדים או תלמידים אינו נשלח.';
 $string['privacy:metadata:annoto_telemetry:siteurl'] = 'כתובת האתר ושמו נשלחים כדי לזהות את ההתקנה.';

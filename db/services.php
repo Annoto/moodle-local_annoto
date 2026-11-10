@@ -51,4 +51,12 @@ $functions = [
         'ajax' => true,
         'services' => [MOODLE_OFFICIAL_MOBILE_SERVICE],
     ],
+    'local_annoto_widget_loaded' => [
+        'classname' => 'local_annoto_external',
+        'methodname' => 'widget_loaded',
+        'classpath' => 'local/annoto/externallib.php',
+        'description' => 'Record that the Annoto widget was loaded on a video (usage telemetry)',
+        'type' => 'write',
+        'ajax' => true,
+    ],
 ];

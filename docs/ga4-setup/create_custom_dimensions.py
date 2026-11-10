@@ -26,7 +26,7 @@
 import argparse
 
 from google.analytics.admin_v1alpha import AnalyticsAdminServiceClient
-from google.analytics.admin_v1alpha.types import CustomDimension, DataRetentionSettings
+from google.analytics.admin_v1alpha.types import CustomDimension, CustomMetric, DataRetentionSettings
 from google.protobuf.field_mask_pb2 import FieldMask
 
 # Event-scoped params we send on each annoto_install / annoto_heartbeat event.
@@ -56,7 +56,26 @@ EVENT_DIMENSIONS = [
     "moodlejs_custom",
     # Activity completion.
     "activity_completion",
-    "activity_completion_active",  # numeric — could also be a custom metric.
+    "activity_completion_active",  # numeric — also sent as the n_activities_completion_cfg metric.
+    # Environment (annoto_environment event).
+    "php_version",
+    "db_type",
+    "theme",
+    "video_plugins",
+    # Errors (annoto_error event).
+    "error_code",
+    "error_area",
+]
+
+# Usage counts, registered as custom *metrics* so reports can sum them. A parameter
+# cannot be both a dimension and a metric, which is why these have their own names.
+EVENT_METRICS = [
+    "n_courses_with_annoto",
+    "n_activities_with_annoto",
+    "n_activities_completion_cfg",
+    "n_learners_active_7d",
+    "n_completions_7d",
+    "error_count",
 ]
 
 # User-scoped user_properties we also send. Display names must be unique across
@@ -65,6 +84,11 @@ USER_DIMENSIONS = [
     ("region", "Region (user)"),
     ("plugin_release", "Plugin release (user)"),
     ("moodle_release", "Moodle release (user)"),
+    # Site identity: user properties because the heartbeat has no room left for them
+    # (GA4 allows 25 parameters per event).
+    ("site_id", "Site ID (user)"),
+    ("site_env", "Site environment (user)"),
+    ("country_code", "Country code (user)"),
 ]
 
 
@@ -96,6 +120,22 @@ def create(client, property_path, param, display, scope, have):
     print(f"  created: {param} [{scope.name}]  ->  \"{display}\"")
 
 
+def create_metric(client, property_path, param, have_metrics):
+    if param in have_metrics:
+        print(f"  skip (exists): {param} [metric]")
+        return
+    client.create_custom_metric(
+        parent=property_path,
+        custom_metric=CustomMetric(
+            parameter_name=param,
+            display_name=pretty(param),
+            measurement_unit=CustomMetric.MeasurementUnit.STANDARD,
+            scope=CustomMetric.MetricScope.EVENT,
+        ),
+    )
+    print(f"  created: {param} [metric]")
+
+
 def main():
     ap = argparse.ArgumentParser(description="Set up GA4 custom dimensions for Annoto telemetry.")
     ap.add_argument("--property", required=True, help="GA4 numeric property ID, e.g. 123456789")
@@ -113,6 +153,11 @@ def main():
     print("User-scoped dimensions:")
     for param, display in USER_DIMENSIONS:
         create(client, prop, param, display, CustomDimension.DimensionScope.USER, have)
+
+    print("Event-scoped metrics:")
+    have_metrics = {m.parameter_name for m in client.list_custom_metrics(parent=prop)}
+    for param in EVENT_METRICS:
+        create_metric(client, prop, param, have_metrics)
 
     if not args.skip_retention:
         print("Data retention:")
@@ -133,9 +178,6 @@ if __name__ == "__main__":
 
 # ---------------------------------------------------------------------------
 # Note on user_count / course_count:
-#   These are numbers. Registered as *dimensions* (above) GA4 treats them as text
-#   labels — fine for filtering/segmenting ("show installs with > 1000 users"),
-#   but you cannot SUM/AVG them in reports. If you'd rather aggregate them, create
-#   them as custom *metrics* instead (client.create_custom_metric with
-#   MeasurementUnit.STANDARD and MetricScope.EVENT). You can have both.
+#   These are numbers registered as *dimensions* (text labels), kept that way for
+#   the existing reports. The n_* usage counts are the summable ones (EVENT_METRICS).
 # ---------------------------------------------------------------------------

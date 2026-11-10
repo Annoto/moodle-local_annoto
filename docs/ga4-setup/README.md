@@ -53,6 +53,20 @@ Idempotent — safe to re-run. The numeric property ID is in
 | Region (user) | User | `region` |
 | Plugin release (user) | User | `plugin_release` |
 | Moodle release (user) | User | `moodle_release` |
+| Php Version | Event | `php_version` |
+| Db Type | Event | `db_type` |
+| Theme | Event | `theme` |
+| Video Plugins | Event | `video_plugins` |
+| Error Code | Event | `error_code` |
+| Error Area | Event | `error_area` |
+| Site ID (user) | User | `site_id` |
+| Site environment (user) | User | `site_env` |
+| Country code (user) | User | `country_code` |
+
+Then **Admin → Custom definitions → Custom metrics → Create custom metric**
+(scope Event, unit Standard) for `n_courses_with_annoto`,
+`n_activities_with_annoto`, `n_activities_completion_cfg`,
+`n_learners_active_7d`, `n_completions_7d` and `error_count`.
 
 Then **Admin → Data retention → Event data retention → 14 months → Save**
 (default is 2 months).
@@ -61,11 +75,40 @@ Then **Admin → Data retention → Event data retention → 14 months → Save*
 > earlier pass: the plugin no longer sends those (it sends **no** personal data),
 > so they will simply stay empty. You can safely delete them.
 
+## Events
+
+| Event | When | Parameters |
+|---|---|---|
+| `annoto_install` | first send | as the heartbeat |
+| `annoto_heartbeat` | weekly | the 20 dimensions above + the five `n_*` metrics (25, GA4's limit) |
+| `annoto_environment` | after each heartbeat | `site_id`, `site_url`, `php_version`, `db_type`, `theme`, `video_plugins` |
+| `annoto_config_change` | an admin save changes a reported flag | `site_id`, `site_url`, `site_env` and the on/off flags |
+| `annoto_uninstall` | plugin removed (best effort) | `site_id`, `site_url`, `plugin_release` |
+| `annoto_error` | daily, for failures queued since the last send | `site_id`, `error_area`, `error_code`, `error_count` |
+
+Every event also carries the user properties `region` (deprecated: it holds the
+deployment domain, not a geography), `plugin_release`, `moodle_release`,
+`site_id`, `site_env` and `country_code`.
+
+`n_courses_with_annoto` / `n_activities_with_annoto` count pages where the
+`moodle-local-js` bundle found a video and loaded the widget (it reports this
+through the `local_annoto_widget_loaded` web service, from bundle 1.4.0).
+`n_learners_active_7d` counts distinct users with a logged widget load in the last
+7 days and is left out when the standard log store is disabled.
+`n_completions_7d` counts Moodle completions in the last 7 days on activities with
+Annoto automatic completion.
+
 ## 3. Verify data is flowing
 After setting real credentials and installing/upgrading the plugin on a test
 Moodle, run its telemetry task and watch GA4 **Realtime** or **DebugView**:
 ```bash
 php admin/cli/scheduled_task.php --execute='\local_annoto\task\telemetry'
+```
+To see one event without waiting for the weekly schedule, use the plugin's CLI:
+```bash
+php local/annoto/cli/telemetry.php --event=annoto_heartbeat --validate   # GA4 validation only
+php admin/cli/cfg.php --component=local_annoto --name=telemetry_debugmode --set=1
+php local/annoto/cli/telemetry.php --event=annoto_heartbeat --send       # shows in DebugView
 ```
 Custom dimensions only start populating reports for data received **after** they
 are created (they are not retroactive), so create them before you care about the

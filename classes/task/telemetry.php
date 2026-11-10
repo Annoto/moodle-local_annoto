@@ -59,6 +59,7 @@ class telemetry extends \core\task\scheduled_task {
         }
         mtrace('AnnotoTelemetryTask: checking whether a heartbeat is due.');
         \local_annoto\telemetry::maybe_send_heartbeat();
+        \local_annoto\telemetry::send_pending_errors();
         mtrace('AnnotoTelemetryTask: done.');
     }
 }
