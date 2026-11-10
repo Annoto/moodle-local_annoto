@@ -157,6 +157,22 @@ if ($hassiteconfig) {
         1
     ));
 
+    // Which copy of the institution's Moodle this is, reported with the telemetry so staging and
+    // test copies are not counted as separate institutions. Defaults to a guess from the host name.
+    $settings->add(new admin_setting_configselect(
+        'local_annoto/siteenv',
+        get_string('siteenv', 'local_annoto'),
+        get_string('siteenv_desc', 'local_annoto'),
+        \local_annoto\telemetry::guess_site_env($CFG->wwwroot),
+        [
+            'production' => get_string('siteenv_production', 'local_annoto'),
+            'staging' => get_string('siteenv_staging', 'local_annoto'),
+            'test' => get_string('siteenv_test', 'local_annoto'),
+            'dev' => get_string('siteenv_dev', 'local_annoto'),
+        ]
+    ));
+    $settings->hide_if('local_annoto/siteenv', 'local_annoto/telemetryenabled', 'notchecked');
+
     // Enable/disable debug logging.
     $settings->add(new admin_setting_configcheckbox(
         'local_annoto/debuglogging',
@@ -222,4 +238,13 @@ if ($hassiteconfig) {
             1 => get_string('yes'),
         ]
     ));
+
+    // A save that changes a flag reported by the telemetry sends annoto_config_change.
+    $telemetryflagsettings = ['clientid', 'ssosecret', 'scripturl', 'moodlejsurl', 'addingdashboard', 'locale',
+        'mediasettingsoverride', 'debuglogging', 'activitycompletion', 'siteenv'];
+    foreach ($telemetryflagsettings as $settingname) {
+        if (isset($settings->settings->{$settingname})) {
+            $settings->settings->{$settingname}->set_updatedcallback('\local_annoto\telemetry::schedule_config_change_check');
+        }
+    }
 }

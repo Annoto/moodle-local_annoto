@@ -232,7 +232,12 @@ function local_annoto_get_user_token($settings, $courseid) {
         "exp" => $expire, // JWT token expiration time.
         "scope" => local_annoto_get_user_scope($settings, $courseid),
     ];
-    $enctoken = \Firebase\JWT\JWT::encode($payload, $settings->ssosecret, 'HS256');
+    try {
+        $enctoken = \Firebase\JWT\JWT::encode($payload, $settings->ssosecret, 'HS256');
+    } catch (\Throwable $e) {
+        \local_annoto\telemetry::record_error('sso', 'token_encode_failed');
+        throw $e;
+    }
 
     return $enctoken;
 }
@@ -630,7 +635,14 @@ function local_annoto_create_lti_course_module($ltitool) {
     $newdashboard->timecreated = time();
     $newdashboard->timemodified = time();
 
-    if (!create_module($newdashboard)) {
+    try {
+        $created = create_module($newdashboard);
+    } catch (\Throwable $e) {
+        \local_annoto\telemetry::record_error('dashboard', 'lti_create_failed');
+        throw $e;
+    }
+    if (!$created) {
+        \local_annoto\telemetry::record_error('dashboard', 'lti_create_failed');
         return null;
     }
 

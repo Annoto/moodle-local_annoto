@@ -84,7 +84,12 @@ class local_annoto_external extends external_api {
         $context = context_course::instance($courseid);
         self::validate_context(context_course::instance($courseid));
 
-        [$result, $response] = !is_guest($context) ? [true, local_annoto_get_jsparam($courseid, $modid)] : [false, null];
+        try {
+            [$result, $response] = !is_guest($context) ? [true, local_annoto_get_jsparam($courseid, $modid)] : [false, null];
+        } catch (\Throwable $e) {
+            \local_annoto\telemetry::record_error('client', 'jsparams_failed');
+            throw $e;
+        }
 
         return ['result' => $result, 'params' => json_encode($response, JSON_HEX_TAG)];
     }
@@ -175,8 +180,13 @@ class local_annoto_external extends external_api {
                         $message = 'Set completion for user ' . $userid . ' cmid ' . $cmid;
                     }
                     $status = true;
+                } else {
+                    // The bundle reported progress on an activity without Annoto completion.
+                    \local_annoto\telemetry::record_error('completion', 'not_configured');
                 }
             }
+        } else {
+            \local_annoto\telemetry::record_error('completion', 'invalid_data');
         }
 
         log::debug('set_completion - ' . $message . ($status ? ' data ' . json_encode($cleandata) : ''));

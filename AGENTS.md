@@ -44,7 +44,7 @@ Moodle-defined entry points stay where Moodle looks for them (`lib.php` callback
 - Admin setting names under `local_annoto/*` in `settings.php` — stored in sites' config; a rename needs an upgrade step.
 - The database schema in `db/install.xml` (`local_annoto_completion`, `local_annoto_completiondata`) — changed only together with a `db/upgrade.php` step and a version bump.
 - `version.php`: `$plugin->component`, `requires` and `supported` — what the Moodle Plugins directory and site upgrades read.
-- The GA4 telemetry event names and parameters sent by `classes/telemetry.php` — registered as custom dimensions in Annoto's GA4 property.
+- The GA4 telemetry event names, parameters and user properties sent by `classes/telemetry.php` — registered as custom dimensions and metrics in Annoto's GA4 property (listed in [docs/ga4-setup/README.md](docs/ga4-setup/README.md)). GA4 accepts at most 25 parameters per event and the heartbeat is close to it: check the count (`tests/telemetry_test.php`) before adding one, and put a new value in another event or a user property when it does not fit.
 
 Changing any of them is a behavior change, never a refactor. Before changing a shared module, grep its consumers across the repo; a signature change enumerates every call site.
 
