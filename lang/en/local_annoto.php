@@ -119,7 +119,13 @@ $string['privacy:metadata:annoto:email'] = 'Your e-mail name is sent to the remo
 $string['telemetryenabled'] = 'Share usage analytics with Annoto';
 $string['telemetryenabled_desc'] = 'Send installation and usage telemetry to Annoto. Uncheck to opt out.';
 $string['telemetrytask'] = 'Annoto usage telemetry task';
+$string['siteenv'] = 'Site environment';
+$string['siteenv_desc'] = 'Which copy of your Moodle this is, sent with the usage analytics so that staging and test copies are not counted as separate installations. Pre-filled with a guess from the site address.';
+$string['siteenv_production'] = 'Production';
+$string['siteenv_staging'] = 'Staging';
+$string['siteenv_test'] = 'Test';
+$string['siteenv_dev'] = 'Development';
 
 // Privacy API - usage telemetry.
-$string['privacy:metadata:annoto_telemetry'] = 'To help Annoto understand and support plugin installations, non-personal information about the site (URL, name, versions, region, aggregate counts, plugin configuration and activity-completion usage) is sent to Annoto via Google Analytics. No personal data about administrators, learners or students is sent.';
+$string['privacy:metadata:annoto_telemetry'] = 'To help Annoto understand and support plugin installations, non-personal information about the site (URL, name, an anonymous site identifier, environment, country, versions, server environment, installed media plugins, aggregate counts of users, courses and Annoto activity completion, plugin configuration, and short error codes) is sent to Annoto via Google Analytics. No personal data about administrators, learners or students is sent.';
 $string['privacy:metadata:annoto_telemetry:siteurl'] = 'The site URL and name are sent to identify the installation.';
