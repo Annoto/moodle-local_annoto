@@ -123,8 +123,7 @@ $string['siteenv_production'] = 'ייצור';
 $string['siteenv_staging'] = 'Staging';
 $string['siteenv_test'] = 'בדיקה';
 $string['siteenv_dev'] = 'פיתוח';
-$string['eventwidgetloaded'] = 'יישומון Annoto נטען';
 
 // Privacy API - usage telemetry.
-$string['privacy:metadata:annoto_telemetry'] = 'כדי לסייע ל-Annoto להבין ולתמוך בהתקנות התוסף, מידע לא-אישי על האתר (כתובת, שם, מזהה אתר אנונימי, סביבה, מדינה, גרסאות, סביבת השרת, תוספי מדיה מותקנים, מספרים מצטברים של קורסים, פעילויות, משתמשים פעילים והשלמות עם Annoto, תצורת התוסף וקודי שגיאה קצרים) נשלח ל-Annoto באמצעות Google Analytics. שום מידע אישי על מנהלי המערכת, לומדים או תלמידים אינו נשלח.';
+$string['privacy:metadata:annoto_telemetry'] = 'כדי לסייע ל-Annoto להבין ולתמוך בהתקנות התוסף, מידע לא-אישי על האתר (כתובת, שם, מזהה אתר אנונימי, סביבה, מדינה, גרסאות, סביבת השרת, תוספי מדיה מותקנים, מספרים מצטברים של משתמשים, קורסים והשלמת פעילויות Annoto, תצורת התוסף וקודי שגיאה קצרים) נשלח ל-Annoto באמצעות Google Analytics. שום מידע אישי על מנהלי המערכת, לומדים או תלמידים אינו נשלח.';
 $string['privacy:metadata:annoto_telemetry:siteurl'] = 'כתובת האתר ושמו נשלחים כדי לזהות את ההתקנה.';

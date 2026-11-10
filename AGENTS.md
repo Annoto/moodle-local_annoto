@@ -38,13 +38,13 @@ Moodle-defined entry points stay where Moodle looks for them (`lib.php` callback
 
 ## Public contracts
 
-- External functions in `db/services.php`: `get_jsparams` and `local_annoto_set_completion` — AJAX-enabled and exposed to the Moodle mobile service — and `local_annoto_widget_loaded` (AJAX only, called by the bundle once it loaded the widget on a video); their parameters and return structures are an API.
+- External functions in `db/services.php`: `get_jsparams` and `local_annoto_set_completion` — AJAX-enabled and exposed to the Moodle mobile service; their parameters and return structures are an API.
 - `window.moodleAnnoto` and the `get_jsparams` result stored on `window.moodleAnnoto.params` (`clientId`, `userToken`, `mediaGroupId`/`Title`/`Description`, `mediaTitle`/`Description`, `locale`, `loginUrl`, `bootstrapUrl`, `deploymentDomain`, `annotoMoodleCdnUrl`, …) and `window.moodleAnnoto.kV7App.playersMap` — read by the `moodle-local-js` bundle, which must keep working against every installed plugin version.
 - The SSO JWT built by `local_annoto_get_user_token()` (HS256 signed with `ssosecret`, `iss` = the raw clientId) — verified by Annoto's auth backend.
 - Admin setting names under `local_annoto/*` in `settings.php` — stored in sites' config; a rename needs an upgrade step.
 - The database schema in `db/install.xml` (`local_annoto_completion`, `local_annoto_completiondata`) — changed only together with a `db/upgrade.php` step and a version bump.
 - `version.php`: `$plugin->component`, `requires` and `supported` — what the Moodle Plugins directory and site upgrades read.
-- The GA4 telemetry event names, parameters and user properties sent by `classes/telemetry.php` — registered as custom dimensions and metrics in Annoto's GA4 property (listed in [docs/ga4-setup/README.md](docs/ga4-setup/README.md)). The heartbeat is at GA4's limit of 25 parameters per event: a new value goes in another event or a user property.
+- The GA4 telemetry event names, parameters and user properties sent by `classes/telemetry.php` — registered as custom dimensions and metrics in Annoto's GA4 property (listed in [docs/ga4-setup/README.md](docs/ga4-setup/README.md)). GA4 accepts at most 25 parameters per event and the heartbeat is close to it: check the count (`tests/telemetry_test.php`) before adding one, and put a new value in another event or a user property when it does not fit.
 
 Changing any of them is a behavior change, never a refactor. Before changing a shared module, grep its consumers across the repo; a signature change enumerates every call site.
 

@@ -64,9 +64,8 @@ Idempotent — safe to re-run. The numeric property ID is in
 | Country code (user) | User | `country_code` |
 
 Then **Admin → Custom definitions → Custom metrics → Create custom metric**
-(scope Event, unit Standard) for `n_courses_with_annoto`,
-`n_activities_with_annoto`, `n_activities_completion_cfg`,
-`n_learners_active_7d`, `n_completions_7d` and `error_count`.
+(scope Event, unit Standard) for `n_activities_completion_cfg`,
+`n_completions_7d` and `error_count`.
 
 Then **Admin → Data retention → Event data retention → 14 months → Save**
 (default is 2 months).
@@ -80,7 +79,7 @@ Then **Admin → Data retention → Event data retention → 14 months → Save*
 | Event | When | Parameters |
 |---|---|---|
 | `annoto_install` | first send | as the heartbeat |
-| `annoto_heartbeat` | weekly | the 20 dimensions above + the five `n_*` metrics (25, GA4's limit) |
+| `annoto_heartbeat` | weekly | the 20 dimensions above, the `n_*` metrics, `engagement_time_msec`, `session_id` |
 | `annoto_environment` | after each heartbeat | `site_id`, `site_url`, `php_version`, `db_type`, `theme`, `video_plugins` |
 | `annoto_config_change` | an admin save changes a reported flag | `site_id`, `site_url`, `site_env` and the on/off flags |
 | `annoto_uninstall` | plugin removed (best effort) | `site_id`, `site_url`, `plugin_release` |
@@ -90,13 +89,10 @@ Every event also carries the user properties `region` (deprecated: it holds the
 deployment domain, not a geography), `plugin_release`, `moodle_release`,
 `site_id`, `site_env` and `country_code`.
 
-`n_courses_with_annoto` / `n_activities_with_annoto` count pages where the
-`moodle-local-js` bundle found a video and loaded the widget (it reports this
-through the `local_annoto_widget_loaded` web service, from bundle 1.4.0).
-`n_learners_active_7d` counts distinct users with a logged widget load in the last
-7 days and is left out when the standard log store is disabled.
+`n_activities_completion_cfg` counts activities with Annoto automatic completion
+configured (the same value as `activity_completion_active`, as a metric).
 `n_completions_7d` counts Moodle completions in the last 7 days on activities with
-Annoto automatic completion.
+Annoto automatic completion. Widget usage is not sent: Annoto already has it.
 
 ## 3. Verify data is flowing
 After setting real credentials and installing/upgrading the plugin on a test

@@ -70,10 +70,7 @@ EVENT_DIMENSIONS = [
 # Usage counts, registered as custom *metrics* so reports can sum them. A parameter
 # cannot be both a dimension and a metric, which is why these have their own names.
 EVENT_METRICS = [
-    "n_courses_with_annoto",
-    "n_activities_with_annoto",
     "n_activities_completion_cfg",
-    "n_learners_active_7d",
     "n_completions_7d",
     "error_count",
 ]

@@ -25,7 +25,7 @@
 namespace local_annoto;
 
 /**
- * Tests for \local_annoto\telemetry and the local_annoto_widget_loaded web service.
+ * Tests for \local_annoto\telemetry.
  *
  * @package    local_annoto
  * @copyright  Annoto Ltd.
@@ -35,31 +35,12 @@ namespace local_annoto;
 final class telemetry_test extends \advanced_testcase {
 
     /**
-     * Load the external functions under test.
-     */
-    public static function setUpBeforeClass(): void {
-        global $CFG;
-        parent::setUpBeforeClass();
-        require_once($CFG->dirroot . '/local/annoto/externallib.php');
-    }
-
-    /**
      * Turn telemetry on, the way an admin saving the settings does.
      */
     protected function setUp(): void {
         parent::setUp();
         $this->resetAfterTest();
         set_config('telemetryenabled', 1, 'local_annoto');
-    }
-
-    /**
-     * Use the standard log store, unbuffered, so widget_loaded events land in the log table.
-     */
-    protected function enable_standard_log(): void {
-        $this->preventResetByRollback();
-        set_config('enabled_stores', 'logstore_standard', 'tool_log');
-        set_config('buffersize', 0, 'logstore_standard');
-        get_log_manager(true);
     }
 
     /**
@@ -94,15 +75,17 @@ final class telemetry_test extends \advanced_testcase {
     }
 
     /**
-     * The heartbeat carries every existing and new usage parameter within GA4's 25.
+     * The heartbeat carries every existing parameter, the usage counts and the session
+     * parameters, within GA4's limit even with DebugView's debug_mode added.
      */
     public function test_heartbeat_params_fit_ga4_limit(): void {
-        $this->enable_standard_log();
+        set_config('telemetry_debugmode', 1, 'local_annoto');
         $params = telemetry::build_params('annoto_heartbeat');
 
         $this->assertLessThanOrEqual(telemetry::MAX_EVENT_PARAMS, count($params));
-        foreach (['n_courses_with_annoto', 'n_activities_with_annoto', 'n_activities_completion_cfg',
-                'n_learners_active_7d', 'n_completions_7d'] as $name) {
+        $this->assertSame(1, $params['engagement_time_msec']);
+        $this->assertSame(telemetry::get_client_id(), $params['session_id']);
+        foreach (['n_activities_completion_cfg', 'n_completions_7d'] as $name) {
             $this->assertArrayHasKey($name, $params);
             $this->assertIsInt($params[$name]);
         }
@@ -130,53 +113,6 @@ final class telemetry_test extends \advanced_testcase {
             $this->assertArrayHasKey($name, $props);
             $this->assertLessThanOrEqual(telemetry::MAX_USERPROP_LEN, \core_text::strlen($props[$name]['value']));
         }
-    }
-
-    /**
-     * Courses and activities count only where the widget was loaded: a course with Annoto on
-     * counts, one with it off does not.
-     */
-    public function test_courses_and_activities_with_annoto(): void {
-        $gen = $this->getDataGenerator();
-        $courseon = $gen->create_course();
-        $courseoff = $gen->create_course();
-        $pageon = $gen->create_module('page', ['course' => $courseon->id]);
-        $pageon2 = $gen->create_module('page', ['course' => $courseon->id]);
-        $gen->create_module('page', ['course' => $courseoff->id]);
-
-        $usage = telemetry::collect_usage();
-        $this->assertSame(0, $usage['n_courses_with_annoto']);
-        $this->assertSame(0, $usage['n_activities_with_annoto']);
-
-        $user = $gen->create_and_enrol($courseon, 'student');
-        $this->setUser($user);
-        telemetry::record_widget_load($courseon->id, $pageon->cmid, \context_module::instance($pageon->cmid));
-        telemetry::record_widget_load($courseon->id, $pageon2->cmid, \context_module::instance($pageon2->cmid));
-        // The course page itself counts for the course, not as an activity.
-        telemetry::record_widget_load($courseon->id, 0, \context_course::instance($courseon->id));
-        // A second load of the same page adds nothing.
-        telemetry::record_widget_load($courseon->id, $pageon->cmid, \context_module::instance($pageon->cmid));
-
-        $usage = telemetry::collect_usage();
-        $this->assertSame(1, $usage['n_courses_with_annoto']);
-        $this->assertSame(2, $usage['n_activities_with_annoto']);
-
-        // A deleted activity stops counting.
-        course_delete_module($pageon2->cmid);
-        $usage = telemetry::collect_usage();
-        $this->assertSame(1, $usage['n_activities_with_annoto']);
-    }
-
-    /**
-     * Nothing is recorded while telemetry is turned off.
-     */
-    public function test_widget_load_not_recorded_when_opted_out(): void {
-        global $DB;
-        set_config('telemetryenabled', 0, 'local_annoto');
-        $course = $this->getDataGenerator()->create_course();
-
-        $this->assertFalse(telemetry::record_widget_load($course->id, 0, \context_course::instance($course->id)));
-        $this->assertSame(0, $DB->count_records('local_annoto_widgetload'));
     }
 
     /**
@@ -223,43 +159,6 @@ final class telemetry_test extends \advanced_testcase {
         $add($off->cmid, $u1->id, COMPLETION_COMPLETE, time());                // Not Annoto completion.
 
         $this->assertSame(1, telemetry::collect_usage()['n_completions_7d']);
-    }
-
-    /**
-     * n_learners_active_7d counts distinct users who loaded the widget in the last 7 days.
-     */
-    public function test_learners_active_7d(): void {
-        global $DB, $SESSION;
-        $this->enable_standard_log();
-        $gen = $this->getDataGenerator();
-        $course = $gen->create_course();
-        $page = $gen->create_module('page', ['course' => $course->id]);
-        $context = \context_module::instance($page->cmid);
-
-        foreach (['recent1', 'recent2', 'old'] as $name) {
-            $user = $gen->create_and_enrol($course, 'student', ['username' => $name]);
-            $this->setUser($user);
-            $SESSION->local_annoto_widgetloads = [];
-            telemetry::record_widget_load($course->id, $page->cmid, $context);
-            // The same user again is still one user.
-            $SESSION->local_annoto_widgetloads = [];
-            telemetry::record_widget_load($course->id, $page->cmid, $context);
-        }
-        $old = $DB->get_record('user', ['username' => 'old']);
-        $DB->set_field('logstore_standard_log', 'timecreated', time() - 8 * DAYSECS, ['userid' => $old->id]);
-
-        $this->assertSame(2, telemetry::collect_usage()['n_learners_active_7d']);
-    }
-
-    /**
-     * Without the standard log store the learner count is left out rather than sent as 0.
-     */
-    public function test_learners_active_7d_omitted_without_log_store(): void {
-        set_config('enabled_stores', '', 'tool_log');
-        get_log_manager(true);
-        $usage = telemetry::collect_usage();
-        $this->assertArrayNotHasKey('n_learners_active_7d', $usage);
-        $this->assertArrayHasKey('engagement_time_msec', telemetry::build_params('annoto_heartbeat'));
     }
 
     /**
@@ -358,27 +257,4 @@ final class telemetry_test extends \advanced_testcase {
         $this->assertLessThanOrEqual(telemetry::MAX_PARAM_LEN, strlen($env['video_plugins']));
     }
 
-    /**
-     * The web service records a load for an enrolled user and rejects an activity of another course.
-     *
-     * @covers \local_annoto_external::widget_loaded
-     */
-    public function test_widget_loaded_external(): void {
-        global $DB;
-        $gen = $this->getDataGenerator();
-        $course = $gen->create_course();
-        $other = $gen->create_course();
-        $page = $gen->create_module('page', ['course' => $course->id]);
-        $otherpage = $gen->create_module('page', ['course' => $other->id]);
-        $this->setUser($gen->create_and_enrol($course, 'student'));
-
-        $result = \local_annoto_external::widget_loaded($course->id, $page->cmid);
-        $result = \external_api::clean_returnvalue(\local_annoto_external::widget_loaded_returns(), $result);
-        $this->assertTrue($result['status']);
-        $this->assertTrue($DB->record_exists('local_annoto_widgetload',
-            ['courseid' => $course->id, 'cmid' => $page->cmid]));
-
-        $this->expectException(\moodle_exception::class);
-        \local_annoto_external::widget_loaded($course->id, $otherpage->cmid);
-    }
 }

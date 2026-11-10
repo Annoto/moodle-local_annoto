@@ -51,24 +51,11 @@ class observer {
      * @return void
      */
     public static function course_module_deleted(\core\event\course_module_deleted $event) {
-        global $DB;
         if ($records = annoto_completion::get_records(['cmid' => $event->objectid])) {
             foreach ($records as $record) {
                 $record->delete();
             }
         }
-        $DB->delete_records('local_annoto_widgetload', ['cmid' => $event->objectid]);
-    }
-
-    /**
-     * Observer for \core\event\course_deleted event: forget where the widget was loaded.
-     *
-     * @param \core\event\course_deleted $event
-     * @return void
-     */
-    public static function course_deleted(\core\event\course_deleted $event) {
-        global $DB;
-        $DB->delete_records('local_annoto_widgetload', ['courseid' => $event->objectid]);
     }
 
     /**

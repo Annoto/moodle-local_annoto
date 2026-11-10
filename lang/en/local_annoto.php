@@ -125,8 +125,7 @@ $string['siteenv_production'] = 'Production';
 $string['siteenv_staging'] = 'Staging';
 $string['siteenv_test'] = 'Test';
 $string['siteenv_dev'] = 'Development';
-$string['eventwidgetloaded'] = 'Annoto widget loaded';
 
 // Privacy API - usage telemetry.
-$string['privacy:metadata:annoto_telemetry'] = 'To help Annoto understand and support plugin installations, non-personal information about the site (URL, name, an anonymous site identifier, environment, country, versions, server environment, installed media plugins, aggregate counts of courses, activities, active users and completions with Annoto, plugin configuration, and short error codes) is sent to Annoto via Google Analytics. No personal data about administrators, learners or students is sent.';
+$string['privacy:metadata:annoto_telemetry'] = 'To help Annoto understand and support plugin installations, non-personal information about the site (URL, name, an anonymous site identifier, environment, country, versions, server environment, installed media plugins, aggregate counts of users, courses and Annoto activity completion, plugin configuration, and short error codes) is sent to Annoto via Google Analytics. No personal data about administrators, learners or students is sent.';
 $string['privacy:metadata:annoto_telemetry:siteurl'] = 'The site URL and name are sent to identify the installation.';

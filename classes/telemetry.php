@@ -26,9 +26,10 @@
  * or student personal data. All sending is best-effort and never interrupts Moodle.
  *
  * Events and their parameters:
- *  - annoto_install / annoto_heartbeat: collect() + collect_usage(). GA4 accepts at
- *    most 25 parameters per event, and these two are at exactly 25, so the site
- *    identity (site_id, site_env, country_code) travels as user properties instead.
+ *  - annoto_install / annoto_heartbeat: collect() + collect_usage(), plus
+ *    engagement_time_msec and session_id. GA4 accepts at most 25 parameters per
+ *    event and these carry 24, so the site identity (site_id, site_env,
+ *    country_code) travels as user properties instead.
  *  - annoto_environment: collect_environment(), sent right after each heartbeat.
  *  - annoto_config_change: config_flags(), when an admin save changes one of them.
  *  - annoto_uninstall: from db/uninstall.php.
@@ -82,7 +83,7 @@ class telemetry {
     /** @var int Minimum number of seconds between heartbeats. */
     const HEARTBEAT_INTERVAL = WEEKSECS;
 
-    /** @var int Window of the *_7d usage counts, in seconds. */
+    /** @var int Window of n_completions_7d, in seconds. */
     const USAGE_WINDOW = WEEKSECS;
 
     /** @var int GA4 event parameter value length limit. */
@@ -116,12 +117,6 @@ class telemetry {
 
     /** @var int Most distinct error codes kept waiting for the next send. */
     const MAX_PENDING_ERRORS = 20;
-
-    /** @var int Seconds a widget-load row is left alone before its timemodified is refreshed. */
-    const WIDGET_LOAD_REFRESH = DAYSECS;
-
-    /** @var int Seconds before the same user's widget load on the same page is logged again. */
-    const WIDGET_LOAD_LOG_INTERVAL = 6 * HOURSECS;
 
     /**
      * @var array Media-related plugins reported in video_plugins: label => components, any of
@@ -390,58 +385,26 @@ class telemetry {
     /**
      * Usage counts sent with the heartbeat, registered in GA4 as custom metrics.
      *
-     * A course or activity "has Annoto" once the CDN bundle found a video on its page and
-     * loaded the widget there: the bundle then calls local_annoto_widget_loaded, which
-     * records the page in local_annoto_widgetload (see record_widget_load()). Bundles older
-     * than that call never report, so the two counts start at 0 and grow as pages are seen.
-     *
-     * n_learners_active_7d is left out when the standard log store is not enabled, since
-     * it is counted from the logged \local_annoto\event\widget_loaded events.
+     * Only what Moodle itself records: how much the widget is used is known on Annoto's side.
      *
      * @return array parameter name => int
      */
     public static function collect_usage(): array {
         global $DB;
-        $since = time() - self::USAGE_WINDOW;
-        $dbman = $DB->get_manager();
-
-        $courses = 0;
-        $activities = 0;
-        if ($dbman->table_exists('local_annoto_widgetload')) {
-            $courses = (int)$DB->count_records_sql(
-                "SELECT COUNT(DISTINCT w.courseid)
-                   FROM {local_annoto_widgetload} w
-                   JOIN {course} c ON c.id = w.courseid
-                  WHERE c.id > 1");
-            $activities = (int)$DB->count_records_sql(
-                "SELECT COUNT(1)
-                   FROM {local_annoto_widgetload} w
-                   JOIN {course_modules} cm ON cm.id = w.cmid
-                  WHERE w.cmid > 0 AND cm.deletioninprogress = 0");
-        }
-
         $completions = 0;
-        if ($dbman->table_exists('local_annoto_completion')) {
+        if ($DB->get_manager()->table_exists('local_annoto_completion')) {
             // Moodle completions in the window on activities with Annoto automatic completion.
             $completions = (int)$DB->count_records_sql(
                 "SELECT COUNT(1)
                    FROM {course_modules_completion} cmc
                    JOIN {local_annoto_completion} ac ON ac.cmid = cmc.coursemoduleid
                   WHERE ac.enabled = :enabled AND cmc.completionstate > 0 AND cmc.timemodified >= :since",
-                ['enabled' => self::COMPLETION_TRACKING_AUTOMATIC, 'since' => $since]);
+                ['enabled' => self::COMPLETION_TRACKING_AUTOMATIC, 'since' => time() - self::USAGE_WINDOW]);
         }
-
-        $usage = [
-            'n_courses_with_annoto'       => $courses,
-            'n_activities_with_annoto'    => $activities,
+        return [
             'n_activities_completion_cfg' => self::count_completion_configured(),
+            'n_completions_7d'            => $completions,
         ];
-        $learners = self::count_active_learners($since);
-        if ($learners !== null) {
-            $usage['n_learners_active_7d'] = $learners;
-        }
-        $usage['n_completions_7d'] = $completions;
-        return $usage;
     }
 
     /**
@@ -456,29 +419,6 @@ class telemetry {
         }
         return (int)$DB->count_records('local_annoto_completion',
             ['enabled' => self::COMPLETION_TRACKING_AUTOMATIC]);
-    }
-
-    /**
-     * Distinct users who loaded the widget since $since, from the standard log store.
-     *
-     * Guests never reach the widget (get_jsparams refuses them), so these are logged-in
-     * users; teachers who load the widget are counted too.
-     *
-     * @param int $since unix time
-     * @return int|null null when the standard log store is not enabled.
-     */
-    protected static function count_active_learners(int $since): ?int {
-        global $DB;
-        $stores = explode(',', (string)get_config('tool_log', 'enabled_stores'));
-        if (!in_array('logstore_standard', $stores, true)
-                || !$DB->get_manager()->table_exists('logstore_standard_log')) {
-            return null;
-        }
-        return (int)$DB->count_records_sql(
-            "SELECT COUNT(DISTINCT userid)
-               FROM {logstore_standard_log}
-              WHERE eventname = :eventname AND timecreated >= :since AND userid > 0",
-            ['eventname' => '\\local_annoto\\event\\widget_loaded', 'since' => $since]);
     }
 
     /**
@@ -549,7 +489,6 @@ class telemetry {
         switch ($eventname) {
             case 'annoto_install':
             case 'annoto_heartbeat':
-                // Exactly 25 parameters: no room for engagement_time_msec or session_id.
                 $params = self::collect() + self::collect_usage();
                 break;
             case 'annoto_environment':
@@ -571,13 +510,11 @@ class telemetry {
                 $params = ['site_id' => self::get_site_id()] + $extra;
                 break;
         }
-        if (count($params) < self::MAX_EVENT_PARAMS) {
-            // Lets GA4 count the site as an active user; only where it fits.
-            $params['engagement_time_msec'] = 1;
-        }
+        // As every event has always carried: lets GA4 count the site as an active user.
+        $params['engagement_time_msec'] = 1;
+        $params['session_id'] = self::get_client_id();
         if (get_config('local_annoto', 'telemetry_debugmode')) {
-            // Shows the event in GA4 DebugView. On the heartbeat this is a 26th parameter;
-            // use cli/telemetry.php --validate to see what GA4 makes of that.
+            // Shows the event in GA4 DebugView.
             $params['debug_mode'] = 1;
         }
         return $params;
@@ -586,7 +523,7 @@ class telemetry {
     /**
      * User properties sent with every event: the release dimensions the report already
      * uses, and the site identity (site_id, site_env, country_code), which has no room
-     * in the heartbeat's 25 event parameters.
+     * left among the heartbeat's event parameters.
      *
      * @return array GA4 user_properties structure
      */
@@ -863,54 +800,6 @@ class telemetry {
      */
     public static function send_uninstall(): bool {
         return self::send_event('annoto_uninstall');
-    }
-
-    /**
-     * Record that the CDN bundle found a video and loaded the widget on a page.
-     *
-     * Keeps one row per course page / activity, refreshed at most once a day, and logs a
-     * \local_annoto\event\widget_loaded event for the user at most once per
-     * WIDGET_LOAD_LOG_INTERVAL per page. Nothing is recorded when telemetry is off.
-     *
-     * @param int $courseid
-     * @param int $cmid 0 for the course page itself
-     * @param \context $context the module context, or the course context when $cmid is 0
-     * @return bool whether the load was recorded
-     */
-    public static function record_widget_load(int $courseid, int $cmid, \context $context): bool {
-        global $DB, $SESSION;
-        if (!self::is_enabled()) {
-            return false;
-        }
-        $now = time();
-        $row = $DB->get_record('local_annoto_widgetload', ['courseid' => $courseid, 'cmid' => $cmid]);
-        if (!$row) {
-            try {
-                $DB->insert_record('local_annoto_widgetload', (object)[
-                    'courseid' => $courseid,
-                    'cmid' => $cmid,
-                    'timecreated' => $now,
-                    'timemodified' => $now,
-                ]);
-            } catch (\dml_write_exception $e) {
-                // Another request inserted the same page first; the row is there either way.
-                debugging('local_annoto: widget load row already inserted', DEBUG_DEVELOPER);
-            }
-        } else if ($row->timemodified < $now - self::WIDGET_LOAD_REFRESH) {
-            $DB->set_field('local_annoto_widgetload', 'timemodified', $now, ['id' => $row->id]);
-        }
-
-        $key = $courseid . ':' . $cmid;
-        if (!isset($SESSION->local_annoto_widgetloads) || !is_array($SESSION->local_annoto_widgetloads)) {
-            $SESSION->local_annoto_widgetloads = [];
-        }
-        $lastlogged = $SESSION->local_annoto_widgetloads[$key] ?? 0;
-        if ($lastlogged < $now - self::WIDGET_LOAD_LOG_INTERVAL) {
-            $SESSION->local_annoto_widgetloads[$key] = $now;
-            // The activity is the event's context (contextinstanceid in the log).
-            event\widget_loaded::create(['context' => $context, 'courseid' => $courseid])->trigger();
-        }
-        return true;
     }
 
     /**
