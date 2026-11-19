@@ -123,6 +123,50 @@ if ($hassiteconfig) {
         $roles
     ));
 
+    /* Embed Annoto Media (editor button, LTI 1.3 Deep Linking). */
+    $settings->add(new admin_setting_heading(
+        'local_annoto/embedheading',
+        get_string('embedheading', 'local_annoto'),
+        get_string('embedheading_desc', 'local_annoto', (object) [
+            'authurl' => (new moodle_url('/local/annoto/lti/auth.php'))->out(false),
+            'returnurl' => (new moodle_url('/local/annoto/embed/return.php'))->out(false),
+        ])
+    ));
+
+    $embedtypes = [0 => get_string('embedltitype_auto', 'local_annoto')];
+    try {
+        global $DB;
+        foreach ($DB->get_records('lti_types', ['ltiversion' => '1.3.0'], 'name ASC', 'id, name, baseurl') as $ltitype) {
+            $embedtypes[$ltitype->id] = format_string($ltitype->name) . ' (' . s($ltitype->baseurl) . ')';
+        }
+    } catch (\Throwable $e) {
+        // The mod_lti tables are missing during a fresh install: keep the auto option only.
+        $embedtypes = [0 => get_string('embedltitype_auto', 'local_annoto')];
+    }
+    $settings->add(new admin_setting_configselect(
+        'local_annoto/embedltitype',
+        get_string('embedltitype', 'local_annoto'),
+        get_string('embedltitype_desc', 'local_annoto'),
+        0,
+        $embedtypes
+    ));
+
+    $settings->add(new admin_setting_configtext(
+        'local_annoto/embedwidth',
+        get_string('embedwidth', 'local_annoto'),
+        get_string('embedwidth_desc', 'local_annoto'),
+        \local_annoto\embed\helper::DEFAULT_WIDTH,
+        PARAM_INT
+    ));
+
+    $settings->add(new admin_setting_configtext(
+        'local_annoto/embedheight',
+        get_string('embedheight', 'local_annoto'),
+        get_string('embedheight_desc', 'local_annoto'),
+        \local_annoto\embed\helper::DEFAULT_HEIGHT,
+        PARAM_INT
+    ));
+
     /* Annoto settings */
     $settings->add(new admin_setting_heading(
         'local_annoto/appsetingsheading',

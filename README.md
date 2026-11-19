@@ -21,6 +21,33 @@ On Moodle 4.4 and later the plugin uses the core Hooks API
 back to the legacy `lib.php` callbacks. Both paths are kept so a single release
 supports the full 3.11–5.2 range.
 
+## Embed Annoto Media (editor button)
+
+Since 5.7.0 the plugin also provides the LTI 1.3 plumbing for the "Embed Annoto Media" button in
+TinyMCE (`tiny_annoto`) and Atto (`atto_annoto`), rendered by `filter_annoto`. Design:
+[docs/design/editor-embed.md](docs/design/editor-embed.md).
+
+Admin setup:
+
+1. Install `local_annoto` 5.7.0+, `filter_annoto`, and `tiny_annoto` (Moodle 4.1+) and/or `atto_annoto`.
+2. Register the Annoto **media embed** LTI 1.3 tool (separate from the dashboard and assignment tools):
+   *Site administration > Plugins > Activity modules > External tool > Manage tools*, paste
+   `{APP_ENDPOINT}/lti/register_embed` (the EU or US Annoto endpoint of your Annoto host) in *Tool URL*,
+   click *Add LTI Advantage*, then *Activate* the pending tool. In the tool settings keep
+   *Supports Deep Linking (Content-Item Message)* on and set *Share launcher's name / email* to *Always*.
+3. Ask Annoto to set the platform **authentication request URL** of this integration to
+   `https://<your moodle>/local/annoto/lti/auth.php` (it forwards every other launch to `/mod/lti/auth.php`).
+4. *Site administration > Plugins > Local plugins > Annoto > Embed Annoto Media*: pick the tool in
+   *Annoto embed LTI tool* (or leave *Automatic*), optionally change the default size.
+5. *Site administration > Plugins > Filters > Manage filters*: turn *Annoto media embed* **On**.
+6. TinyMCE: the button appears automatically (toolbar "content" group and *Insert* menu).
+   Atto: add `annoto` to *Site administration > Plugins > Text editors > Atto HTML editor > Atto toolbar settings*
+   (for example `insert = equation, charmap, table, clear, annoto`).
+7. Permissions: teachers, managers and course creators can embed by default
+   (`local/annoto:embedmedia` + `tiny/annoto:use` / `atto/annoto:use`). To let students embed (e.g. in forum posts
+   or online text submissions), allow those capabilities for the Student role, and ask Annoto to enable
+   *mediaActivitySubmission* for the course group. Viewing needs `local/annoto:viewembed` (all users by default).
+
 <p>
     <span style="font-size: 14pt;"><strong>Please Note: Subscription is required to use this service.</strong></span>
 </p>

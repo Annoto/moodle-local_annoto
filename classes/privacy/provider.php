@@ -50,6 +50,16 @@ class provider implements
             'email' => 'privacy:metadata:annoto:email',
           ], 'privacy:metadata:annoto');
 
+        // Embed Annoto Media: the LTI 1.3 launches of the editor picker and of embedded media send
+        // the user's id, name, email (as configured on the LTI tool), roles and course to Annoto.
+        $collection->add_external_location_link('annoto_lti_embed', [
+            'userid' => 'privacy:metadata:annoto_lti_embed:userid',
+            'fullname' => 'privacy:metadata:annoto_lti_embed:fullname',
+            'email' => 'privacy:metadata:annoto_lti_embed:email',
+            'roles' => 'privacy:metadata:annoto_lti_embed:roles',
+            'courseid' => 'privacy:metadata:annoto_lti_embed:courseid',
+          ], 'privacy:metadata:annoto_lti_embed');
+
         // Usage telemetry: when enabled, non-personal site information (URL, name,
         // versions, region, aggregate counts) is sent to Annoto via Google Analytics
         // so Annoto knows which sites use the plugin. No personal data is sent.

@@ -49,4 +49,32 @@ $capabilities = [
         ],
         'clonepermissionsfrom' => 'moodle/course:manageactivities',
     ],
+
+    // Open the "Embed Annoto Media" picker from the TinyMCE / Atto editor (tiny_annoto, atto_annoto).
+    // Give it to the Student role too to let students record/upload (also needs Annoto's
+    // mediaActivitySubmission feature for the course).
+    'local/annoto:embedmedia' => [
+        'riskbitmask' => RISK_PERSONAL,
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_COURSE,
+        'archetypes' => [
+            'editingteacher' => CAP_ALLOW,
+            'manager' => CAP_ALLOW,
+            'coursecreator' => CAP_ALLOW,
+        ],
+    ],
+
+    // View Annoto media embedded in text (per-viewer LTI 1.3 launch, sends the user's identity to Annoto).
+    'local/annoto:viewembed' => [
+        'riskbitmask' => RISK_PERSONAL,
+        'captype' => 'read',
+        'contextlevel' => CONTEXT_COURSE,
+        'archetypes' => [
+            'user' => CAP_ALLOW,
+            'student' => CAP_ALLOW,
+            'teacher' => CAP_ALLOW,
+            'editingteacher' => CAP_ALLOW,
+            'manager' => CAP_ALLOW,
+        ],
+    ],
  ];

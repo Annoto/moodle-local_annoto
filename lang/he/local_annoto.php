@@ -127,3 +127,30 @@ $string['siteenv_dev'] = 'פיתוח';
 // Privacy API - usage telemetry.
 $string['privacy:metadata:annoto_telemetry'] = 'כדי לסייע ל-Annoto להבין ולתמוך בהתקנות התוסף, מידע לא-אישי על האתר (כתובת, שם, מזהה אתר אנונימי, סביבה, מדינה, גרסאות, סביבת השרת, תוספי מדיה מותקנים, מספרים מצטברים של משתמשים, קורסים והשלמת פעילויות Annoto, תצורת התוסף וקודי שגיאה קצרים) נשלח ל-Annoto באמצעות Google Analytics. שום מידע אישי על מנהלי המערכת, לומדים או תלמידים אינו נשלח.';
 $string['privacy:metadata:annoto_telemetry:siteurl'] = 'כתובת האתר ושמו נשלחים כדי לזהות את ההתקנה.';
+
+// Embed Annoto Media (editor button, LTI 1.3 Deep Linking).
+$string['annoto:embedmedia'] = 'הטמעת מדיה של Annoto מעורך הטקסט';
+$string['annoto:viewembed'] = 'צפייה במדיה של Annoto המוטמעת בטקסט';
+$string['embedheading'] = 'הטמעת מדיה של Annoto (כפתור בעורך)';
+$string['embedheading_desc'] = 'מאפשר למרצים (ובאופן אופציונלי גם לסטודנטים) ללחוץ על כפתור Annoto בעורך TinyMCE או Atto כדי להעלות, להקליט או לבחור סרטון ולהטמיע אותו בכל טקסט. נדרשים: כלי ה-LTI 1.3 של Annoto להטמעת מדיה (רישום באמצעות כתובת הרישום של Annoto להטמעה), המסנן filter_annoto, ותוספי העורך tiny_annoto ו/או atto_annoto. ברישום ה-LTI ב-Annoto, כתובת בקשת האימות של הפלטפורמה חייבת להיות <code>{$a->authurl}</code> (היא מעבירה כל הפעלה אחרת ל-/mod/lti/auth.php של Moodle). תשובות Deep Linking חוזרות אל <code>{$a->returnurl}</code>.';
+$string['embedltitype'] = 'כלי LTI של Annoto להטמעה';
+$string['embedltitype_desc'] = 'הכלי החיצוני מסוג LTI 1.3 שנרשם להטמעת מדיה של Annoto (לא לוח הבקרה ולא כלי המטלות). "אוטומטי" בוחר את כלי ה-LTI 1.3 המוגדר הראשון בדומיין הפריסה של Annoto ששמו או כתובת הכלי שלו מכילים "embed".';
+$string['embedltitype_auto'] = 'אוטומטי (איתור לפי דומיין הפריסה)';
+$string['embedwidth'] = 'רוחב ברירת מחדל להטמעה';
+$string['embedwidth_desc'] = 'רוחב בפיקסלים של מדיה מוטמעת כאשר Annoto אינו שולח גודל.';
+$string['embedheight'] = 'גובה ברירת מחדל להטמעה';
+$string['embedheight_desc'] = 'גובה בפיקסלים של מדיה מוטמעת כאשר Annoto אינו שולח גודל.';
+$string['embed_dialogtitle'] = 'הטמעת מדיה של Annoto';
+$string['embed_defaulttitle'] = 'מדיה של Annoto';
+$string['embed_loading'] = 'פותח את Annoto…';
+$string['embed_inserted'] = 'המדיה נוספה לטקסט.';
+$string['embed_cancelled'] = 'לא נבחר דבר.';
+$string['embed_notconfigured'] = 'הטמעת מדיה של Annoto אינה מוגדרת באתר זה: לא הוגדר כלי LTI 1.3 של Annoto להטמעה. פנו למנהל ה-Moodle כדי לרשום אותו ולבחור אותו בהגדרות תוסף Annoto.';
+$string['embed_invalidurl'] = 'הקישור למדיה של Annoto אינו מפנה לכלי ההטמעה של Annoto שהוגדר.';
+$string['embed_invalidresponse'] = 'Annoto החזיר תשובה לא תקינה. נסו שוב.';
+$string['privacy:metadata:annoto_lti_embed'] = 'כאשר בוחרים מדיה של Annoto בעורך או צופים בה במקום שבו הוטמעה, הפעלת LTI 1.3 שולחת מידע על המשתמש לכלי ההטמעה של Annoto.';
+$string['privacy:metadata:annoto_lti_embed:userid'] = 'מזהה המשתמש ב-Moodle.';
+$string['privacy:metadata:annoto_lti_embed:fullname'] = 'שמו המלא של המשתמש, אם כלי ה-LTI מוגדר לשלוח אותו.';
+$string['privacy:metadata:annoto_lti_embed:email'] = 'כתובת הדוא"ל של המשתמש, אם כלי ה-LTI מוגדר לשלוח אותה.';
+$string['privacy:metadata:annoto_lti_embed:roles'] = 'תפקידי ה-LTI של המשתמש בקורס.';
+$string['privacy:metadata:annoto_lti_embed:courseid'] = 'מזהה הקורס, שמו המקוצר ושמו המלא.';

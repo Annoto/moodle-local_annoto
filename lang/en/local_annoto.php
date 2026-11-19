@@ -129,3 +129,30 @@ $string['siteenv_dev'] = 'Development';
 // Privacy API - usage telemetry.
 $string['privacy:metadata:annoto_telemetry'] = 'To help Annoto understand and support plugin installations, non-personal information about the site (URL, name, an anonymous site identifier, environment, country, versions, server environment, installed media plugins, aggregate counts of users, courses and Annoto activity completion, plugin configuration, and short error codes) is sent to Annoto via Google Analytics. No personal data about administrators, learners or students is sent.';
 $string['privacy:metadata:annoto_telemetry:siteurl'] = 'The site URL and name are sent to identify the installation.';
+
+// Embed Annoto Media (editor button, LTI 1.3 Deep Linking).
+$string['annoto:embedmedia'] = 'Embed Annoto media from the text editor';
+$string['annoto:viewembed'] = 'View Annoto media embedded in text';
+$string['embedheading'] = 'Embed Annoto Media (editor button)';
+$string['embedheading_desc'] = 'Lets teachers (and optionally students) click the Annoto button in the TinyMCE or Atto editor to upload, record or pick a video and embed it in any text. Requires the Annoto media embed LTI 1.3 tool (register it with the Annoto embed registration URL), the filter_annoto filter, and the tiny_annoto and/or atto_annoto editor plugins. In the Annoto LTI registration, the platform authentication request URL must be <code>{$a->authurl}</code> (it forwards all other launches to Moodle\'s own /mod/lti/auth.php). Deep Linking responses return to <code>{$a->returnurl}</code>.';
+$string['embedltitype'] = 'Annoto embed LTI tool';
+$string['embedltitype_desc'] = 'The LTI 1.3 external tool registered for Annoto media embed (not the dashboard or the assignment tool). "Automatic" picks the first configured LTI 1.3 tool on the Annoto deployment domain whose name or tool URL contains "embed".';
+$string['embedltitype_auto'] = 'Automatic (find by deployment domain)';
+$string['embedwidth'] = 'Default embed width';
+$string['embedwidth_desc'] = 'Width in pixels of embedded Annoto media when Annoto does not send a size.';
+$string['embedheight'] = 'Default embed height';
+$string['embedheight_desc'] = 'Height in pixels of embedded Annoto media when Annoto does not send a size.';
+$string['embed_dialogtitle'] = 'Embed Annoto Media';
+$string['embed_defaulttitle'] = 'Annoto media';
+$string['embed_loading'] = 'Opening Annoto…';
+$string['embed_inserted'] = 'The media was added to the text.';
+$string['embed_cancelled'] = 'Nothing was selected.';
+$string['embed_notconfigured'] = 'Embed Annoto Media is not set up on this site: no Annoto embed LTI 1.3 tool is configured. Ask your Moodle administrator to register it and select it in the Annoto plugin settings.';
+$string['embed_invalidurl'] = 'The Annoto media link does not point to the configured Annoto embed tool.';
+$string['embed_invalidresponse'] = 'Annoto returned an invalid response. Please try again.';
+$string['privacy:metadata:annoto_lti_embed'] = 'When Annoto media is picked in the editor or viewed where it is embedded, an LTI 1.3 launch sends user information to the Annoto embed tool.';
+$string['privacy:metadata:annoto_lti_embed:userid'] = 'The user\'s Moodle ID.';
+$string['privacy:metadata:annoto_lti_embed:fullname'] = 'The user\'s full name, if the LTI tool is set to send it.';
+$string['privacy:metadata:annoto_lti_embed:email'] = 'The user\'s email address, if the LTI tool is set to send it.';
+$string['privacy:metadata:annoto_lti_embed:roles'] = 'The user\'s LTI roles in the course.';
+$string['privacy:metadata:annoto_lti_embed:courseid'] = 'The course ID, short name and full name.';
