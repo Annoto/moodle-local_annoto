@@ -113,6 +113,25 @@ if ($hassiteconfig) {
         0
     ));
 
+    // Limit the automatic dashboard to some courses; both empty adds it to all the courses.
+    $settings->add(new admin_setting_configtextarea(
+        'local_annoto/dashboardcourses',
+        get_string('dashboardcourses', 'local_annoto'),
+        get_string('dashboardcourses_desc', 'local_annoto'),
+        '',
+        PARAM_RAW_TRIMMED
+    ));
+    $settings->hide_if('local_annoto/dashboardcourses', 'local_annoto/addingdashboard', 'notchecked');
+
+    $settings->add(new admin_setting_configtext(
+        'local_annoto/dashboardcategories',
+        get_string('dashboardcategories', 'local_annoto'),
+        get_string('dashboardcategories_desc', 'local_annoto'),
+        '',
+        PARAM_SEQUENCE
+    ));
+    $settings->hide_if('local_annoto/dashboardcategories', 'local_annoto/addingdashboard', 'notchecked');
+
     // Dashboard access roles.
     [$roles, $defaultroles] = local_annoto_get_all_dashboard_roles();
     $settings->add(new admin_setting_configmulticheckbox(
@@ -136,6 +155,22 @@ if ($hassiteconfig) {
         get_string('locale', 'local_annoto'),
         get_string('locale_desc', 'local_annoto'),
         1
+    ));
+
+    // Prefix the course name sent to Annoto with its category.
+    $settings->add(new admin_setting_configcheckbox(
+        'local_annoto/groupcategoryprefix',
+        get_string('groupcategoryprefix', 'local_annoto'),
+        get_string('groupcategoryprefix_desc', 'local_annoto'),
+        0
+    ));
+
+    // Widget side by page direction (RTL / LTR).
+    $settings->add(new admin_setting_configcheckbox(
+        'local_annoto/widgetpositionbydirection',
+        get_string('widgetpositionbydirection', 'local_annoto'),
+        get_string('widgetpositionbydirection_desc', 'local_annoto'),
+        0
     ));
 
     // Moderators Roles.

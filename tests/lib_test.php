@@ -367,4 +367,115 @@ final class lib_test extends \advanced_testcase {
         $this->assertEquals($page->cmid, $params['activityCompletionReq']->cmid);
         $this->assertSame([], $params['cmCompletions']);
     }
+
+    /**
+     * The style hides the manual completion button of exactly the given course modules.
+     *
+     * @covers ::local_annoto_manual_completion_css
+     */
+    public function test_manual_completion_css(): void {
+        $this->assertSame('', local_annoto_manual_completion_css([]));
+
+        $html = local_annoto_manual_completion_css([12, '34']);
+
+        $this->assertStringStartsWith('<style', $html);
+        $this->assertStringContainsString('[data-action="toggle-manual-completion"][data-cmid="12"]', $html);
+        $this->assertStringContainsString('[data-action="toggle-manual-completion"][data-cmid="34"]', $html);
+        $this->assertStringContainsString('display: none', $html);
+    }
+
+    /**
+     * Only course modules with Annoto completion get their manual completion button hidden.
+     *
+     * @covers ::local_annoto_manual_completion_css_html
+     */
+    public function test_manual_completion_css_html_lists_annoto_completion_cms(): void {
+        global $COURSE, $DB, $PAGE;
+        $this->resetAfterTest();
+        set_config('clientid', 'client-123', 'local_annoto');
+        $course = $this->getDataGenerator()->create_course(['enablecompletion' => 1]);
+        $annoto = $this->getDataGenerator()->create_module('page', ['course' => $course->id]);
+        $manual = $this->getDataGenerator()->create_module('page', ['course' => $course->id, 'completion' => 1]);
+        $DB->set_field('course_modules', 'completion', annoto_completion::COMPLETION_TRACKING_AUTOMATIC, ['id' => $annoto->cmid]);
+        $PAGE->set_pagetype('course-view-topics');
+        $COURSE = get_course($course->id);
+
+        $html = local_annoto_manual_completion_css_html();
+
+        $this->assertStringContainsString('[data-cmid="' . $annoto->cmid . '"]', $html);
+        $this->assertStringNotContainsString('[data-cmid="' . $manual->cmid . '"]', $html);
+    }
+
+    /**
+     * With no course or category listed the dashboard is added everywhere; otherwise only to the
+     * listed courses and to the courses of the listed categories and their subcategories.
+     *
+     * @covers ::local_annoto_is_dashboard_autoadd_course
+     */
+    public function test_is_dashboard_autoadd_course(): void {
+        $this->resetAfterTest();
+        $generator = $this->getDataGenerator();
+        $parent = $generator->create_category();
+        $child = $generator->create_category(['parent' => $parent->id]);
+        $other = $generator->create_category();
+        $byshortname = $generator->create_course(['shortname' => 'BIU-101', 'category' => $other->id]);
+        $byidnumber = $generator->create_course(['idnumber' => '88-202', 'category' => $other->id]);
+        $incategory = $generator->create_course(['category' => $child->id]);
+        $unlisted = $generator->create_course(['category' => $other->id]);
+
+        $settings = (object)['dashboardcourses' => '', 'dashboardcategories' => ''];
+        $this->assertTrue(local_annoto_is_dashboard_autoadd_course($unlisted, $settings));
+
+        $settings = (object)['dashboardcourses' => "biu-101\n 88-202 ,", 'dashboardcategories' => (string)$parent->id];
+        $this->assertTrue(local_annoto_is_dashboard_autoadd_course($byshortname, $settings));
+        $this->assertTrue(local_annoto_is_dashboard_autoadd_course($byidnumber, $settings));
+        $this->assertTrue(local_annoto_is_dashboard_autoadd_course($incategory, $settings));
+        $this->assertFalse(local_annoto_is_dashboard_autoadd_course($unlisted, $settings));
+    }
+
+    /**
+     * The category parameters replace their old values and keep the instructor's other parameters.
+     *
+     * @covers ::local_annoto_merge_lti_custom_params
+     */
+    public function test_merge_lti_custom_params(): void {
+        $merged = local_annoto_merge_lti_custom_params(
+            "foo=bar\nannoto_course_category=Old\n",
+            ['annoto_course_category' => 'Law', 'annoto_course_category_path' => '$Faculties / Law']
+        );
+
+        $this->assertSame("foo=bar\nannoto_course_category=Law\nannoto_course_category_path=Faculties / Law", $merged);
+    }
+
+    /**
+     * The course category is sent with the course, and prefixes the course name only when enabled.
+     *
+     * @covers ::local_annoto_get_jsparam
+     * @covers ::local_annoto_get_course_category_details
+     */
+    public function test_get_jsparam_sends_course_category(): void {
+        global $CFG;
+        require_once($CFG->dirroot . '/course/lib.php');
+        $this->resetAfterTest();
+        [$course] = $this->setup_completion_course();
+        $parent = $this->getDataGenerator()->create_category(['name' => 'Faculty of Law']);
+        $child = $this->getDataGenerator()->create_category(['name' => 'Contracts', 'parent' => $parent->id,
+            'idnumber' => 'LAW-C']);
+        move_courses([$course->id], $child->id);
+
+        $params = local_annoto_get_jsparam($course->id, 0);
+
+        $this->assertEquals($child->id, $params['mediaGroupCategoryId']);
+        $this->assertSame('Contracts', $params['mediaGroupCategory']);
+        $this->assertSame('LAW-C', $params['mediaGroupCategoryIdNumber']);
+        $this->assertSame('Faculty of Law / Contracts', $params['mediaGroupCategoryPath']);
+        $this->assertSame(get_course($course->id)->fullname, $params['mediaGroupTitle']);
+        $this->assertSame('ltr', $params['pageDirection']);
+        $this->assertFalse($params['widgetPositionByDirection']);
+
+        set_config('groupcategoryprefix', 1, 'local_annoto');
+        $params = local_annoto_get_jsparam($course->id, 0);
+
+        $this->assertSame('Contracts / ' . get_course($course->id)->fullname, $params['mediaGroupTitle']);
+    }
 }

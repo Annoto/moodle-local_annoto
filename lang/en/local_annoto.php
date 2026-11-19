@@ -60,11 +60,19 @@ $string['externaltoolsettings'] = 'Annoto dashboard (LTI)';
 $string['lti_activity_name'] = 'Annoto Dashboard';
 $string['managementdashboard'] = 'Dashboard manager roles';
 $string['managementdashboard_desc'] = 'Specify who is allowed to access Annoto dashboard';
+$string['dashboardcourses'] = 'Add only to these courses';
+$string['dashboardcourses_desc'] = 'Course short names or ID numbers, one per line or comma separated. When this list or the category list below is filled in, the Annoto dashboard is added automatically only to the listed courses and to the courses in the listed categories. Leave both empty to add it to all the courses.';
+$string['dashboardcategories'] = 'Add only to courses in these categories';
+$string['dashboardcategories_desc'] = 'Course category ids, comma separated. Courses in their subcategories are included.';
 
 // Annoto settings.
 $string['appsetingsheading'] = 'Annoto settings';
 $string['locale'] = 'Locale';
 $string['locale_desc'] = 'If enable will set per page and course based on Course and User preferences';
+$string['groupcategoryprefix'] = 'Add the course category to the course name';
+$string['groupcategoryprefix_desc'] = 'If enabled, the course name sent to Annoto starts with the name of the course category (for example "Faculty of Law / Contracts 101"), so that Annoto reports and exports can be told apart per category. The category is always sent to the Annoto dashboard.';
+$string['widgetpositionbydirection'] = 'Position the widget by page direction';
+$string['widgetpositionbydirection_desc'] = 'If enabled, on right-to-left pages (for example Hebrew or Arabic) the Annoto widget opens on the left side of the player, away from the Moodle navigation, and on left-to-right pages on its default side.';
 $string['moderatorroles'] = 'Moderator roles';
 $string['moderatorrolesdesc'] = 'Specify who is allowed to moderate discussions (only roles that at least include the following capabilities are available: local/annoto:moderatediscussion).';
 $string['debuglogging'] = 'Enable debug logging';

@@ -40,8 +40,12 @@ if (!defined('DEFAULTHEIGHT')) {
     define('DEFAULTHEIGHT', 480);
 }
 
+if (!defined('LOCAL_ANNOTO_CATEGORY_PATH_SEPARATOR')) {
+    define('LOCAL_ANNOTO_CATEGORY_PATH_SEPARATOR', ' / ');
+}
+
 if (!defined('LOCAL_ANNOTO_TOP_OF_BODY_THEMES')) {
-    define('LOCAL_ANNOTO_TOP_OF_BODY_THEMES', 'lambda,adaptable,academi');
+    define('LOCAL_ANNOTO_TOP_OF_BODY_THEMES', 'lambda,adaptable,academi,edumy');
 }
 
 require_once($CFG->libdir . '/completionlib.php');
@@ -72,6 +76,7 @@ function local_annoto_before_standard_top_of_body_html() {
     if ($html !== '') {
         local_annoto_kaltura_hook_emitted(true);
     }
+    $html .= local_annoto_manual_completion_css_html();
     // Prevent callback loading for all themes except those:.
     $themes = explode(',', LOCAL_ANNOTO_TOP_OF_BODY_THEMES);
     if (in_array($PAGE->theme->name, $themes)) {
@@ -154,6 +159,53 @@ function local_annoto_kaltura_hook_html() {
     $jsrev = isset($CFG->jsrev) ? (int)$CFG->jsrev : 1;
     $rev = $jsrev > 0 ? $jsrev : time();
     return html_writer::script('', new moodle_url('/local/annoto/initkaltura.js', ['rev' => $rev]));
+}
+
+/**
+ * Style that hides Moodle's manual "Mark as done" button of the course's activities with Annoto completion.
+ *
+ * Annoto completion stores the course module's completion as annoto_completion::COMPLETION_TRACKING_AUTOMATIC,
+ * which Moodle core does not know: its completion templates treat anything that is not automatic as manual
+ * and render the "Mark as done" button, whose click then fails since the activity has no manual completion.
+ * The bundle renders the Annoto conditions in the completion area instead; this style keeps the button off
+ * the activity and course pages from the first paint, also where the bundle does not run (e.g. the
+ * activity has no video). Emitted at the top of the body, so it covers every theme.
+ *
+ * @return string HTML fragment, empty when the page has no such activity.
+ */
+function local_annoto_manual_completion_css_html() {
+    global $DB, $COURSE;
+
+    if (empty($COURSE->id) || $COURSE->id == SITEID || !local_annoto_is_target_page() || !local_annoto_is_configured()) {
+        return '';
+    }
+    $cmids = $DB->get_fieldset_select(
+        'course_modules',
+        'id',
+        'course = :courseid AND completion = :completion',
+        ['courseid' => $COURSE->id, 'completion' => annoto_completion::COMPLETION_TRACKING_AUTOMATIC]
+    );
+    return local_annoto_manual_completion_css($cmids);
+}
+
+/**
+ * Style element hiding the manual completion button of the given course modules.
+ *
+ * @param int[] $cmids course module ids
+ * @return string HTML fragment, empty when there are no course modules.
+ */
+function local_annoto_manual_completion_css(array $cmids) {
+    if (empty($cmids)) {
+        return '';
+    }
+    $selectors = array_map(function ($cmid) {
+        return '[data-action="toggle-manual-completion"][data-cmid="' . (int)$cmid . '"]';
+    }, $cmids);
+    return html_writer::tag(
+        'style',
+        implode(",\n", $selectors) . ' { display: none !important; }',
+        ['data-annoto' => 'manual-completion']
+    );
 }
 
 /**
@@ -337,6 +389,7 @@ function local_annoto_get_completion_modtypes() {
         'h5pactivity',
         'kalvidres',
         'lti',
+        'oublog',
     ];
 }
 
@@ -402,6 +455,58 @@ function local_annoto_get_course_cm_completions($course, $userscope) {
 }
 
 /**
+ * Text direction of a language, as Moodle renders its pages in it.
+ *
+ * @param string $lang the language code.
+ * @return string 'rtl' or 'ltr'
+ */
+function local_annoto_get_lang_direction($lang) {
+    $direction = get_string_manager()->get_string('thisdirection', 'langconfig', null, $lang);
+    return $direction === 'rtl' ? 'rtl' : 'ltr';
+}
+
+/**
+ * The category of a course, as sent to Annoto so that its usage can be told apart per category.
+ *
+ * @param stdClass $course the course.
+ * @return stdClass id, name, idnumber and path (the names from the top category down, ' / ' separated);
+ *         empty values when the category cannot be read.
+ */
+function local_annoto_get_course_category_details($course) {
+    $details = (object)['id' => 0, 'name' => '', 'idnumber' => '', 'path' => ''];
+    if (empty($course->category)) {
+        return $details;
+    }
+    $category = core_course_category::get($course->category, IGNORE_MISSING, true);
+    if (!$category) {
+        return $details;
+    }
+    $names = [];
+    foreach (array_merge($category->get_parents(), [$category->id]) as $categoryid) {
+        $item = core_course_category::get($categoryid, IGNORE_MISSING, true);
+        if ($item) {
+            $names[] = local_annoto_format_category_name($item);
+        }
+    }
+    $details->id = (int)$category->id;
+    $details->name = local_annoto_format_category_name($category);
+    $details->idnumber = (string)$category->idnumber;
+    $details->path = implode(LOCAL_ANNOTO_CATEGORY_PATH_SEPARATOR, $names);
+    return $details;
+}
+
+/**
+ * Plain text name of a course category, single line.
+ *
+ * @param core_course_category $category the category.
+ * @return string
+ */
+function local_annoto_format_category_name($category) {
+    $name = format_string($category->name, true, ['context' => $category->get_context(), 'escape' => false]);
+    return trim(preg_replace('/\s+/', ' ', $name));
+}
+
+/**
  * Get parameters for Anooto's JS script
  * @param int $courseid the id of the course.
  * @param string $pageurl url of the current page.
@@ -449,6 +554,13 @@ function local_annoto_get_jsparam($courseid, $modid) {
         $cmcompletions = local_annoto_get_course_cm_completions($course, $userscope);
     }
 
+    $category = local_annoto_get_course_category_details($course);
+    $grouptitle = $course->fullname;
+    if (!empty($settings->groupcategoryprefix) && $category->name !== '') {
+        $grouptitle = $category->name . LOCAL_ANNOTO_CATEGORY_PATH_SEPARATOR . $grouptitle;
+    }
+    $lang = local_annoto_get_lang($course);
+
     $jsparams = [
         'deploymentDomain' => local_annoto_get_deployment_domain(),
         'bootstrapUrl' => $settings->scripturl ?? '',
@@ -460,9 +572,15 @@ function local_annoto_get_jsparam($courseid, $modid) {
         'mediaTitle' => $cmtitle ?? '',
         'mediaDescription' => $cmintro ?? '',
         'mediaGroupId' => $courseid,
-        'mediaGroupTitle' => $course->fullname,
+        'mediaGroupTitle' => $grouptitle,
         'mediaGroupDescription' => $course->summary,
-        'locale' => $settings->locale ? local_annoto_get_lang($course) : false,
+        'mediaGroupCategoryId' => $category->id,
+        'mediaGroupCategory' => $category->name,
+        'mediaGroupCategoryIdNumber' => $category->idnumber,
+        'mediaGroupCategoryPath' => $category->path,
+        'locale' => $settings->locale ? $lang : false,
+        'pageDirection' => local_annoto_get_lang_direction($lang),
+        'widgetPositionByDirection' => !empty($settings->widgetpositionbydirection),
         'cmid' => $modid ?? null,
         'moodleVersion' => $CFG->version,
         'moodleRelease' => $CFG->release,
@@ -542,12 +660,14 @@ function local_annoto_extend_settings_navigation(settings_navigation $settingsna
     // Create a dashboard instance if not available.
     // If the dashboard is available, add a navigation button to the settings block, even if addingdashboard is false.
     if (!$cm = local_annoto_get_lti_course_module($ltitool)) {
-        if (!$settings->addingdashboard) {
+        if (!$settings->addingdashboard || !local_annoto_is_dashboard_autoadd_course($PAGE->course, $settings)) {
             return;
         }
         if (!$cm = local_annoto_create_lti_course_module($ltitool)) {
             return;
         }
+    } else {
+        local_annoto_sync_dashboard_category_params($cm);
     }
 
     $text = get_string('lti_activity_name', 'local_annoto');
@@ -567,6 +687,118 @@ function local_annoto_extend_settings_navigation(settings_navigation $settingsna
         // Insert the new node two places after the users node.
         $settingnode->add_node($annotodashboard, $settingnode->children->get_key_list()[$key + 2]);
     }
+}
+
+/**
+ * Split a list setting into its trimmed, non-empty items: one per line or comma separated.
+ *
+ * @param string|null $value the setting value.
+ * @return string[]
+ */
+function local_annoto_split_list_setting($value) {
+    $items = preg_split('/[\r\n,]+/', (string)$value);
+    return array_values(array_filter(array_map('trim', $items), function ($item) {
+        return $item !== '';
+    }));
+}
+
+/**
+ * Whether the Annoto dashboard may be added automatically to a course.
+ *
+ * With no courses and no categories listed in the settings it is added to every course. Otherwise
+ * only to a listed course (by short name or ID number) or to a course in a listed category or in
+ * one of its subcategories (by category id).
+ *
+ * @param stdClass $course the course.
+ * @param stdClass $settings the plugin settings.
+ * @return bool
+ */
+function local_annoto_is_dashboard_autoadd_course($course, $settings) {
+    $courses = array_map('core_text::strtolower', local_annoto_split_list_setting($settings->dashboardcourses ?? ''));
+    $categoryids = array_filter(array_map('intval', local_annoto_split_list_setting($settings->dashboardcategories ?? '')));
+    if (!$courses && !$categoryids) {
+        return true;
+    }
+    foreach ([$course->shortname ?? '', $course->idnumber ?? ''] as $identifier) {
+        if ($identifier !== '' && in_array(core_text::strtolower($identifier), $courses, true)) {
+            return true;
+        }
+    }
+    if (!$categoryids || empty($course->category)) {
+        return false;
+    }
+    $category = core_course_category::get($course->category, IGNORE_MISSING, true);
+    if (!$category) {
+        return false;
+    }
+    $coursecategoryids = array_map('intval', array_merge($category->get_parents(), [$category->id]));
+    return (bool)array_intersect($categoryids, $coursecategoryids);
+}
+
+/**
+ * LTI custom parameters that carry the course category to the Annoto dashboard.
+ *
+ * Moodle sends each as custom_<name> in the launch.
+ *
+ * @param stdClass $course the course.
+ * @return string[] value by parameter name
+ */
+function local_annoto_get_dashboard_category_params($course) {
+    $category = local_annoto_get_course_category_details($course);
+    return [
+        'annoto_course_category_id' => (string)$category->id,
+        'annoto_course_category' => $category->name,
+        'annoto_course_category_idnumber' => $category->idnumber,
+        'annoto_course_category_path' => $category->path,
+    ];
+}
+
+/**
+ * Merge the category parameters into an LTI instance's custom parameters, keeping any other parameter.
+ *
+ * @param string|null $customparameters the instance's custom parameters, one name=value per line.
+ * @param string[] $params value by parameter name to set.
+ * @return string the merged custom parameters.
+ */
+function local_annoto_merge_lti_custom_params($customparameters, array $params) {
+    $lines = [];
+    foreach (preg_split('/\r\n|\r|\n/', (string)$customparameters) as $line) {
+        $name = trim(explode('=', $line, 2)[0]);
+        if (trim($line) === '' || array_key_exists($name, $params)) {
+            continue;
+        }
+        $lines[] = $line;
+    }
+    foreach ($params as $name => $value) {
+        // A value starting with $ would be read by Moodle as a substitution variable.
+        $lines[] = $name . '=' . ltrim(str_replace(["\r", "\n"], ' ', $value), '$');
+    }
+    return implode("\n", $lines);
+}
+
+/**
+ * Keep the course category parameters of the course's Annoto dashboard up to date.
+ *
+ * Dashboards added before the parameters existed, and courses moved to another category or whose
+ * category was renamed, get the current values. Writes only when a value changed.
+ *
+ * @param cm_info $cm the dashboard course module.
+ * @return void
+ */
+function local_annoto_sync_dashboard_category_params($cm) {
+    global $DB;
+    $lti = $DB->get_record('lti', ['id' => $cm->instance], 'id, instructorcustomparameters');
+    if (!$lti) {
+        return;
+    }
+    $merged = local_annoto_merge_lti_custom_params(
+        $lti->instructorcustomparameters,
+        local_annoto_get_dashboard_category_params($cm->get_course())
+    );
+    if ($merged === (string)$lti->instructorcustomparameters) {
+        return;
+    }
+    $DB->set_field('lti', 'instructorcustomparameters', $merged, ['id' => $lti->id]);
 }
 
 /**
@@ -632,6 +864,10 @@ function local_annoto_create_lti_course_module($ltitool) {
     $newdashboard->instructorchoicesendname = 1;
     $newdashboard->instructorchoicesendemailaddr = 1;
     $newdashboard->showtitlelaunch = 1;
+    $newdashboard->instructorcustomparameters = local_annoto_merge_lti_custom_params(
+        '',
+        local_annoto_get_dashboard_category_params($PAGE->course)
+    );
     $newdashboard->timecreated = time();
     $newdashboard->timemodified = time();
 

@@ -60,11 +60,19 @@ $string['externaltoolsettings'] = 'לוח הבקרה של Annoto (LTI)';
 $string['lti_activity_name'] = 'לוח הבקרה של Annoto';
 $string['managementdashboard'] = 'תפקידי מנהל לוח הבקרה';
 $string['managementdashboard_desc'] = 'ציין מי רשאי לגשת ללוח הבקרה של Annoto';
+$string['dashboardcourses'] = 'הוסף רק לקורסים אלה';
+$string['dashboardcourses_desc'] = 'שמות מקוצרים או מספרי זיהוי של קורסים, אחד בכל שורה או מופרדים בפסיקים. כאשר רשימה זו או רשימת הקטגוריות שלמטה מלאה, לוח הבקרה של Annoto יתווסף אוטומטית רק לקורסים הרשומים ולקורסים שבקטגוריות הרשומות. השאירו את שתיהן ריקות כדי להוסיף אותו לכל הקורסים.';
+$string['dashboardcategories'] = 'הוסף רק לקורסים בקטגוריות אלה';
+$string['dashboardcategories_desc'] = 'מזהי קטגוריות קורסים, מופרדים בפסיקים. קורסים בתתי-הקטגוריות שלהן נכללים.';
 
 // Annoto settings.
 $string['appsetingsheading'] = 'הגדרות Annoto';
 $string['locale'] = 'שפה';
 $string['locale_desc'] = 'אם מאופשר, תוגדר שפה לכל עמוד וקורס בהתאם להעדפות הקורס והמשתמש';
+$string['groupcategoryprefix'] = 'הוסף את קטגוריית הקורס לשם הקורס';
+$string['groupcategoryprefix_desc'] = 'אם מאופשר, שם הקורס שנשלח ל-Annoto יתחיל בשם קטגוריית הקורס (לדוגמה "הפקולטה למשפטים / חוזים 101"), כך שניתן להבחין בין קטגוריות בדוחות ובייצואים של Annoto. הקטגוריה נשלחת תמיד ללוח הבקרה של Annoto.';
+$string['widgetpositionbydirection'] = 'מיקום הווידג\'ט לפי כיוון הדף';
+$string['widgetpositionbydirection_desc'] = 'אם מאופשר, בדפים מימין לשמאל (לדוגמה עברית או ערבית) הווידג\'ט של Annoto ייפתח בצד שמאל של הנגן, הרחק מתפריט הניווט של Moodle, ובדפים משמאל לימין בצד ברירת המחדל שלו.';
 $string['moderatorroles'] = 'תפקידי מנהל דיון';
 $string['moderatorrolesdesc'] = 'ציין מי רשאי לנהל דיונים (רק תפקידים הכוללים לפחות את ההרשאות הבאות יהיו זמינים: local/annoto:moderatediscussion).';
 $string['debuglogging'] = 'אפשר רישום דיבאג';
