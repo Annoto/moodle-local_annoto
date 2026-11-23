@@ -165,14 +165,6 @@ if ($hassiteconfig) {
         0
     ));
 
-    // Widget side by page direction (RTL / LTR).
-    $settings->add(new admin_setting_configcheckbox(
-        'local_annoto/widgetpositionbydirection',
-        get_string('widgetpositionbydirection', 'local_annoto'),
-        get_string('widgetpositionbydirection_desc', 'local_annoto'),
-        0
-    ));
-
     // Moderators Roles.
     $settings->add(new local_annoto_admin_setting_custompickroles(
         'local_annoto/moderatorroles',

@@ -455,17 +455,6 @@ function local_annoto_get_course_cm_completions($course, $userscope) {
 }
 
 /**
- * Text direction of a language, as Moodle renders its pages in it.
- *
- * @param string $lang the language code.
- * @return string 'rtl' or 'ltr'
- */
-function local_annoto_get_lang_direction($lang) {
-    $direction = get_string_manager()->get_string('thisdirection', 'langconfig', null, $lang);
-    return $direction === 'rtl' ? 'rtl' : 'ltr';
-}
-
-/**
  * The category of a course, as sent to Annoto so that its usage can be told apart per category.
  *
  * @param stdClass $course the course.
@@ -579,8 +568,6 @@ function local_annoto_get_jsparam($courseid, $modid) {
         'mediaGroupCategoryIdNumber' => $category->idnumber,
         'mediaGroupCategoryPath' => $category->path,
         'locale' => $settings->locale ? $lang : false,
-        'pageDirection' => local_annoto_get_lang_direction($lang),
-        'widgetPositionByDirection' => !empty($settings->widgetpositionbydirection),
         'cmid' => $modid ?? null,
         'moodleVersion' => $CFG->version,
         'moodleRelease' => $CFG->release,

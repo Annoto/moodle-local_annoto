@@ -470,8 +470,6 @@ final class lib_test extends \advanced_testcase {
         $this->assertSame('LAW-C', $params['mediaGroupCategoryIdNumber']);
         $this->assertSame('Faculty of Law / Contracts', $params['mediaGroupCategoryPath']);
         $this->assertSame(get_course($course->id)->fullname, $params['mediaGroupTitle']);
-        $this->assertSame('ltr', $params['pageDirection']);
-        $this->assertFalse($params['widgetPositionByDirection']);
 
         set_config('groupcategoryprefix', 1, 'local_annoto');
         $params = local_annoto_get_jsparam($course->id, 0);
