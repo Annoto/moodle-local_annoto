@@ -55,6 +55,10 @@ class hook_callbacks {
             $hook->add_html($html);
             local_annoto_kaltura_hook_emitted(true);
         }
+        $css = local_annoto_manual_completion_css_html();
+        if ($css !== '') {
+            $hook->add_html($css);
+        }
         // Prevent callback loading for all themes except those.
         $themes = explode(',', LOCAL_ANNOTO_TOP_OF_BODY_THEMES);
         if (in_array($PAGE->theme->name, $themes)) {
